@@ -1,0 +1,36 @@
+{
+  "task_pack_id": "shopops-goal-2026-06-03",
+  "task_id": "T05",
+  "requirement": "REQ-003",
+  "order_source_default": "crawler",
+  "taobao_api_credentials_present": false,
+  "taobao_api_credentials_block_current_crawler_scope": false,
+  "real_taobao_api_call_attempted": false,
+  "env_presence": {
+    "ORDER_SOURCE": false,
+    "USE_MOCK_COLLECTORS": false,
+    "TAOBAO_APP_KEY": false,
+    "TAOBAO_APP_SECRET": false,
+    "TAOBAO_SESSION_KEY": false
+  },
+  "boundary_contract": {
+    "api_source_factory": "covered by tests/test_taobao_order_api_boundary.py",
+    "pagination": "covered by injected page_fetcher with two pages",
+    "paid_filter": "WAIT_BUYER_PAY excluded from normalized orders",
+    "orders_raw_shape": "unique_key and Chinese field mapping emitted by collector",
+    "failure_no_zero": "credential, explicit API, and page-fetch exception failures return null metrics, not 0",
+    "crawler_nonblocking": "default crawler settings validate without Taobao credentials"
+  },
+  "secret_guard_limitation": {
+    "status": "PASS_WITH_LIMITATION",
+    "script": "scripts/acceptance/secret_guard.py",
+    "script_exit_code": 1,
+    "classification": "pre_existing_false_positive_outside_T05_code",
+    "flagged_values": [
+      "FEISHU_APP_SECRET=missing",
+      "TAOBAO_APP_SECRET=missing",
+      "TAOBAO_SESSION_KEY=missing"
+    ],
+    "evidence": "docs/auto-execute/logs/T09/secret-guard.txt"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "delete_existing_douyin": {
+    "deleted_records": 5580,
+    "platform": "抖音"
+  },
+  "douyin_duplicate_extra_rows": 0,
+  "douyin_duplicate_key_count": 0,
+  "douyin_unique_order_count": 10061,
+  "missing_unique_keys": [],
+  "parsed_order_rows": 10061,
+  "readback_count": 10061,
+  "sample_rows": [
+    {
+      "unique_key": "douyin_6927008817907334424",
+      "平台": "抖音",
+      "订单号": "6927008817907334424"
+    },
+    {
+      "unique_key": "douyin_6953541681170093897",
+      "平台": "抖音",
+      "订单号": "6953541681170093897"
+    },
+    {
+      "unique_key": "douyin_6927013416551414904",
+      "平台": "抖音",
+      "订单号": "6927013416551414904"
+    },
+    {
+      "unique_key": "douyin_6953505929342227978",
+      "平台": "抖音",
+      "订单号": "6953505929342227978"
+    },
+    {
+      "unique_key": "douyin_6927015794371361872",
+      "平台": "抖音",
+      "订单号": "6927015794371361872"
+    }
+  ],
+  "source_order_file": "D:\\lyh\\ShopOps\\0609\\抖音\\1780986782_cd252d95cfe5af7cb34aa3dbd6f7cee8fzOmjPIk.csv",
+  "status": "success",
+  "table_douyin_record_count": 10061,
+  "target_table": "tblTbbFkEepZAGru",
+  "upsert": {
+    "created": 10061,
+    "dropped_nonexistent_fields": {},
+    "saved": 10061,
+    "updated": 0
+  }
+}

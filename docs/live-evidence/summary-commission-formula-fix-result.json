@@ -1,0 +1,332 @@
+{
+  "commission_record_count": 5680,
+  "detail_sum_by_platform": {
+    "抖音": 249625.78,
+    "视频号": 15235.35
+  },
+  "detail_formula_sum_by_platform": {
+    "抖音": 249625.78,
+    "视频号": 15235.35
+  },
+  "all_summary_rows": [
+    {
+      "platform": "抖音",
+      "summary_commission": 249625.78,
+      "expected": 249625.78
+    },
+    {
+      "platform": "视频号",
+      "summary_commission": 15235.35,
+      "expected": 15235.35
+    },
+    {
+      "platform": "全平台总计",
+      "summary_commission": 264861.13,
+      "expected": 264861.13
+    }
+  ],
+  "daily_summary_rows": [
+    {
+      "date": "2026-04-15",
+      "platform": "抖音",
+      "summary_commission": 25.35,
+      "expected": 25.35
+    },
+    {
+      "date": "2026-04-15",
+      "platform": "全平台总计",
+      "summary_commission": 25.35,
+      "expected": 25.35
+    },
+    {
+      "date": "2026-04-16",
+      "platform": "抖音",
+      "summary_commission": 25.35,
+      "expected": 25.35
+    },
+    {
+      "date": "2026-04-16",
+      "platform": "全平台总计",
+      "summary_commission": 25.35,
+      "expected": 25.35
+    },
+    {
+      "date": "2026-04-25",
+      "platform": "抖音",
+      "summary_commission": 116.61,
+      "expected": 116.61
+    },
+    {
+      "date": "2026-04-25",
+      "platform": "全平台总计",
+      "summary_commission": 116.61,
+      "expected": 116.61
+    },
+    {
+      "date": "2026-04-26",
+      "platform": "抖音",
+      "summary_commission": 60.84,
+      "expected": 60.84
+    },
+    {
+      "date": "2026-04-26",
+      "platform": "全平台总计",
+      "summary_commission": 60.84,
+      "expected": 60.84
+    },
+    {
+      "date": "2026-04-27",
+      "platform": "抖音",
+      "summary_commission": 226.46,
+      "expected": 226.46
+    },
+    {
+      "date": "2026-04-27",
+      "platform": "全平台总计",
+      "summary_commission": 226.46,
+      "expected": 226.46
+    },
+    {
+      "date": "2026-04-28",
+      "platform": "抖音",
+      "summary_commission": 270.4,
+      "expected": 270.4
+    },
+    {
+      "date": "2026-04-28",
+      "platform": "全平台总计",
+      "summary_commission": 270.4,
+      "expected": 270.4
+    },
+    {
+      "date": "2026-04-29",
+      "platform": "抖音",
+      "summary_commission": 135.2,
+      "expected": 135.2
+    },
+    {
+      "date": "2026-04-29",
+      "platform": "全平台总计",
+      "summary_commission": 135.2,
+      "expected": 135.2
+    },
+    {
+      "date": "2026-04-30",
+      "platform": "抖音",
+      "summary_commission": 245.05,
+      "expected": 245.05
+    },
+    {
+      "date": "2026-04-30",
+      "platform": "全平台总计",
+      "summary_commission": 245.05,
+      "expected": 245.05
+    },
+    {
+      "date": "2026-05-01",
+      "platform": "抖音",
+      "summary_commission": 101.4,
+      "expected": 101.4
+    },
+    {
+      "date": "2026-05-01",
+      "platform": "全平台总计",
+      "summary_commission": 101.4,
+      "expected": 101.4
+    },
+    {
+      "date": "2026-05-02",
+      "platform": "抖音",
+      "summary_commission": 101.4,
+      "expected": 101.4
+    },
+    {
+      "date": "2026-05-02",
+      "platform": "全平台总计",
+      "summary_commission": 101.4,
+      "expected": 101.4
+    },
+    {
+      "date": "2026-05-03",
+      "platform": "抖音",
+      "summary_commission": 236.6,
+      "expected": 236.6
+    },
+    {
+      "date": "2026-05-03",
+      "platform": "全平台总计",
+      "summary_commission": 236.6,
+      "expected": 236.6
+    },
+    {
+      "date": "2026-05-04",
+      "platform": "抖音",
+      "summary_commission": 490.1,
+      "expected": 490.1
+    },
+    {
+      "date": "2026-05-04",
+      "platform": "全平台总计",
+      "summary_commission": 490.1,
+      "expected": 490.1
+    },
+    {
+      "date": "2026-05-05",
+      "platform": "抖音",
+      "summary_commission": 457.99,
+      "expected": 457.99
+    },
+    {
+      "date": "2026-05-05",
+      "platform": "全平台总计",
+      "summary_commission": 457.99,
+      "expected": 457.99
+    },
+    {
+      "date": "2026-05-06",
+      "platform": "抖音",
+      "summary_commission": 1336.79,
+      "expected": 1336.79
+    },
+    {
+      "date": "2026-05-06",
+      "platform": "全平台总计",
+      "summary_commission": 1336.79,
+      "expected": 1336.79
+    },
+    {
+      "date": "2026-05-07",
+      "platform": "抖音",
+      "summary_commission": 177.45,
+      "expected": 177.45
+    },
+    {
+      "date": "2026-05-07",
+      "platform": "全平台总计",
+      "summary_commission": 177.45,
+      "expected": 177.45
+    },
+    {
+      "date": "2026-05-08",
+      "platform": "抖音",
+      "summary_commission": 359.97,
+      "expected": 359.97
+    },
+    {
+      "date": "2026-05-08",
+      "platform": "视频号",
+      "summary_commission": 42.25,
+      "expected": 42.25
+    },
+    {
+      "date": "2026-05-08",
+      "platform": "全平台总计",
+      "summary_commission": 402.22,
+      "expected": 402.22
+    },
+    {
+      "date": "2026-05-09",
+      "platform": "抖音",
+      "summary_commission": 387.01,
+      "expected": 387.01
+    },
+    {
+      "date": "2026-05-09",
+      "platform": "全平台总计",
+      "summary_commission": 387.01,
+      "expected": 387.01
+    },
+    {
+      "date": "2026-05-10",
+      "platform": "抖音",
+      "summary_commission": 466.44,
+      "expected": 466.44
+    },
+    {
+      "date": "2026-05-10",
+      "platform": "视频号",
+      "summary_commission": 84.5,
+      "expected": 84.5
+    },
+    {
+      "date": "2026-05-10",
+      "platform": "全平台总计",
+      "summary_commission": 550.94,
+      "expected": 550.94
+    },
+    {
+      "date": "2026-05-11",
+      "platform": "抖音",
+      "summary_commission": 989.33,
+      "expected": 989.33
+    },
+    {
+      "date": "2026-05-11",
+      "platform": "全平台总计",
+      "summary_commission": 989.33,
+      "expected": 989.33
+    },
+    {
+      "date": "2026-05-12",
+      "platform": "抖音",
+      "summary_commission": 1483.82,
+      "expected": 1483.82
+    },
+    {
+      "date": "2026-05-12",
+      "platform": "视频号",
+      "summary_commission": 42.25,
+      "expected": 42.25
+    },
+    {
+      "date": "2026-05-12",
+      "platform": "全平台总计",
+      "summary_commission": 1526.07,
+      "expected": 1526.07
+    },
+    {
+      "date": "2026-05-13",
+      "platform": "抖音",
+      "summary_commission": 317.72,
+      "expected": 317.72
+    },
+    {
+      "date": "2026-05-13",
+      "platform": "全平台总计",
+      "summary_commission": 317.72,
+      "expected": 317.72
+    },
+    {
+      "date": "2026-05-14",
+      "platform": "抖音",
+      "summary_commission": 743.6,
+      "expected": 743.6
+    },
+    {
+      "date": "2026-05-14",
+      "platform": "全平台总计",
+      "summary_commission": 743.6,
+      "expected": 743.6
+    },
+    {
+      "date": "2026-05-15",
+      "platform": "抖音",
+      "summary_commission": 260.15,
+      "expected": 260.15
+    },
+    {
+      "date": "2026-05-15",
+      "platform": "视频号",
+      "summary_commission": 126.75,
+      "expected": 126.75
+    },
+    {
+      "date": "2026-05-15",
+      "platform": "全平台总计",
+      "summary_commission": 386.9,
+      "expected": 386.9
+    }
+  ],
+  "all_mismatches": [],
+  "daily_mismatches": []
+}

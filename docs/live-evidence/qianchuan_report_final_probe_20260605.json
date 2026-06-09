@@ -1,0 +1,43 @@
+﻿{
+    "advertiser_id":  "1860240208332803",
+    "calls":  [
+                  {
+                      "name":  "qianchuan_report_advertiser_with_filtering",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/advertiser/get/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+                                             "filtering":  "{\"marketing_goal\":\"ALL\"}",
+                                             "advertiser_id":  "1860240208332803",
+                                             "start_date":  "2026-06-01",
+                                             "end_date":  "2026-06-01",
+                                             "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                             "page":  "1"
+                                         },
+                      "response":  {
+                                       "code":  40000,
+                                       "message":  "非法数据报表指标入参：roi",
+                                       "request_id":  "2026060522165806B9B1EAC2BFA40A8CC6"
+                                   }
+                  },
+                  {
+                      "name":  "qianchuan_report_ad_with_filtering",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/ad/get/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+                                             "filtering":  "{\"marketing_goal\":\"ALL\"}",
+                                             "advertiser_id":  "1860240208332803",
+                                             "start_date":  "2026-06-01",
+                                             "end_date":  "2026-06-01",
+                                             "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                             "page":  "1"
+                                         },
+                      "response":  {
+                                       "code":  40000,
+                                       "message":  "非法数据报表指标入参：roi",
+                                       "request_id":  "20260605221659637AF5AA0641915E245D"
+                                   }
+                  }
+              ]
+}

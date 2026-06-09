@@ -1,0 +1,147 @@
+{
+  "app_token_mask": "Khb...nOe",
+  "platform_counts": {
+    "<EMPTY>": 18281
+  },
+  "sample_by_platform": {
+    "<EMPTY>": {
+      "unique_key": "jushuitan_21117346_330570",
+      "买家昵称": "295747",
+      "交易状态": "Sent",
+      "公式_其他费用": 0,
+      "公式_商品成本": 0,
+      "公式_平台扣点": 0,
+      "公式_有效销售额": 169,
+      "公式_汇总平台": [
+        {
+          "text": "抖音",
+          "type": "text"
+        }
+      ],
+      "公式_统计日期": [
+        {
+          "text": "2026-05-31",
+          "type": "text"
+        }
+      ],
+      "公式_运费成本": 0,
+      "公式_退款金额": 0,
+      "公式_销售额": 169,
+      "创建时间": "2026-05-31 23:37:56",
+      "单价": "169",
+      "原始数据": "{\"__raw_so_ids__\": [\"21117346:6926803521674443949\"], \"amount\": 169, \"as_id\": null, \"buyer_id\": 295747, \"buyer_message\": null, \"buyer_paid_amount\": 119, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:04:20\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": null, \"ext_datas\": \"\", \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 169, \"base_price\": 169, \"buyer_paid_amount\": 119, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7634815254895152410\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":0}\", \"item_pay_amount\": null, \"item_status\": \"Sent\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 330570, \"oi_id\": 345857, \"outer_oi_id\": \"6926803521674443949\", \"pic\": \"https://p3-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 1, \"raw_so_id\": \"6926803521674443949\", \"referrer_id\": \"3212101035235721\", \"referrer_name\": \"趣白\", \"refund_id\": null, \"refund_qty\": null, \"refund_status\": null, \"remark\": null, \"seller_income_amount\": 169, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": \"@JDAZ25563646000\", \"labels\": \"京东配送,小店,平台补贴,店铺老客,抖音,线上发货,高频购买\", \"lc_id\": \"JD\", \"link_o_id\": null, \"logistics_company\": \"京东物流(常用)\", \"merge_so_id\": null, \"modified\": \"2026-06-04 13:07:29\", \"node\": null, \"o_id\": 330570, \"open_id\": \"1@#UJs3dJczkkORLzFlSHFdLXIA62OI1FjPHSQHvli0iKt38C+cSqDnLfPNfYN0jqzgjIS06Alt9DU=\", \"order_date\": \"2026-05-31 23:37:56\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6926803521674443949\", \"outer_so_id\": null, \"paid_amount\": 169, \"pay_amount\": 169, \"pay_date\": \"2026-05-31 23:38:03\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 169, \"buyer_account\": \"1@#UJs3dJczkkORLzFlSHFdLXIA62OI1FjPHSQHvli0iKt38C+cSqDnLfPNfYN0jqzgjIS06Alt9DU=\", \"is_order_pay\": true, \"o_id\": 330570, \"outer_pay_id\": \"6926803521674443949\", \"pay_date\": \"2026-05-31 23:38:03\", \"pay_id\": 436290, \"pay_type\": 1, \"payment\": \"微信\", \"seller_account\": null, \"status\": \"Confirmed\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 50, \"question_desc\": null, \"question_type\": null, \"raw_so_id\": \"6926803521674443949\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"3212101035235721\", \"referrer_name\": \"趣白\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 169, \"send_date\": \"2026-06-01 08:52:58\", \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#UJs3dJczkkORLzFlSHFdLXIA62OI1FjPHSQHvli0iKt38C+cSqDnLfPNfYN0jqzgjIS06Alt9DU=\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"WAIT_BUYER_CONFIRM_GOODS\", \"sign_time\": null, \"skus\": \"1.3651289727850242\", \"so_id\": \"6926803521674443949\", \"status\": \"Sent\", \"tag\": null, \"ts\": 8066243911, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+      "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+      "实收款": "169",
+      "平台": "抖音",
+      "店铺ID": "21117346",
+      "店铺名称": "趣白抖音",
+      "操作信息": "聚水潭API真实拉取",
+      "数据来源": "聚水潭真实接口",
+      "数量": "1",
+      "订单号": "330570",
+      "采集时间": "2026-06-04 18:53:49"
+    }
+  },
+  "source_field_names": [
+    "unique_key",
+    "平台",
+    "店铺ID",
+    "店铺名称",
+    "采集时间",
+    "订单号",
+    "创建时间",
+    "买家昵称",
+    "商品名称",
+    "单价",
+    "数量",
+    "履约/售后状态",
+    "交易状态",
+    "实收款",
+    "操作信息",
+    "页面URL",
+    "页面截图",
+    "原始数据",
+    "数据来源",
+    "发货截止时间",
+    "发货倒计时",
+    "商品图片说明",
+    "拼多多订单状态",
+    "拼多多售后状态",
+    "拼多多承诺发货时间",
+    "拼多多快递单号",
+    "拼多多物流公司",
+    "拼多多商品ID",
+    "拼多多商品规格",
+    "拼多多商家编码",
+    "拼多多支付方式",
+    "拼多多用户实付金额",
+    "公式_统计日期",
+    "公式_汇总平台",
+    "公式_销售额",
+    "公式_退款金额",
+    "公式_有效销售额",
+    "公式_商品成本",
+    "公式_运费成本",
+    "公式_平台扣点",
+    "公式_其他费用"
+  ],
+  "source_record_count": 18281,
+  "source_table_id": "tblbPjczqMElVU9a",
+  "summary_field_names": [
+    "unique_key",
+    "统计日期",
+    "平台",
+    "汇总key",
+    "订单数",
+    "销售额",
+    "投流消耗",
+    "达人佣金",
+    "已知费用后利润",
+    "ROI",
+    "平台ROI",
+    "数据状态",
+    "退款金额",
+    "有效销售额",
+    "商品成本",
+    "运费成本",
+    "平台扣点",
+    "其他费用",
+    "展现",
+    "点击",
+    "已知总投入",
+    "投流后毛利",
+    "经营利润估算",
+    "投流记录数",
+    "已知费用利润率",
+    "利润率",
+    "缺失项",
+    "汇总时间"
+  ],
+  "summary_table_id": "tblepMIg19Ov1kSw",
+  "tables": [
+    {
+      "name": "订单明细原始表",
+      "table_id": "tblbPjczqMElVU9a"
+    },
+    {
+      "name": "推广数据表",
+      "table_id": "tblXLtZsMTaikCeb"
+    },
+    {
+      "name": "达人佣金明细表",
+      "table_id": "tblhBsehmQbzWEVm"
+    },
+    {
+      "name": "动态经营汇总表",
+      "table_id": "tbldpguqBhSjnIPP"
+    },
+    {
+      "name": "公式动态经营汇总表",
+      "table_id": "tblepMIg19Ov1kSw"
+    },
+    {
+      "name": "全周期平台总计表",
+      "table_id": "tblufREIgBB4VBAg"
+    }
+  ]
+}

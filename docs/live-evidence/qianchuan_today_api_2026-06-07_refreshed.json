@@ -1,0 +1,147 @@
+{
+  "mode": "qianchuan_live_readonly_today_refreshed_token",
+  "generated_at": "2026-06-07T10:08:28+08:00",
+  "date": "2026-06-07",
+  "advertiser_id": "1860240208332803",
+  "token_present": true,
+  "note": "Read-only Qianchuan/OceanEngine API pull. Tokens/secrets excluded.",
+  "calls": [
+    {
+      "name": "refresh_access_token",
+      "url": "https://ad.oceanengine.com/open_api/oauth2/refresh_token/",
+      "request_body": {
+        "app_id_present": true,
+        "secret_present": true,
+        "grant_type": "refresh_token",
+        "refresh_token_present": true
+      },
+      "http_status": 200,
+      "ok": false,
+      "response": {
+        "code": 40103,
+        "message": "由于用户重新授权，当前refresh_token已失效，请使用重新授权后的refresh_token",
+        "request_id": "2026060710082336A7912FBE44CF7ADDEC"
+      }
+    },
+    {
+      "name": "uni_promotion_ALL",
+      "url": "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/get/",
+      "request_params": {
+        "advertiser_id": "1860240208332803",
+        "order_platform": "ALL",
+        "fields": "[\"stat_cost\",\"total_cost_per_pay_order_for_roi2\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "marketing_goal": "ALL"
+      },
+      "http_status": 200,
+      "ok": false,
+      "response": {
+        "code": 40102,
+        "message": "access_token已过期",
+        "request_id": "20260607100824AE193185C4F98BBF2A39"
+      }
+    },
+    {
+      "name": "uni_promotion_QIANCHUAN",
+      "url": "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/get/",
+      "request_params": {
+        "advertiser_id": "1860240208332803",
+        "order_platform": "QIANCHUAN",
+        "fields": "[\"stat_cost\",\"total_cost_per_pay_order_for_roi2\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "marketing_goal": "ALL"
+      },
+      "http_status": 200,
+      "ok": false,
+      "response": {
+        "code": 40102,
+        "message": "access_token已过期",
+        "request_id": "2026060710082577BE511AEA72A33603F3"
+      }
+    },
+    {
+      "name": "uni_promotion_ECP_AWEME",
+      "url": "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/get/",
+      "request_params": {
+        "advertiser_id": "1860240208332803",
+        "order_platform": "ECP_AWEME",
+        "fields": "[\"stat_cost\",\"total_cost_per_pay_order_for_roi2\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "marketing_goal": "ALL"
+      },
+      "http_status": 200,
+      "ok": false,
+      "response": {
+        "code": 40102,
+        "message": "access_token已过期",
+        "request_id": "20260607100826873FFE042AACACCCB670"
+      }
+    },
+    {
+      "name": "aweme_uni_promotion_order_report_daily",
+      "url": "https://api.oceanengine.com/open_api/v1.0/qianchuan/aweme/uni_promotion/order/report/get/",
+      "request_params": {
+        "advertiser_id": "1860240208332803",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "page": "1",
+        "page_size": "100",
+        "order_field": "stat_cost_for_roi2",
+        "order_type": "DESC",
+        "fields": "[\"stat_cost_for_roi2\",\"total_cost_per_pay_order_settle_for_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+        "time_granularity": "TIME_GRANULARITY_DAILY"
+      },
+      "http_status": 200,
+      "ok": false,
+      "response": {
+        "code": 40102,
+        "message": "access_token已过期",
+        "request_id": "20260607100827AD094FD7CAD670FB8623"
+      }
+    },
+    {
+      "name": "aweme_uni_promotion_order_report_total",
+      "url": "https://api.oceanengine.com/open_api/v1.0/qianchuan/aweme/uni_promotion/order/report/get/",
+      "request_params": {
+        "advertiser_id": "1860240208332803",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "page": "1",
+        "page_size": "100",
+        "order_field": "stat_cost_for_roi2",
+        "order_type": "DESC",
+        "fields": "[\"stat_cost_for_roi2\",\"total_cost_per_pay_order_settle_for_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_unfinished_estimate_order_gmv_for_roi2\"]"
+      },
+      "http_status": 200,
+      "ok": false,
+      "response": {
+        "code": 40102,
+        "message": "access_token已过期",
+        "request_id": "20260607100828DE354F28E8E0FCBB6463"
+      }
+    },
+    {
+      "name": "aweme_uni_promotion_order_get_VIDEO_PROM_GOODS_created_today",
+      "url": "https://api.oceanengine.com/open_api/v1.0/qianchuan/aweme/uni_promotion/order/get/",
+      "request_params": {
+        "advertiser_id": "1860240208332803",
+        "marketing_goal": "VIDEO_PROM_GOODS",
+        "order_field": "order_create_time",
+        "cursor": "0",
+        "count": "50",
+        "start_time": "2026-06-07 00:00:00",
+        "end_time": "2026-06-07 23:59:59"
+      },
+      "http_status": 200,
+      "ok": false,
+      "response": {
+        "code": 40102,
+        "message": "access_token已过期",
+        "request_id": "2026060710082883F7221B232301DA77DD"
+      }
+    }
+  ]
+}

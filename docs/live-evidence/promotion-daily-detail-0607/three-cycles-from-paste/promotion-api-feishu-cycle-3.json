@@ -1,0 +1,25 @@
+{
+  "cycle": 3,
+  "captured_at": "2026-06-07 21:28:25",
+  "query_date": "2026-06-07",
+  "platform": "天猫",
+  "api_cost": 3232.79,
+  "api_fields": {
+    "charge": 3232.7899999999977,
+    "adPv": 28032,
+    "click": 1386,
+    "roi": 3.1888863798762084,
+    "alipayInshopAmt": 10309.0
+  },
+  "feishu_action": "updated",
+  "created_fields": [],
+  "feishu_record_id": "recvlRCQtOspPY",
+  "feishu_unique_key": "天猫2026-06-07",
+  "feishu_cost": "3232.79",
+  "matched": true,
+  "raw_status": {
+    "http_shape": "info.data.list",
+    "info_ok": true,
+    "message": null
+  }
+}

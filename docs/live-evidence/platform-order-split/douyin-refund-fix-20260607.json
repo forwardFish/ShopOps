@@ -1,0 +1,26 @@
+{
+  "paid_total": 1602735.52,
+  "refund_success_refund_sample": [
+    169.0,
+    169.0,
+    169.0,
+    145.33,
+    169.0,
+    119.0,
+    169.0,
+    169.0,
+    167.0,
+    146.54
+  ],
+  "refund_success_rows": 1955,
+  "refund_total": 317583.79,
+  "source_file": "D:\\lyh\\ShopOps\\抖音\\0607\\1780818387_50f90004feaf19ec05e8c73cefbfeb24fzOmjPIk.csv",
+  "source_rows": 9770,
+  "status": "success",
+  "target_table_id": "tblTbbFkEepZAGru",
+  "upsert": {
+    "created": 0,
+    "saved": 9770,
+    "updated": 9770
+  }
+}

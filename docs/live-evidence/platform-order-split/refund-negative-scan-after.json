@@ -1,0 +1,43 @@
+{
+  "sample_record_after": {
+    "unique_key": "tmall_5119111586217093519",
+    "公式_有效销售额": 0,
+    "单价": "169",
+    "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+    "实收款": "0",
+    "订单号": "5119111586217093519",
+    "退款金额": "169"
+  },
+  "天猫": {
+    "negative_effective_count": 0,
+    "negative_samples": [],
+    "table_id": "tbl0gBiMcAKMCcwI",
+    "total": 8272,
+    "zero_price_refund_count": 0,
+    "zero_price_refund_samples": []
+  },
+  "抖音": {
+    "negative_effective_count": 0,
+    "negative_samples": [],
+    "table_id": "tblTbbFkEepZAGru",
+    "total": 9768,
+    "zero_price_refund_count": 0,
+    "zero_price_refund_samples": []
+  },
+  "拼多多": {
+    "negative_effective_count": 0,
+    "negative_samples": [],
+    "table_id": "tblFI9ZNPzrjR6Jm",
+    "total": 4784,
+    "zero_price_refund_count": 0,
+    "zero_price_refund_samples": []
+  },
+  "视频号": {
+    "negative_effective_count": 0,
+    "negative_samples": [],
+    "table_id": "tblFlMuPnVEn8qkw",
+    "total": 404,
+    "zero_price_refund_count": 0,
+    "zero_price_refund_samples": []
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "douyin_daily_checks": [
+    {
+      "???": null,
+      "????": null,
+      "??????": null,
+      "date": "2026-06-02",
+      "found": false
+    },
+    {
+      "???": null,
+      "????": null,
+      "??????": null,
+      "date": "2026-06-03",
+      "found": false
+    },
+    {
+      "???": null,
+      "????": null,
+      "??????": null,
+      "date": "2026-06-04",
+      "found": false
+    },
+    {
+      "???": null,
+      "????": null,
+      "??????": null,
+      "date": "2026-06-05",
+      "found": false
+    },
+    {
+      "???": null,
+      "????": null,
+      "??????": null,
+      "date": "2026-06-06",
+      "found": false
+    },
+    {
+      "???": null,
+      "????": null,
+      "??????": null,
+      "date": "2026-06-07",
+      "found": false
+    },
+    {
+      "???": null,
+      "????": null,
+      "??????": null,
+      "date": "2026-06-08",
+      "found": false
+    },
+    {
+      "???": null,
+      "????": null,
+      "??????": null,
+      "date": "2026-06-09",
+      "found": false
+    }
+  ],
+  "douyin_total": [],
+  "saved_dimension_rows": 40,
+  "saved_total_rows": 5
+}

@@ -1,0 +1,162 @@
+{
+  "task_pack_id": "shopops-goal-2026-06-03",
+  "task_id": "T11",
+  "status": "BLOCKED_BY_ENVIRONMENT",
+  "summary": "T11 reran the current local Python test suite, Feishu acceptance verifier, and secret guard. Local tests and local Feishu-style storage proof pass. Pure PASS is not claimed because live Feishu write/upsert/readback and live Qianniu PC/CDP verification are blocked by missing environment credentials/SDK/session.",
+  "executed_only": "T11",
+  "scope": {
+    "requirements": [
+      "REQ-001",
+      "REQ-002",
+      "REQ-003",
+      "REQ-004",
+      "REQ-005",
+      "REQ-006",
+      "REQ-007",
+      "REQ-008",
+      "REQ-009",
+      "REQ-010",
+      "REQ-011",
+      "REQ-012",
+      "REQ-013",
+      "REQ-014"
+    ],
+    "allowed_paths": [
+      "tests/**",
+      "scripts/acceptance/**",
+      "docs/auto-execute/**"
+    ],
+    "product_code_modified": false,
+    "external_side_effects": false,
+    "live_feishu_pass_claimed": false,
+    "live_qianniu_pass_claimed": false
+  },
+  "evidence": [
+    {
+      "type": "pytest_initial",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "command": "python -m pytest -q",
+      "log": "docs/auto-execute/logs/T11/pytest-full-current.txt",
+      "summary": "Initial full pytest run failed before test execution because pytest attempted to scan blocked temp path C:\\Users\\linyanhui\\AppData\\Local\\Temp\\pytest-of-linyanhui."
+    },
+    {
+      "type": "pytest_full_local_suite",
+      "status": "PASS",
+      "command": "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest -q -o cache_dir=docs/auto-execute/logs/T11/pytest-cache-rerun --basetemp=docs/auto-execute/logs/T11/pytest-tmp-rerun",
+      "log": "docs/auto-execute/logs/T11/pytest-full-rerun.txt",
+      "summary": "31 passed in 2.10s."
+    },
+    {
+      "type": "feishu_acceptance_script",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "command": "python scripts/acceptance/verify_feishu_data.py",
+      "log": "docs/auto-execute/logs/T11/verify-feishu-current.txt",
+      "result": "docs/auto-execute/results/T03.json",
+      "probe": "docs/auto-execute/logs/T03/feishu-environment-probe.json",
+      "summary": "Verifier exited 4 after proving local storage behavior and failing closed for live Feishu because required credentials/table IDs and lark_oapi are missing."
+    },
+    {
+      "type": "local_feishu_storage_proof",
+      "status": "PASS",
+      "path": "docs/auto-execute/external-data/T03/local-storage-proof.json",
+      "summary": "Local Feishu double wrote/read all required tables, preserved unique_key upsert semantics, and proved pending replay clears."
+    },
+    {
+      "type": "secret_guard_initial",
+      "status": "FAIL",
+      "command": "python scripts/acceptance/secret_guard.py",
+      "log": "docs/auto-execute/logs/T11/secret-guard-current.txt",
+      "summary": "Initial guard falsely classified environment audit values set to 'missing' as secrets."
+    },
+    {
+      "type": "secret_guard_repair",
+      "status": "PASS",
+      "path": "scripts/acceptance/secret_guard.py",
+      "summary": "Task-local acceptance-script repair added 'missing' to placeholder values so absent secret audit lines are not treated as leaks."
+    },
+    {
+      "type": "secret_guard_rerun",
+      "status": "PASS",
+      "command": "python scripts/acceptance/secret_guard.py",
+      "log": "docs/auto-execute/logs/T11/secret-guard-current-rerun.txt",
+      "summary": "SECRET_GUARD: PASS."
+    },
+    {
+      "type": "qianniu_order_live_probe_reference",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "path": "docs/auto-execute/logs/T04/qianniu-cdp-probe.json",
+      "summary": "Existing current task-pack evidence reports http://127.0.0.1:9222/json/version returned HTTP 502; T11 did not rerun T04."
+    },
+    {
+      "type": "qianniu_promotion_live_probe_reference",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "path": "docs/auto-execute/logs/T06/environment-probe-current.json",
+      "summary": "Existing current task-pack evidence reports no QIANNIU_CDP_URL and default CDP endpoint unavailable; T11 did not rerun T06."
+    }
+  ],
+  "blockers": [
+    {
+      "id": "T11-LIVE-FEISHU-ENV",
+      "status": "OPEN",
+      "classification": "BLOCKED_BY_ENVIRONMENT",
+      "summary": "Live Feishu Bitable write/upsert/readback cannot be verified.",
+      "details": {
+        "missing": [
+          "FEISHU_APP_ID",
+          "FEISHU_APP_SECRET",
+          "FEISHU_APP_TOKEN",
+          "FEISHU_TABLE_ALERT_LOG",
+          "FEISHU_TABLE_DAILY_REPORT",
+          "FEISHU_TABLE_METRICS_10MIN",
+          "FEISHU_TABLE_MONITOR_SNAPSHOT",
+          "FEISHU_TABLE_ORDERS_RAW",
+          "FEISHU_TABLE_PROMOTION_SNAPSHOT",
+          "FEISHU_TABLE_SHOP_CONFIG",
+          "FEISHU_TABLE_SYSTEM_CONFIG",
+          "FEISHU_TABLE_TASK_LOG",
+          "lark_oapi"
+        ]
+      },
+      "evidence": "docs/auto-execute/logs/T03/feishu-environment-probe.json"
+    },
+    {
+      "id": "T11-LIVE-QIANNIU-CDP",
+      "status": "OPEN",
+      "classification": "BLOCKED_BY_ENVIRONMENT",
+      "summary": "Live Qianniu PC/CDP order and promotion-center collection cannot be verified from this surface.",
+      "details": {
+        "order_center_probe": "HTTP 502 at http://127.0.0.1:9222/json/version",
+        "promotion_probe": "QIANNIU_CDP_URL absent and default http://127.0.0.1:9222/json/version unavailable"
+      },
+      "evidence": [
+        "docs/auto-execute/logs/T04/qianniu-cdp-probe.json",
+        "docs/auto-execute/logs/T06/environment-probe-current.json"
+      ]
+    }
+  ],
+  "repairs": [
+    {
+      "status": "DONE",
+      "path": "scripts/acceptance/secret_guard.py",
+      "summary": "Classified the literal audit value 'missing' as a non-secret placeholder."
+    }
+  ],
+  "log_paths": [
+    "docs/auto-execute/logs/T11/pytest-full-current.txt",
+    "docs/auto-execute/logs/T11/pytest-full-workspace-temp.txt",
+    "docs/auto-execute/logs/T11/pytest-full-rerun.txt",
+    "docs/auto-execute/logs/T11/verify-feishu-current.txt",
+    "docs/auto-execute/logs/T11/secret-guard-current.txt",
+    "docs/auto-execute/logs/T11/secret-guard-current-rerun.txt"
+  ],
+  "changed_files": [
+    "scripts/acceptance/secret_guard.py",
+    "docs/auto-execute/results/T11.json",
+    "docs/auto-execute/latest/T11-HANDOFF.md"
+  ],
+  "json_parse": {
+    "status": "PASS",
+    "command": "python -m json.tool docs/auto-execute/results/T11.json",
+    "log": "docs/auto-execute/logs/T11/T11-json-parse.txt"
+  }
+}

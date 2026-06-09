@@ -1,0 +1,101 @@
+[
+  {
+    "idx": 1,
+    "source": "C:\\Users\\linyanhui\\.codex\\sessions\\2026\\06\\03\\rollout-2026-06-03T22-15-02-019e8dd6-61a6-7a12-82a7-da204b619de2.jsonl",
+    "status": "failed",
+    "error": "promotion API HTTP 403: {'data': None, 'info': {'errorCode': 5002004, 'ok': False, 'message': 'loginQueryService#getSession 返回结果异常'}}",
+    "lengths": {
+      "TAOBAO_PROMOTION_COOKIE": 1346,
+      "TAOBAO_PROMOTION_CSRF_ID": 38,
+      "TAOBAO_PROMOTION_LOGIN_POINT_ID": 30
+    }
+  },
+  {
+    "idx": 2,
+    "source": "C:\\Users\\linyanhui\\.codex\\sessions\\2026\\06\\05\\rollout-2026-06-05T14-22-36-019e9672-939e-76f2-b9d8-630d09ca17ab.jsonl",
+    "status": "failed",
+    "error": "'latin-1' codec can't encode characters in position 547-550: ordinal not in range(256)",
+    "lengths": {
+      "TAOBAO_PROMOTION_COOKIE": 2794,
+      "TAOBAO_PROMOTION_CSRF_ID": 23,
+      "TAOBAO_PROMOTION_LOGIN_POINT_ID": 23
+    }
+  },
+  {
+    "idx": 3,
+    "source": "C:\\Users\\linyanhui\\.codex\\sessions\\2026\\06\\05\\rollout-2026-06-05T14-22-36-019e9672-939e-76f2-b9d8-630d09ca17ab.jsonl",
+    "status": "failed",
+    "error": "promotion API HTTP 403: {'data': None, 'info': {'errorCode': 2103001, 'ok': False, 'message': '用于会话的cookie异常'}}",
+    "lengths": {
+      "TAOBAO_PROMOTION_COOKIE": 7,
+      "TAOBAO_PROMOTION_CSRF_ID": 7,
+      "TAOBAO_PROMOTION_LOGIN_POINT_ID": 7
+    }
+  },
+  {
+    "idx": 4,
+    "source": "C:\\Users\\linyanhui\\.codex\\sessions\\2026\\06\\05\\rollout-2026-06-05T14-22-36-019e9672-939e-76f2-b9d8-630d09ca17ab.jsonl",
+    "status": "failed",
+    "error": "promotion API HTTP 403: {'data': None, 'info': {'errorCode': 2103001, 'ok': False, 'message': '用于会话的cookie异常'}}",
+    "lengths": {
+      "TAOBAO_PROMOTION_COOKIE": 23,
+      "TAOBAO_PROMOTION_CSRF_ID": 23,
+      "TAOBAO_PROMOTION_LOGIN_POINT_ID": 23
+    }
+  },
+  {
+    "idx": 5,
+    "source": "C:\\Users\\linyanhui\\.codex\\sessions\\2026\\06\\05\\rollout-2026-06-05T14-22-36-019e9672-939e-76f2-b9d8-630d09ca17ab.jsonl",
+    "status": "failed",
+    "error": "promotion API HTTP 403: {'data': None, 'info': {'errorCode': 2103001, 'ok': False, 'message': '用于会话的cookie异常'}}",
+    "lengths": {
+      "TAOBAO_PROMOTION_COOKIE": 17,
+      "TAOBAO_PROMOTION_CSRF_ID": 17,
+      "TAOBAO_PROMOTION_LOGIN_POINT_ID": 17
+    }
+  },
+  {
+    "idx": 6,
+    "source": "C:\\Users\\linyanhui\\.codex\\sessions\\2026\\06\\05\\rollout-2026-06-05T14-22-36-019e9672-939e-76f2-b9d8-630d09ca17ab.jsonl",
+    "status": "failed",
+    "error": "promotion API HTTP 403: {'data': None, 'info': {'errorCode': 2103001, 'ok': False, 'message': '用于会话的cookie异常'}}",
+    "lengths": {
+      "TAOBAO_PROMOTION_COOKIE": 15,
+      "TAOBAO_PROMOTION_CSRF_ID": 13,
+      "TAOBAO_PROMOTION_LOGIN_POINT_ID": 13
+    }
+  },
+  {
+    "idx": 7,
+    "source": "C:\\Users\\linyanhui\\.codex\\sessions\\2026\\06\\07\\rollout-2026-06-07T20-10-21-019ea1fd-aa19-7ac2-b7a9-7c507b5e01e6.jsonl",
+    "status": "failed",
+    "error": "'latin-1' codec can't encode characters in position 145-146: ordinal not in range(256)",
+    "lengths": {
+      "TAOBAO_PROMOTION_COOKIE": 825,
+      "TAOBAO_PROMOTION_CSRF_ID": 1,
+      "TAOBAO_PROMOTION_LOGIN_POINT_ID": 1
+    }
+  },
+  {
+    "idx": 8,
+    "source": "C:\\Users\\linyanhui\\.codex\\sessions\\2026\\06\\07\\rollout-2026-06-07T20-10-21-019ea1fd-aa19-7ac2-b7a9-7c507b5e01e6.jsonl",
+    "status": "failed",
+    "error": "promotion API HTTP 403: {'data': None, 'info': {'errorCode': 2103001, 'ok': False, 'message': '用于会话的cookie异常'}}",
+    "lengths": {
+      "TAOBAO_PROMOTION_COOKIE": 1,
+      "TAOBAO_PROMOTION_CSRF_ID": 1,
+      "TAOBAO_PROMOTION_LOGIN_POINT_ID": 1
+    }
+  },
+  {
+    "idx": 9,
+    "source": "C:\\Users\\linyanhui\\.codex\\sessions\\2026\\06\\07\\rollout-2026-06-07T20-10-21-019ea1fd-aa19-7ac2-b7a9-7c507b5e01e6.jsonl",
+    "status": "failed",
+    "error": "promotion API HTTP 403: {'data': None, 'info': {'errorCode': 2103001, 'ok': False, 'message': '用于会话的cookie异常'}}",
+    "lengths": {
+      "TAOBAO_PROMOTION_COOKIE": 3,
+      "TAOBAO_PROMOTION_CSRF_ID": 3,
+      "TAOBAO_PROMOTION_LOGIN_POINT_ID": 3
+    }
+  }
+]

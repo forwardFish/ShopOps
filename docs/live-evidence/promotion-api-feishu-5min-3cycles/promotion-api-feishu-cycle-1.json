@@ -1,0 +1,22 @@
+{
+  "cycle": 1,
+  "captured_at": "2026-06-03 23:07:20",
+  "query_date": "2026-06-03",
+  "api_cost": 3311.86,
+  "api_fields": {
+    "charge": 3311.860860000021,
+    "adPv": 32847,
+    "click": 1405,
+    "roi": 3.1127515423458743,
+    "alipayInshopAmt": 10309.0
+  },
+  "feishu_record_id": "recvluFovNtymJ",
+  "feishu_unique_key": "taobao_shop_001_tuiguangcenter_202606032307",
+  "feishu_cost": "3311.86",
+  "matched": true,
+  "raw_status": {
+    "http_shape": "info.data.list",
+    "info_ok": true,
+    "message": null
+  }
+}

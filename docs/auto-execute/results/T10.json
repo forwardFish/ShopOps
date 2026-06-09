@@ -1,0 +1,61 @@
+{
+  "task_pack_id": "shopops-goal-2026-06-03",
+  "task_id": "T10",
+  "status": "BLOCKED_BY_ENVIRONMENT",
+  "evidence": [
+    {
+      "type": "implementation",
+      "status": "PASS",
+      "summary": "Repaired operator README with local run, daily report, Windows runbook, environment boundary, and safety instructions.",
+      "path": "README.md"
+    },
+    {
+      "type": "configuration_template",
+      "status": "PASS",
+      "summary": "Repaired .env.example with crawler/Qianniu local defaults, Feishu table keys, Chinese display names, pending replay path, and daily report time.",
+      "path": ".env.example"
+    },
+    {
+      "type": "pytest",
+      "status": "PASS",
+      "command": "python -m pytest -q -p no:cacheprovider --basetemp docs\\auto-execute\\logs\\T10\\pytest-tmp-rerun tests\\test_alerts_task_log_daily_report.py tests\\test_storage_and_scheduler.py",
+      "summary": "10 passed in 0.89s",
+      "log": "docs/auto-execute/logs/T10/pytest-focused-rerun.txt"
+    },
+    {
+      "type": "local_feishu_daily_report_proof",
+      "status": "PASS",
+      "summary": "Local Feishu double contains one daily_report row after two sends for unique_key taobao_shop_001_20260602, proving upsert prevents duplicates locally.",
+      "path": "docs/auto-execute/external-data/T10/daily-report-local-proof.json"
+    },
+    {
+      "type": "environment_probe",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "summary": "No live Qianniu CDP response and no Feishu credentials/table IDs were present in this Codex surface.",
+      "path": "docs/auto-execute/logs/T10/environment-probe.json"
+    },
+    {
+      "type": "verification_log",
+      "status": "PASS_WITH_LIMITATION",
+      "path": "docs/auto-execute/logs/T10/verification.txt"
+    },
+    {
+      "type": "json_parse",
+      "status": "PASS",
+      "command": "python -m json.tool docs\\auto-execute\\results\\T10.json",
+      "log": "docs/auto-execute/logs/T10/T10-json-parse.txt"
+    }
+  ],
+  "blockers": [
+    {
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "scope": "live Feishu daily_report/task_run_log write-readback",
+      "detail": "FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_APP_TOKEN, FEISHU_TABLE_DAILY_REPORT, and FEISHU_TABLE_TASK_LOG were not available in the environment, so real Feishu Bitable daily report upsert/readback could not be attempted."
+    },
+    {
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "scope": "live Qianniu Windows CDP verification",
+      "detail": "http://127.0.0.1:9222/json/version was unavailable from this surface, so no live logged-in Qianniu PC session evidence could be collected."
+    }
+  ]
+}

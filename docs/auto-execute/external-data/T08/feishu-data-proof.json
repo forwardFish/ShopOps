@@ -1,0 +1,106 @@
+{
+  "blockers": [
+    "缺少真实 Feishu Bitable 凭据或表 ID，无法执行真实写入、upsert 和读回校验。",
+    "缺少可用的真实千牛 PC CDP 会话：CDP HTTP 状态异常：502"
+  ],
+  "counts_after_first": {
+    "metrics_10min": 1,
+    "monitor_snapshot": 1,
+    "orders_raw": 2,
+    "promotion_snapshot": 1,
+    "task_run_log": 1
+  },
+  "counts_after_second": {
+    "metrics_10min": 2,
+    "monitor_snapshot": 1,
+    "orders_raw": 2,
+    "promotion_snapshot": 1,
+    "task_run_log": 2
+  },
+  "environment_probe": {
+    "feishu_required_env_present": {
+      "FEISHU_APP_ID": false,
+      "FEISHU_APP_SECRET": false,
+      "FEISHU_APP_TOKEN": false,
+      "FEISHU_TABLE_METRICS_10MIN": false,
+      "FEISHU_TABLE_MONITOR_SNAPSHOT": false,
+      "FEISHU_TABLE_ORDERS_RAW": false,
+      "FEISHU_TABLE_PROMOTION_SNAPSHOT": false,
+      "FEISHU_TABLE_TASK_LOG": false
+    },
+    "missing_feishu_env": [
+      "FEISHU_APP_ID",
+      "FEISHU_APP_SECRET",
+      "FEISHU_APP_TOKEN",
+      "FEISHU_TABLE_MONITOR_SNAPSHOT",
+      "FEISHU_TABLE_ORDERS_RAW",
+      "FEISHU_TABLE_PROMOTION_SNAPSHOT",
+      "FEISHU_TABLE_METRICS_10MIN",
+      "FEISHU_TABLE_TASK_LOG"
+    ],
+    "qianniu_cdp_available": false,
+    "qianniu_cdp_message": "CDP HTTP 状态异常：502",
+    "qianniu_cdp_url": "http://127.0.0.1:9222",
+    "taobao_api_credentials_block_current_crawler_scope": false,
+    "taobao_api_credentials_present": {
+      "TAOBAO_APP_KEY": false,
+      "TAOBAO_APP_SECRET": false,
+      "TAOBAO_SESSION_KEY": false
+    }
+  },
+  "field_mapping_ok": true,
+  "local_verdict": "PASS",
+  "monitor_snapshot_sample": {
+    "unique_key": "taobao_shop_001_202606031127",
+    "今日成交额(元)": 454.5,
+    "今日订单数": 2,
+    "实时ROI": 3.6817,
+    "店铺ID": "taobao_shop_001",
+    "店铺名称": "淘宝店铺A",
+    "总推广消耗(元)": 123.45,
+    "推广中心花费(元)": 123.45,
+    "推广来源": "qianniu_pc",
+    "数据状态": "normal",
+    "是否告警": false,
+    "获客成本(元)": 61.725,
+    "订单来源": "crawler",
+    "采集时间": "2026-06-03 11:27:27",
+    "错误信息": null
+  },
+  "no_failure_as_zero": true,
+  "pending_after_replay": [],
+  "pending_before_replay": [
+    {
+      "created_at": "2026-06-03 11:27:27",
+      "fields": {
+        "unique_key": "taobao_shop_001_202606031127",
+        "今日成交额(元)": 454.5,
+        "今日订单数": 2,
+        "实时ROI": 3.6817,
+        "店铺ID": "taobao_shop_001",
+        "店铺名称": "淘宝店铺A",
+        "总推广消耗(元)": 123.45,
+        "推广中心花费(元)": 123.45,
+        "推广来源": "qianniu_pc",
+        "数据状态": "normal",
+        "是否告警": false,
+        "获客成本(元)": 61.725,
+        "订单来源": "crawler",
+        "采集时间": "2026-06-03 11:27:27",
+        "错误信息": null
+      },
+      "reason": "local_fail_table",
+      "table": "monitor_snapshot"
+    }
+  ],
+  "pending_cache_replay_ok": true,
+  "real_external_verification": "not_attempted_environment_blocked",
+  "scope": {
+    "order_source": "crawler",
+    "promotion_source": "qianniu_pc",
+    "pure_pass_requires_real_feishu_and_qianniu_evidence": true,
+    "taobao_open_platform_api_required_for_current_scope": false
+  },
+  "upsert_ok": true,
+  "verdict": "BLOCKED_BY_ENVIRONMENT"
+}

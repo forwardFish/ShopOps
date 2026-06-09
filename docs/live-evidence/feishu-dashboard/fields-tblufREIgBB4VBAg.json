@@ -1,0 +1,152 @@
+[
+  {
+    "field_id": "fldigwfQhV",
+    "field_name": "unique_key",
+    "type": 1
+  },
+  {
+    "field_id": "fldvkbB4D2",
+    "field_name": "统计范围",
+    "type": 1
+  },
+  {
+    "field_id": "fldXHhxMQu",
+    "field_name": "平台",
+    "type": 1
+  },
+  {
+    "field_id": "fldjOy6otw",
+    "field_name": "汇总key",
+    "type": 20
+  },
+  {
+    "field_id": "fld5C8qsdt",
+    "field_name": "订单数",
+    "type": 20
+  },
+  {
+    "field_id": "fldAwlFptn",
+    "field_name": "销售额",
+    "type": 20
+  },
+  {
+    "field_id": "fldsEAQMAN",
+    "field_name": "退款金额",
+    "type": 20
+  },
+  {
+    "field_id": "fldlI3pcd8",
+    "field_name": "有效销售额",
+    "type": 20
+  },
+  {
+    "field_id": "fldZTvYuuP",
+    "field_name": "达人佣金",
+    "type": 20
+  },
+  {
+    "field_id": "fldpM4BSVo",
+    "field_name": "投流记录数",
+    "type": 20
+  },
+  {
+    "field_id": "fldxFCBN2G",
+    "field_name": "投流消耗",
+    "type": 20
+  },
+  {
+    "field_id": "fldjCE1y08",
+    "field_name": "商品成本",
+    "type": 20
+  },
+  {
+    "field_id": "fldiRpNbuJ",
+    "field_name": "运费成本",
+    "type": 20
+  },
+  {
+    "field_id": "fldc61nwRr",
+    "field_name": "平台扣点",
+    "type": 20
+  },
+  {
+    "field_id": "fld0dT1fxF",
+    "field_name": "其他费用",
+    "type": 20
+  },
+  {
+    "field_id": "fldCVpeDgA",
+    "field_name": "已知总投入",
+    "type": 20
+  },
+  {
+    "field_id": "fldzAnnUIN",
+    "field_name": "已知费用后利润",
+    "type": 20
+  },
+  {
+    "field_id": "fldfYwAbaX",
+    "field_name": "投流后毛利",
+    "type": 20
+  },
+  {
+    "field_id": "fld4eVahw0",
+    "field_name": "经营利润估算",
+    "type": 20
+  },
+  {
+    "field_id": "fldNhCtt6c",
+    "field_name": "ROI",
+    "type": 20
+  },
+  {
+    "field_id": "fldCt83r6R",
+    "field_name": "平台ROI",
+    "type": 20
+  },
+  {
+    "field_id": "fldvAgFHP7",
+    "field_name": "已知费用利润率",
+    "type": 20
+  },
+  {
+    "field_id": "fldMrDMXLy",
+    "field_name": "利润率",
+    "type": 20
+  },
+  {
+    "field_id": "fldSaOPpKx",
+    "field_name": "展现",
+    "type": 20
+  },
+  {
+    "field_id": "fldOhDbC5Q",
+    "field_name": "点击",
+    "type": 20
+  },
+  {
+    "field_id": "fld8DVjqkE",
+    "field_name": "数据状态",
+    "type": 20
+  },
+  {
+    "field_id": "fldu8IRsw7",
+    "field_name": "缺失项",
+    "type": 20
+  },
+  {
+    "field_id": "fldY3MqIrL",
+    "field_name": "汇总时间",
+    "type": 20
+  },
+  {
+    "field_id": "fldLKgVYFG",
+    "field_name": "实际卖出数量",
+    "type": 20
+  },
+  {
+    "field_id": "fldCN89L4H",
+    "field_name": "??????",
+    "type": 20
+  }
+]

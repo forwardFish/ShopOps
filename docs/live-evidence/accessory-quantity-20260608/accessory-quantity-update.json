@@ -1,0 +1,169 @@
+{
+  "app_token": "KhbEbksLbauw0fssL6EcKAnlnOe",
+  "app_url": "https://my.feishu.cn/base/KhbEbksLbauw0fssL6EcKAnlnOe",
+  "mode": "accessory_quantity_goal",
+  "readback": {
+    "tbl0gBiMcAKMCcwI": {
+      "accessory_field_type": 3,
+      "accessory_mismatches": [],
+      "accessory_samples": [],
+      "flag_counts": {
+        "blank": 0,
+        "否": 8363,
+        "是": 0
+      },
+      "has_accessory_field": true,
+      "name": "订单明细-天猫",
+      "qty_formula_property": {
+        "formatter": "0",
+        "formula_expression": "IF(bitable::$table[tbl0gBiMcAKMCcwI].$field[fldko4wI3X]=\"是\",0,IFBLANK(bitable::$table[tbl0gBiMcAKMCcwI].$field[fld03HXa6s],0))"
+      }
+    },
+    "tblFI9ZNPzrjR6Jm": {
+      "accessory_field_type": 3,
+      "accessory_mismatches": [],
+      "accessory_samples": [],
+      "flag_counts": {
+        "blank": 0,
+        "否": 4815,
+        "是": 0
+      },
+      "has_accessory_field": true,
+      "name": "订单明细-拼多多",
+      "qty_formula_property": {
+        "formatter": "0",
+        "formula_expression": "IF(bitable::$table[tblFI9ZNPzrjR6Jm].$field[fldLkRHN9J]=\"是\",0,IFBLANK(bitable::$table[tblFI9ZNPzrjR6Jm].$field[fldb6M4YPR],0))"
+      }
+    },
+    "tblFlMuPnVEn8qkw": {
+      "accessory_field_type": 3,
+      "accessory_mismatches": [],
+      "accessory_samples": [],
+      "flag_counts": {
+        "blank": 0,
+        "否": 421,
+        "是": 0
+      },
+      "has_accessory_field": true,
+      "name": "订单明细-视频号",
+      "qty_formula_property": {
+        "formatter": "0",
+        "formula_expression": "IF(bitable::$table[tblFlMuPnVEn8qkw].$field[fldzQL9bYP]=\"是\",0,IFBLANK(bitable::$table[tblFlMuPnVEn8qkw].$field[fldvmtabkr],0))"
+      }
+    },
+    "tblTbbFkEepZAGru": {
+      "accessory_field_type": 3,
+      "accessory_mismatches": [
+        {
+          "flag": null,
+          "product": "洁面乳打泡机配件; 趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+          "qty_formula_value": 0,
+          "record_id": "recvlXV8daNtrE"
+        }
+      ],
+      "accessory_samples": [
+        {
+          "flag": "是",
+          "product": "洁面乳打泡机配件",
+          "qty_formula_value": 0,
+          "record_id": "recvlQOvx87TIA"
+        },
+        {
+          "flag": "是",
+          "product": "洁面乳打泡机配件",
+          "qty_formula_value": 0,
+          "record_id": "recvlQOwSUVgFL"
+        },
+        {
+          "flag": "是",
+          "product": "洁面乳打泡机配件",
+          "qty_formula_value": 0,
+          "record_id": "recvlQOwSUNumf"
+        },
+        {
+          "flag": "是",
+          "product": "洁面乳打泡机配件",
+          "qty_formula_value": 0,
+          "record_id": "recvlQOy2S7nwA"
+        },
+        {
+          "flag": "是",
+          "product": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器; 洁面乳打泡机配件",
+          "qty_formula_value": 0,
+          "record_id": "recvlQOy2SgpLg"
+        },
+        {
+          "flag": "是",
+          "product": "洁面乳打泡机配件",
+          "qty_formula_value": 0,
+          "record_id": "recvlQODCCAKXw"
+        },
+        {
+          "flag": "是",
+          "product": "洁面乳打泡机配件",
+          "qty_formula_value": 0,
+          "record_id": "recvlQODCCfX80"
+        },
+        {
+          "flag": "是",
+          "product": "洁面乳打泡机配件; 趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+          "qty_formula_value": 0,
+          "record_id": "recvlQOF72tUZE"
+        },
+        {
+          "flag": "是",
+          "product": "洁面乳打泡机配件",
+          "qty_formula_value": 0,
+          "record_id": "recvlQOZet1Iwg"
+        },
+        {
+          "flag": "是",
+          "product": "洁面乳打泡机配件",
+          "qty_formula_value": 0,
+          "record_id": "recvlVL7Eed8Bt"
+        }
+      ],
+      "flag_counts": {
+        "blank": 1,
+        "否": 9866,
+        "是": 12
+      },
+      "has_accessory_field": true,
+      "name": "订单明细-抖音",
+      "qty_formula_property": {
+        "formatter": "0",
+        "formula_expression": "IF(bitable::$table[tblTbbFkEepZAGru].$field[fldTBg3njr]=\"是\",0,IFBLANK(bitable::$table[tblTbbFkEepZAGru].$field[fldYZKzNZg],0))"
+      }
+    }
+  },
+  "updated": {
+    "tbl0gBiMcAKMCcwI": {
+      "accessory_rows_by_product_name": 0,
+      "name": "订单明细-天猫",
+      "non_accessory_rows": 8363,
+      "records": 8363,
+      "updated_flag_rows": 8363
+    },
+    "tblFI9ZNPzrjR6Jm": {
+      "accessory_rows_by_product_name": 0,
+      "name": "订单明细-拼多多",
+      "non_accessory_rows": 4815,
+      "records": 4815,
+      "updated_flag_rows": 4815
+    },
+    "tblFlMuPnVEn8qkw": {
+      "accessory_rows_by_product_name": 0,
+      "name": "订单明细-视频号",
+      "non_accessory_rows": 421,
+      "records": 421,
+      "updated_flag_rows": 421
+    },
+    "tblTbbFkEepZAGru": {
+      "accessory_rows_by_product_name": 12,
+      "name": "订单明细-抖音",
+      "non_accessory_rows": 9866,
+      "records": 9878,
+      "updated_flag_rows": 9878
+    }
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "task_pack_id": "shopops-goal-2026-06-03",
+  "task_id": "T04",
+  "task_name": "qianniu-order-center-live-crawler",
+  "status": "BLOCKED_BY_ENVIRONMENT",
+  "summary": "T04 executed only the Qianniu order-center crawler task boundary. Local parser, scroll/pagination evidence shape, orders_raw persistence, monitor_snapshot aggregation, task_run_log write, and no-zero failure handling are proven. A live Qianniu PC CDP order-center PASS is not claimed because the current CDP probe returned HTTP 502 at http://127.0.0.1:9222/json/version.",
+  "requirements": [
+    "REQ-001",
+    "REQ-002",
+    "REQ-010"
+  ],
+  "evidence": [
+    {
+      "type": "local_parser_storage_proof",
+      "path": "docs/auto-execute/external-data/T04/order-crawler-local-proof.json",
+      "status": "PASS_LOCAL",
+      "summary": "Parsed two crawler-source order rows, preserved order fields, marked pagination_or_scroll true with four scroll iterations, wrote two orders_raw rows, wrote one monitor_snapshot row, wrote one task_run_log row, and kept failure metrics as null rather than numeric 0."
+    },
+    {
+      "type": "targeted_tests",
+      "command": "python -m pytest tests/test_taobao_order_crawler.py tests/test_storage_and_scheduler.py -q -p no:cacheprovider --basetemp .\\.pytest-tmp\\T04-current",
+      "path": "docs/auto-execute/logs/T04/pytest-order-crawler.txt",
+      "status": "PASS",
+      "summary": "10 passed in 0.26s"
+    },
+    {
+      "type": "full_regression_tests",
+      "command": "python -m pytest -q -p no:cacheprovider --basetemp .\\.pytest-tmp\\T04-full",
+      "path": "docs/auto-execute/logs/T04/pytest-full.txt",
+      "status": "PASS",
+      "summary": "25 passed in 0.62s"
+    },
+    {
+      "type": "live_qianniu_cdp_probe",
+      "path": "docs/auto-execute/logs/T04/qianniu-cdp-probe.json",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "summary": "GET http://127.0.0.1:9222/json/version returned HTTP 502, so live Qianniu PC CDP order-center collection could not be verified."
+    },
+    {
+      "type": "upstream_dependency",
+      "path": "docs/auto-execute/results/T03.json",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "summary": "T03 current task-pack result exists and proves local storage behavior while failing closed for live Feishu credentials/table IDs/SDK."
+    },
+    {
+      "type": "handoff",
+      "path": "docs/auto-execute/latest/T04-HANDOFF.md",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "summary": "Current T04 handoff for task_pack_id shopops-goal-2026-06-03."
+    }
+  ],
+  "blockers": [
+    {
+      "id": "T04-QIANNIU-CDP-LIVE",
+      "classification": "BLOCKED_BY_ENVIRONMENT",
+      "status": "OPEN",
+      "summary": "Live Qianniu PC order-center collection cannot be verified because the CDP endpoint at http://127.0.0.1:9222/json/version returned HTTP 502.",
+      "evidence": "docs/auto-execute/logs/T04/qianniu-cdp-probe.json"
+    },
+    {
+      "id": "T04-FEISHU-ORDERS-MONITOR-READBACK",
+      "classification": "BLOCKED_BY_ENVIRONMENT",
+      "status": "OPEN",
+      "summary": "Real Feishu orders_raw and monitor_snapshot write/readback cannot be upgraded to live proof because T03 established missing Feishu credentials/table IDs/SDK in this environment.",
+      "evidence": "docs/auto-execute/results/T03.json"
+    }
+  ],
+  "log_paths": [
+    "docs/auto-execute/logs/T04/pytest-order-crawler.txt",
+    "docs/auto-execute/logs/T04/pytest-full.txt",
+    "docs/auto-execute/logs/T04/local-proof-generation.txt",
+    "docs/auto-execute/logs/T04/qianniu-cdp-probe.json",
+    "docs/auto-execute/blockers.md",
+    "docs/auto-execute/repair-queue.md"
+  ],
+  "changed_files": [
+    "docs/auto-execute/results/T04.json",
+    "docs/auto-execute/latest/T04-HANDOFF.md",
+    "docs/auto-execute/external-data/T04/order-crawler-local-proof.json",
+    "docs/auto-execute/logs/T04/pytest-order-crawler.txt",
+    "docs/auto-execute/logs/T04/pytest-full.txt",
+    "docs/auto-execute/logs/T04/local-proof-generation.txt",
+    "docs/auto-execute/logs/T04/qianniu-cdp-probe.json"
+  ],
+  "security": {
+    "secrets_touched": false,
+    "external_side_effects": false,
+    "live_qianniu_pass_claimed": false,
+    "ordinary_browser_or_qianniu_web_claimed": false,
+    "ad_mutation_performed": false,
+    "buyer_pii_persisted": false
+  },
+  "not_executed": [
+    "No T05 or later task was executed.",
+    "No live Qianniu PASS was claimed without a usable CDP session.",
+    "No Feishu live write/readback PASS was claimed without credentials/table IDs/SDK.",
+    "No product source changes were required after local verification passed."
+  ],
+  "next_task": "T05-taobao-order-api-future-boundary"
+}

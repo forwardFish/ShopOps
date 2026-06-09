@@ -1,0 +1,255 @@
+{
+  "天猫": {
+    "duplicate_order_count": 0,
+    "duplicate_order_extra_rows": 0,
+    "duplicate_order_samples": {},
+    "duplicate_unique_key_count": 0,
+    "duplicate_unique_key_extra_rows": 0,
+    "duplicate_unique_key_samples": {},
+    "noncanonical_samples": [
+      {
+        "expected_unique_key": "tmall_5119104890211213816",
+        "order_no": "5119104890211213816",
+        "record_id": "recvlQxD7bzurR",
+        "unique_key": "taobao_taobao_shop_001_5119104890211213816"
+      },
+      {
+        "expected_unique_key": "tmall_5118888423729006923",
+        "order_no": "5118888423729006923",
+        "record_id": "recvlQxD7bvU1p",
+        "unique_key": "taobao_taobao_shop_001_5118888423729006923"
+      },
+      {
+        "expected_unique_key": "tmall_5119276500293185706",
+        "order_no": "5119276500293185706",
+        "record_id": "recvlQxD7bTFop",
+        "unique_key": "taobao_taobao_shop_001_5119276500293185706"
+      },
+      {
+        "expected_unique_key": "tmall_3306284475923049469",
+        "order_no": "3306284475923049469",
+        "record_id": "recvlQxD7bThfn",
+        "unique_key": "taobao_taobao_shop_001_3306284475923049469"
+      },
+      {
+        "expected_unique_key": "tmall_5119075730022112032",
+        "order_no": "5119075730022112032",
+        "record_id": "recvlQxD7bYrXZ",
+        "unique_key": "taobao_taobao_shop_001_5119075730022112032"
+      },
+      {
+        "expected_unique_key": "tmall_3306305678217007981",
+        "order_no": "3306305678217007981",
+        "record_id": "recvlQxD7bsBVu",
+        "unique_key": "taobao_taobao_shop_001_3306305678217007981"
+      },
+      {
+        "expected_unique_key": "tmall_5118860739179049333",
+        "order_no": "5118860739179049333",
+        "record_id": "recvlQxD7bWFmb",
+        "unique_key": "taobao_taobao_shop_001_5118860739179049333"
+      },
+      {
+        "expected_unique_key": "tmall_3306749485232004755",
+        "order_no": "3306749485232004755",
+        "record_id": "recvlQxD7bAnpp",
+        "unique_key": "taobao_taobao_shop_001_3306749485232004755"
+      },
+      {
+        "expected_unique_key": "tmall_3306296498163119390",
+        "order_no": "3306296498163119390",
+        "record_id": "recvlQxD7b4AwR",
+        "unique_key": "taobao_taobao_shop_001_3306296498163119390"
+      },
+      {
+        "expected_unique_key": "tmall_3306743221517130580",
+        "order_no": "3306743221517130580",
+        "record_id": "recvlQxD7buCkU",
+        "unique_key": "taobao_taobao_shop_001_3306743221517130580"
+      }
+    ],
+    "noncanonical_unique_key_rows": 8145,
+    "total_records": 8145,
+    "unique_orders": 8145
+  },
+  "抖音": {
+    "duplicate_order_count": 84,
+    "duplicate_order_extra_rows": 84,
+    "duplicate_order_samples": {
+      "331017": 2,
+      "331020": 2,
+      "331021": 2,
+      "331022": 2,
+      "331023": 2,
+      "331024": 2,
+      "331025": 2,
+      "331029": 2,
+      "331030": 2,
+      "331032": 2
+    },
+    "duplicate_unique_key_count": 82,
+    "duplicate_unique_key_extra_rows": 82,
+    "duplicate_unique_key_samples": {
+      "jushuitan_21117346_331017": 2,
+      "jushuitan_21117346_331020": 2,
+      "jushuitan_21117346_331021": 2,
+      "jushuitan_21117346_331022": 2,
+      "jushuitan_21117346_331023": 2,
+      "jushuitan_21117346_331024": 2,
+      "jushuitan_21117346_331025": 2,
+      "jushuitan_21117346_331029": 2,
+      "jushuitan_21117346_331030": 2,
+      "jushuitan_21117346_331032": 2
+    },
+    "noncanonical_samples": [
+      {
+        "expected_unique_key": "douyin_330570",
+        "order_no": "330570",
+        "record_id": "recvlQykWHHoAC",
+        "unique_key": "jushuitan_21117346_330570"
+      },
+      {
+        "expected_unique_key": "douyin_333174",
+        "order_no": "333174",
+        "record_id": "recvlQykWHjvqQ",
+        "unique_key": "jushuitan_21117346_333174"
+      },
+      {
+        "expected_unique_key": "douyin_333117",
+        "order_no": "333117",
+        "record_id": "recvlQykWHEgMF",
+        "unique_key": "jushuitan_21117346_333117"
+      },
+      {
+        "expected_unique_key": "douyin_332980",
+        "order_no": "332980",
+        "record_id": "recvlQykWH4lOK",
+        "unique_key": "jushuitan_21117346_332980"
+      },
+      {
+        "expected_unique_key": "douyin_332979",
+        "order_no": "332979",
+        "record_id": "recvlQykWH5G3H",
+        "unique_key": "jushuitan_21117346_332979"
+      },
+      {
+        "expected_unique_key": "douyin_332928",
+        "order_no": "332928",
+        "record_id": "recvlQykWHZJGI",
+        "unique_key": "jushuitan_21117346_332928"
+      },
+      {
+        "expected_unique_key": "douyin_332922",
+        "order_no": "332922",
+        "record_id": "recvlQykWHQGrh",
+        "unique_key": "jushuitan_21117346_332922"
+      },
+      {
+        "expected_unique_key": "douyin_332789",
+        "order_no": "332789",
+        "record_id": "recvlQykWH5MyG",
+        "unique_key": "jushuitan_21117346_332789"
+      },
+      {
+        "expected_unique_key": "douyin_332783",
+        "order_no": "332783",
+        "record_id": "recvlQykWHJZaI",
+        "unique_key": "jushuitan_21117346_332783"
+      },
+      {
+        "expected_unique_key": "douyin_333642",
+        "order_no": "333642",
+        "record_id": "recvlQykWH4qe7",
+        "unique_key": "jushuitan_21117346_333642"
+      }
+    ],
+    "noncanonical_unique_key_rows": 14769,
+    "total_records": 14769,
+    "unique_orders": 14685
+  },
+  "拼多多": {
+    "duplicate_order_count": 0,
+    "duplicate_order_extra_rows": 0,
+    "duplicate_order_samples": {},
+    "duplicate_unique_key_count": 0,
+    "duplicate_unique_key_extra_rows": 0,
+    "duplicate_unique_key_samples": {},
+    "noncanonical_samples": [],
+    "noncanonical_unique_key_rows": 0,
+    "total_records": 4768,
+    "unique_orders": 4768
+  },
+  "视频号": {
+    "duplicate_order_count": 0,
+    "duplicate_order_extra_rows": 0,
+    "duplicate_order_samples": {},
+    "duplicate_unique_key_count": 0,
+    "duplicate_unique_key_extra_rows": 0,
+    "duplicate_unique_key_samples": {},
+    "noncanonical_samples": [
+      {
+        "expected_unique_key": "shipinhao_338639",
+        "order_no": "338639",
+        "record_id": "recvlQyYeJ0u2R",
+        "unique_key": "jushuitan_21117363_338639"
+      },
+      {
+        "expected_unique_key": "shipinhao_338638",
+        "order_no": "338638",
+        "record_id": "recvlQyYeJLUTJ",
+        "unique_key": "jushuitan_21117363_338638"
+      },
+      {
+        "expected_unique_key": "shipinhao_338637",
+        "order_no": "338637",
+        "record_id": "recvlQyYeJj4sV",
+        "unique_key": "jushuitan_21117363_338637"
+      },
+      {
+        "expected_unique_key": "shipinhao_338636",
+        "order_no": "338636",
+        "record_id": "recvlQyYeJCFVA",
+        "unique_key": "jushuitan_21117363_338636"
+      },
+      {
+        "expected_unique_key": "shipinhao_338634",
+        "order_no": "338634",
+        "record_id": "recvlQyYeJPXCQ",
+        "unique_key": "jushuitan_21117363_338634"
+      },
+      {
+        "expected_unique_key": "shipinhao_338631",
+        "order_no": "338631",
+        "record_id": "recvlQyYeJzdhC",
+        "unique_key": "jushuitan_21117363_338631"
+      },
+      {
+        "expected_unique_key": "shipinhao_338630",
+        "order_no": "338630",
+        "record_id": "recvlQyYeJ9BIy",
+        "unique_key": "jushuitan_21117363_338630"
+      },
+      {
+        "expected_unique_key": "shipinhao_338629",
+        "order_no": "338629",
+        "record_id": "recvlQyYeJPcpW",
+        "unique_key": "jushuitan_21117363_338629"
+      },
+      {
+        "expected_unique_key": "shipinhao_338628",
+        "order_no": "338628",
+        "record_id": "recvlQyYeJ42Vw",
+        "unique_key": "jushuitan_21117363_338628"
+      },
+      {
+        "expected_unique_key": "shipinhao_338627",
+        "order_no": "338627",
+        "record_id": "recvlQyYeJdZ3L",
+        "unique_key": "jushuitan_21117363_338627"
+      }
+    ],
+    "noncanonical_unique_key_rows": 369,
+    "total_records": 369,
+    "unique_orders": 369
+  }
+}

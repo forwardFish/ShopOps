@@ -1,0 +1,57 @@
+[
+  {
+    "统计日期": "2026-06-07",
+    "平台": "天猫",
+    "销售额": 13182,
+    "退款金额": 1352,
+    "有效销售额": 13182,
+    "订单数": 90,
+    "record_id": "recvlP4RVLfkHa",
+    "sales_minus_refund": 11830.0,
+    "effective_gap_vs_sales_minus_refund": 1352.0
+  },
+  {
+    "统计日期": "2026-06-07",
+    "平台": "抖音",
+    "销售额": 7386.45,
+    "退款金额": 652.33,
+    "有效销售额": 6734.12,
+    "订单数": 43,
+    "record_id": "recvlP4RVLomF4",
+    "sales_minus_refund": 6734.12,
+    "effective_gap_vs_sales_minus_refund": 0.0
+  },
+  {
+    "统计日期": "2026-06-07",
+    "平台": "拼多多",
+    "销售额": 90815.0500000002,
+    "退款金额": 0,
+    "有效销售额": 90815.0499999999,
+    "订单数": 481,
+    "record_id": "recvlP4RVLJQaN",
+    "sales_minus_refund": 90815.05,
+    "effective_gap_vs_sales_minus_refund": 0.0
+  },
+  {
+    "统计日期": "2026-06-07",
+    "平台": "视频号",
+    "销售额": 2197,
+    "退款金额": 0,
+    "有效销售额": 2197,
+    "订单数": 11,
+    "record_id": "recvlP4RVLx47R",
+    "sales_minus_refund": 2197.0,
+    "effective_gap_vs_sales_minus_refund": 0.0
+  },
+  {
+    "统计日期": "2026-06-07",
+    "平台": "全平台总计",
+    "销售额": 113580.5,
+    "退款金额": 2004.33,
+    "有效销售额": 112928.17,
+    "订单数": 625,
+    "record_id": "recvlP4RVL8eVE",
+    "sales_minus_refund": 111576.17,
+    "effective_gap_vs_sales_minus_refund": 1352.0
+  }
+]

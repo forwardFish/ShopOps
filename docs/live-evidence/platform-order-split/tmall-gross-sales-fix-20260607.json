@@ -1,0 +1,16 @@
+{
+  "status": "success",
+  "target_table_id": "tbl0gBiMcAKMCcwI",
+  "source_file": "D:\\lyh\\ShopOps\\天猫\\0607\\ExportOrderList26586703454.xlsx",
+  "rows": 8272,
+  "upsert": {
+    "created": 0,
+    "updated": 8272,
+    "saved": 8272
+  },
+  "paid": 1371078.08,
+  "refund": 733283.71,
+  "effective": 637794.37,
+  "sales_minus_refund": 637794.37,
+  "refund_gt_paid_rows": 0
+}

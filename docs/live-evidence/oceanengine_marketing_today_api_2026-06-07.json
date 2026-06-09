@@ -1,0 +1,216 @@
+{
+  "mode": "oceanengine_marketing_today_report_probe",
+  "generated_at": "2026-06-07T10:11:20+08:00",
+  "date": "2026-06-07",
+  "authorized_advertiser_ids": [
+    "1775021907615757",
+    "1860239941640323",
+    "1867141875210348"
+  ],
+  "note": "Read-only OceanEngine marketing report probe. Tokens/secrets excluded.",
+  "calls": [
+    {
+      "name": "refresh_oceanengine_marketing_token",
+      "url": "https://ad.oceanengine.com/open_api/oauth2/refresh_token/",
+      "request_params": {
+        "grant_type": "refresh_token"
+      },
+      "http_status": 200,
+      "ok": true,
+      "response": {
+        "code": 0,
+        "message": "OK"
+      }
+    },
+    {
+      "name": "get_authorized_advertisers",
+      "url": "https://api.oceanengine.com/open_api/oauth2/advertiser/get/",
+      "request_params": {},
+      "http_status": 200,
+      "ok": true,
+      "response": {
+        "code": 0,
+        "message": "OK",
+        "request_id": "20260607101113D1BD6D27B041C7B49AA0",
+        "data": {
+          "list": [
+            {
+              "account_id": 1775021907615757,
+              "account_name": "BP-1775021907615757",
+              "account_role": "CUSTOMER_OPERATOR",
+              "account_type": "CUSTOMER_OPERATOR",
+              "advertiser_id": 1775021907615757,
+              "advertiser_name": "BP-1775021907615757",
+              "advertiser_role": 5,
+              "is_valid": true
+            },
+            {
+              "account_id": 1860239941640323,
+              "account_name": "BP-1860239941640323",
+              "account_role": "CUSTOMER_OPERATOR",
+              "account_type": "CUSTOMER_OPERATOR",
+              "advertiser_id": 1860239941640323,
+              "advertiser_name": "BP-1860239941640323",
+              "advertiser_role": 5,
+              "is_valid": true
+            },
+            {
+              "account_id": 1867141875210348,
+              "account_name": "BP-1867141875210348",
+              "account_role": "CUSTOMER_ADMIN",
+              "account_type": "CUSTOMER_ADMIN",
+              "advertiser_id": 1867141875210348,
+              "advertiser_name": "BP-1867141875210348",
+              "advertiser_role": 2,
+              "is_valid": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "marketing_report_advertiser_1775021907615757",
+      "url": "https://api.oceanengine.com/open_api/v1.0/report/advertiser/get/",
+      "request_params": {
+        "advertiser_id": "1775021907615757",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "fields": "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"convert_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+        "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
+        "page": "1",
+        "page_size": "100"
+      },
+      "http_status": 404,
+      "ok": false,
+      "response": "404 page not found"
+    },
+    {
+      "name": "marketing_report_campaign_1775021907615757",
+      "url": "https://api.oceanengine.com/open_api/v1.0/report/campaign/get/",
+      "request_params": {
+        "advertiser_id": "1775021907615757",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "fields": "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"convert_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+        "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
+        "page": "1",
+        "page_size": "100"
+      },
+      "http_status": 404,
+      "ok": false,
+      "response": "404 page not found"
+    },
+    {
+      "name": "marketing_report_ad_1775021907615757",
+      "url": "https://api.oceanengine.com/open_api/v1.0/report/ad/get/",
+      "request_params": {
+        "advertiser_id": "1775021907615757",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "fields": "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"convert_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+        "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
+        "page": "1",
+        "page_size": "100"
+      },
+      "http_status": 404,
+      "ok": false,
+      "response": "404 page not found"
+    },
+    {
+      "name": "marketing_report_advertiser_1860239941640323",
+      "url": "https://api.oceanengine.com/open_api/v1.0/report/advertiser/get/",
+      "request_params": {
+        "advertiser_id": "1860239941640323",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "fields": "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"convert_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+        "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
+        "page": "1",
+        "page_size": "100"
+      },
+      "http_status": 404,
+      "ok": false,
+      "response": "404 page not found"
+    },
+    {
+      "name": "marketing_report_campaign_1860239941640323",
+      "url": "https://api.oceanengine.com/open_api/v1.0/report/campaign/get/",
+      "request_params": {
+        "advertiser_id": "1860239941640323",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "fields": "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"convert_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+        "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
+        "page": "1",
+        "page_size": "100"
+      },
+      "http_status": 404,
+      "ok": false,
+      "response": "404 page not found"
+    },
+    {
+      "name": "marketing_report_ad_1860239941640323",
+      "url": "https://api.oceanengine.com/open_api/v1.0/report/ad/get/",
+      "request_params": {
+        "advertiser_id": "1860239941640323",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "fields": "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"convert_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+        "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
+        "page": "1",
+        "page_size": "100"
+      },
+      "http_status": 404,
+      "ok": false,
+      "response": "404 page not found"
+    },
+    {
+      "name": "marketing_report_advertiser_1867141875210348",
+      "url": "https://api.oceanengine.com/open_api/v1.0/report/advertiser/get/",
+      "request_params": {
+        "advertiser_id": "1867141875210348",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "fields": "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"convert_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+        "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
+        "page": "1",
+        "page_size": "100"
+      },
+      "http_status": 404,
+      "ok": false,
+      "response": "404 page not found"
+    },
+    {
+      "name": "marketing_report_campaign_1867141875210348",
+      "url": "https://api.oceanengine.com/open_api/v1.0/report/campaign/get/",
+      "request_params": {
+        "advertiser_id": "1867141875210348",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "fields": "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"convert_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+        "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
+        "page": "1",
+        "page_size": "100"
+      },
+      "http_status": 404,
+      "ok": false,
+      "response": "404 page not found"
+    },
+    {
+      "name": "marketing_report_ad_1867141875210348",
+      "url": "https://api.oceanengine.com/open_api/v1.0/report/ad/get/",
+      "request_params": {
+        "advertiser_id": "1867141875210348",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "fields": "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"convert_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+        "time_granularity": "STAT_TIME_GRANULARITY_DAILY",
+        "page": "1",
+        "page_size": "100"
+      },
+      "http_status": 404,
+      "ok": false,
+      "response": "404 page not found"
+    }
+  ]
+}

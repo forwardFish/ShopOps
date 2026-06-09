@@ -1,0 +1,85 @@
+{
+  "task_pack_id": "shopops-goal-2026-06-03",
+  "task_id": "T05",
+  "name": "taobao-api-boundary-and-nonblocking-config",
+  "status": "PASS_WITH_LIMITATION",
+  "executed_only": "T05",
+  "requirement": "REQ-003",
+  "scope": {
+    "allowed_code_files_touched": [
+      "shopops/collectors/taobao_order_api.py"
+    ],
+    "allowed_test_files_touched": [
+      "tests/test_taobao_order_api_boundary.py"
+    ],
+    "real_taobao_api_call_attempted": false,
+    "taobao_api_credentials_required_for_current_crawler_mvp": false,
+    "default_order_source": "crawler"
+  },
+  "implementation_evidence": {
+    "api_source_factory": "create_order_collector returns TaobaoOrderApiCollector when ORDER_SOURCE=api",
+    "crawler_nonblocking_config": "default crawler configuration validates with empty Taobao API credentials",
+    "credential_guard": "real non-mock API path returns success=false with order_api_credentials_missing and null metrics when credentials are absent",
+    "pagination_contract": "TaobaoOrderApiCollector supports an injected paged API fetcher and loops until a short page",
+    "paid_filter_contract": "WAIT_BUYER_PAY trades are excluded from paid order count, total amount, and normalized orders",
+    "orders_raw_contract": "normalized API orders include unique_key, 数据来源=api, shop fields, order id, status, payment, fetched time, and raw data",
+    "failure_no_zero": "API failures return order_count=null, paid_order_count=null, total_amount=null, raw=null"
+  },
+  "evidence": [
+    {
+      "type": "code",
+      "path": "shopops/collectors/taobao_order_api.py",
+      "summary": "Added page-aware injectable API fetch boundary while preserving credential fail-closed behavior for the real non-mock path."
+    },
+    {
+      "type": "test",
+      "path": "tests/test_taobao_order_api_boundary.py",
+      "summary": "Covers ORDER_SOURCE=api factory switch, crawler default nonblocking credentials, API credential failure semantics, pagination, paid filtering, normalized order shape, upstream exception handling, and no-zero failure."
+    },
+    {
+      "type": "command",
+      "command": "python -m pytest -q -p no:cacheprovider --basetemp .\\.pytest-tmp\\T05-api tests\\test_taobao_order_api_boundary.py tests\\test_storage_and_scheduler.py",
+      "status": "PASS",
+      "summary": "13 passed in 0.27s",
+      "log": "docs/auto-execute/logs/T05/pytest-api-boundary.txt"
+    },
+    {
+      "type": "command",
+      "command": "python -m pytest -q -p no:cacheprovider --basetemp .\\.pytest-tmp\\T05-full",
+      "status": "PASS",
+      "summary": "31 passed in 1.22s",
+      "log": "docs/auto-execute/logs/T05/pytest-full.txt"
+    },
+    {
+      "type": "external-data",
+      "path": "docs/auto-execute/external-data/T05/api-boundary-proof.json",
+      "status": "PASS_WITH_LIMITATION",
+      "summary": "REQ-003 API boundary proof recorded; Taobao API credentials are absent but nonblocking for current crawler MVP."
+    },
+    {
+      "type": "guard",
+      "command": "python scripts\\acceptance\\secret_guard.py",
+      "status": "PASS_WITH_LIMITATION",
+      "summary": "Guard exited 1 because pre-existing T01 logs contain literal '=missing' diagnostic values for secret env vars; no T05 code secret was identified.",
+      "log": "docs/auto-execute/logs/T09/secret-guard.txt"
+    }
+  ],
+  "blockers": [],
+  "limitations": [
+    {
+      "status": "PASS_WITH_LIMITATION",
+      "classification": "PRE_EXISTING_GUARD_FALSE_POSITIVE",
+      "summary": "Project secret_guard.py treats literal diagnostic values such as TAOBAO_APP_SECRET=missing in prior T01 logs as secret hits. T05 did not modify scripts or rewrite prior task evidence."
+    },
+    {
+      "status": "DEFERRED",
+      "classification": "FUTURE_API_LIVE_PROOF",
+      "summary": "Real Taobao Open Platform API request/response proof is intentionally deferred by REQ-003 and is not required for current crawler-first MVP acceptance."
+    }
+  ],
+  "next_actions": [
+    "When the project is ready for official Taobao API mode, provide real Taobao Open Platform credentials in a secure environment and bind the page fetcher to the actual SDK/client.",
+    "In a separate guard-maintenance task, update scripts/acceptance/secret_guard.py or prior diagnostic logs so literal '=missing' values do not fail secret scans."
+  ],
+  "handoff": "docs/auto-execute/latest/T05-HANDOFF.md"
+}

@@ -1,0 +1,24 @@
+{
+  "mode": "qianchuan_live_readonly_today_auth_code_probe",
+  "generated_at": "2026-06-07T10:10:29+08:00",
+  "date": "2026-06-07",
+  "advertiser_id": "1860240208332803",
+  "note": "Read-only auth-code probe. Tokens/secrets excluded.",
+  "calls": [
+    {
+      "name": "exchange_qianchuan_auth_code",
+      "url": "https://ad.oceanengine.com/open_api/oauth2/access_token/",
+      "request_params": {
+        "grant_type": "auth_code",
+        "auth_code_present": true
+      },
+      "http_status": 200,
+      "ok": false,
+      "response": {
+        "code": 40115,
+        "message": "授权码无效",
+        "request_id": "202606071010292E3F9EA3A92BFB300AF8"
+      }
+    }
+  ]
+}

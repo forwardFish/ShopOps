@@ -1,0 +1,56 @@
+{
+  "task_pack_id": "shopops-goal-2026-06-03",
+  "task_id": "T02",
+  "generated_at": "2026-06-03T13:05:00+08:00",
+  "matrix_path": "docs/auto-execute/shopops-goal-requirement-traceability-matrix.md",
+  "coverage": {
+    "required_ids": [
+      "REQ-001",
+      "REQ-002",
+      "REQ-003",
+      "REQ-004",
+      "REQ-005",
+      "REQ-006",
+      "REQ-007",
+      "REQ-008",
+      "REQ-009",
+      "REQ-010",
+      "REQ-011",
+      "REQ-012",
+      "REQ-013",
+      "REQ-014"
+    ],
+    "mapped_ids": [
+      "REQ-001",
+      "REQ-002",
+      "REQ-003",
+      "REQ-004",
+      "REQ-005",
+      "REQ-006",
+      "REQ-007",
+      "REQ-008",
+      "REQ-009",
+      "REQ-010",
+      "REQ-011",
+      "REQ-012",
+      "REQ-013",
+      "REQ-014"
+    ],
+    "missing_ids": [],
+    "duplicate_ids": [],
+    "coverage_status": "PASS"
+  },
+  "status": "PASS_WITH_LIMITATION",
+  "limitations": [
+    {
+      "id": "T02-LIMIT-FEISHU-LIVE",
+      "classification": "BLOCKED_BY_ENVIRONMENT",
+      "summary": "Traceability is complete, but real Feishu Bitable write/update/upsert/readback proof remains unavailable without live credentials, table IDs, and SDK/API access."
+    },
+    {
+      "id": "T02-LIMIT-QIANNIU-LIVE",
+      "classification": "BLOCKED_BY_ENVIRONMENT",
+      "summary": "Traceability is complete, but real Qianniu PC order-center and promotion-center proof remains unavailable without a live CDP session."
+    }
+  ]
+}

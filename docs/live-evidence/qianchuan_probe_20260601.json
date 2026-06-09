@@ -1,0 +1,93 @@
+{
+  "advertiser_id": null,
+  "calls": [
+    {
+      "error": null,
+      "method": "POST_FORM",
+      "name": "probe_client_credentials_token",
+      "request_body": {
+        "app_id": "1867142358210672",
+        "grant_type": "client_credentials",
+        "secret": "9904...4a4d"
+      },
+      "request_headers": {},
+      "request_params": null,
+      "response": {
+        "code": 40000,
+        "message": "auth_code: Value is not nullable",
+        "request_id": "20260605205520B6130BD4DA536176866A"
+      },
+      "status_code": 200,
+      "success": false,
+      "url": "https://ad.oceanengine.com/open_api/oauth2/access_token/"
+    },
+    {
+      "error": null,
+      "method": "GET",
+      "name": "get_authorized_advertisers",
+      "request_body": null,
+      "request_headers": {},
+      "request_params": null,
+      "response": {
+        "code": 40104,
+        "message": "The access_token is empty.",
+        "request_id": "20260605205525EABCBCFFA2AD1FECD81D"
+      },
+      "status_code": 200,
+      "success": false,
+      "url": "https://api.oceanengine.com/open_api/oauth2/advertiser/get/"
+    },
+    {
+      "error": null,
+      "method": "GET",
+      "name": "get_qianchuan_advertiser_report",
+      "request_body": null,
+      "request_headers": {},
+      "request_params": {
+        "advertiser_id": "",
+        "end_date": "2026-06-01",
+        "fields": "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+        "page": 1,
+        "page_size": 100,
+        "start_date": "2026-06-01",
+        "time_granularity": "TIME_GRANULARITY_DAILY"
+      },
+      "response": {
+        "code": 40104,
+        "message": "The access_token is empty.",
+        "request_id": "202606052055271E6C377E0000ECEB7B07"
+      },
+      "status_code": 200,
+      "success": false,
+      "url": "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/advertiser/get/?advertiser_id=&start_date=2026-06-01&end_date=2026-06-01&fields=%5B%22stat_cost%22%2C%22show_cnt%22%2C%22click_cnt%22%2C%22pay_order_count%22%2C%22pay_order_amount%22%2C%22roi%22%5D&time_granularity=TIME_GRANULARITY_DAILY&page=1&page_size=100"
+    },
+    {
+      "error": null,
+      "method": "GET",
+      "name": "get_qianchuan_ad_report",
+      "request_body": null,
+      "request_headers": {},
+      "request_params": {
+        "advertiser_id": "",
+        "end_date": "2026-06-01",
+        "fields": "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+        "page": 1,
+        "page_size": 100,
+        "start_date": "2026-06-01",
+        "time_granularity": "TIME_GRANULARITY_DAILY"
+      },
+      "response": {
+        "code": 40104,
+        "message": "The access_token is empty.",
+        "request_id": "20260605205529192F64EE1E0D6D17F529"
+      },
+      "status_code": 200,
+      "success": false,
+      "url": "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/ad/get/?advertiser_id=&start_date=2026-06-01&end_date=2026-06-01&fields=%5B%22stat_cost%22%2C%22show_cnt%22%2C%22click_cnt%22%2C%22pay_order_count%22%2C%22pay_order_amount%22%2C%22roi%22%5D&time_granularity=TIME_GRANULARITY_DAILY&page=1&page_size=100"
+    }
+  ],
+  "end_date": "2026-06-01",
+  "has_access_token": false,
+  "mode": "oceanengine_qianchuan",
+  "start_date": "2026-06-01"
+}

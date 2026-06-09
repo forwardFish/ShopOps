@@ -1,0 +1,8 @@
+{
+  "status": "extracted",
+  "cookie_count": 32,
+  "cookie_length": 1780,
+  "csrf_len": 38,
+  "login_len": 30,
+  "query_url_found": true
+}

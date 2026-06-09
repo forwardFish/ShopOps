@@ -1,0 +1,47 @@
+{
+  "status": "success",
+  "target_table": "tblhBsehmQbzWEVm",
+  "wechat_excel": "C:\\Users\\linyanhui\\Downloads\\微信小店订单_wx8248933f80e464e7_2026年06月06日20时51分55秒\\微信小店订单_wx8248933f80e464e7_2026年06月06日20时51分55秒_1.xlsx",
+  "douyin_excel": "C:\\Users\\linyanhui\\Downloads\\抖音.xlsx",
+  "source_row_count": 5680,
+  "platform_counts": {
+    "视频号": 390,
+    "抖音": 5290
+  },
+  "duplicate_unique_keys": [],
+  "source_validation": {},
+  "created_fields": [
+    "带货达人",
+    "带货达人ID",
+    "带货佣金",
+    "带货佣金口径"
+  ],
+  "upsert": {
+    "created": 0,
+    "updated": 5680,
+    "saved": 5680
+  },
+  "readback_count": 5680,
+  "validation": {
+    "source_missing": {},
+    "readback_missing": {},
+    "missing_unique_keys": [],
+    "mismatched_order_unique_keys": []
+  },
+  "deleted_duplicate_fields": [
+    "达人ID",
+    "达人昵称",
+    "佣金率",
+    "预估佣金",
+    "结算佣金",
+    "订单下单时间",
+    "订单实际支付金额",
+    "带货账号昵称",
+    "带货费用",
+    "预估佣金支出",
+    "实际佣金支出",
+    "作者账号",
+    "抖音/火山号"
+  ],
+  "remaining_duplicate_fields": []
+}

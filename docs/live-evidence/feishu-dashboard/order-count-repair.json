@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "changes": {
+    "order_helper_sold": "updated",
+    "summary:订单数": "updated",
+    "summary:实际卖出数量": "updated",
+    "summary:销售额": "updated",
+    "summary:退款金额": "updated",
+    "summary:有效销售额": "updated",
+    "summary:商品成本": "updated",
+    "summary:运费成本": "updated",
+    "summary:平台扣点": "updated",
+    "summary:其他费用": "updated",
+    "kpi_sold_qty": "updated",
+    "delete_order_garbled": false,
+    "delete_summary_garbled": true,
+    "delete_kpi_garbled": true
+  },
+  "order_filter": "[订单明细-天猫].FILTER(CurrentValue.[公式_统计日期]=[统计日期]&&([平台]=\"全平台总计\"||CurrentValue.[平台]=[平台]))",
+  "summary_filter": "[公式动态经营汇总表].FILTER(CurrentValue.[统计日期]>=[开始日期]&&CurrentValue.[统计日期]<=[结束日期]&&CurrentValue.[平台]=[平台])",
+  "samples_2026_06_07": []
+}

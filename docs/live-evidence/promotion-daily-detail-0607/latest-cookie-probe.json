@@ -1,0 +1,56 @@
+{
+  "query_date": "2026-06-07",
+  "results": [
+    {
+      "csrf_len": 13,
+      "login": "",
+      "http": 403,
+      "ok": false,
+      "errorCode": 2102001,
+      "message": "bizLogin csrf检查未通过",
+      "has_charge": false,
+      "cost": null
+    },
+    {
+      "csrf_len": 13,
+      "login": "0",
+      "http": 403,
+      "ok": false,
+      "errorCode": 2102001,
+      "message": "bizLogin csrf检查未通过",
+      "has_charge": false,
+      "cost": null
+    },
+    {
+      "csrf_len": 13,
+      "login": "1",
+      "http": 403,
+      "ok": false,
+      "errorCode": 2102001,
+      "message": "bizLogin csrf检查未通过",
+      "has_charge": false,
+      "cost": null
+    },
+    {
+      "csrf_len": 13,
+      "login": "30",
+      "http": 403,
+      "ok": false,
+      "errorCode": 2102001,
+      "message": "bizLogin csrf检查未通过",
+      "has_charge": false,
+      "cost": null
+    },
+    {
+      "csrf_len": 13,
+      "login": "default",
+      "http": 403,
+      "ok": false,
+      "errorCode": 2102001,
+      "message": "bizLogin csrf检查未通过",
+      "has_charge": false,
+      "cost": null
+    }
+  ],
+  "chosen": null
+}

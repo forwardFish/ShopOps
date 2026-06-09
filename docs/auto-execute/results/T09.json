@@ -1,0 +1,42 @@
+{
+  "task_pack_id": "shopops-goal-2026-06-03",
+  "task_id": "T09",
+  "status": "BLOCKED_BY_ENVIRONMENT",
+  "evidence": [
+    {
+      "type": "stale_result_rejected",
+      "path": "docs/auto-execute/results/T09.json",
+      "detail": "Previous T09 result lacked task_pack_id and was treated as historical/stale evidence only."
+    },
+    {
+      "type": "pytest",
+      "command": "python -m pytest -q -p no:cacheprovider --basetemp <workspace>/docs/auto-execute/logs/T09/pytest-tmp-20260603181720 tests/test_alerts_task_log_daily_report.py tests/test_storage_and_scheduler.py",
+      "status": "PASS",
+      "summary": "10 passed in 0.19s",
+      "log": "docs/auto-execute/logs/T09/pytest-focused-workspace-temp.txt"
+    },
+    {
+      "type": "secret_guard",
+      "command": "python scripts/acceptance/secret_guard.py",
+      "status": "FAIL",
+      "summary": "SECRET_GUARD: FAIL on pre-existing docs/auto-execute/logs/T01/source-intake-current-audit.txt lines 34, 47, and 48.",
+      "log": "docs/auto-execute/logs/T09/secret-guard.txt"
+    },
+    {
+      "type": "verification_log",
+      "path": "docs/auto-execute/logs/T09/verification.txt"
+    }
+  ],
+  "blockers": [
+    {
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "scope": "live external validation",
+      "detail": "No real Feishu credentials/table IDs or live Qianniu CDP session were available in this Codex surface, so T09 could not produce live task_run_log/alert_log write-readback evidence. Local storage/scheduler behavior is covered by focused pytest evidence."
+    },
+    {
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "scope": "secret guard",
+      "detail": "Required secret guard exits nonzero because pre-existing T01 audit log lines contain placeholder text 'FEISHU_APP_SECRET=missing', 'TAOBAO_APP_SECRET=missing', and 'TAOBAO_SESSION_KEY=missing'. This is not a T09 code failure, but it blocks a pure PASS under the required guard lane."
+    }
+  ]
+}

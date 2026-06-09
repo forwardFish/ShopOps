@@ -1,0 +1,157 @@
+﻿{
+    "calls":  [
+                  {
+                      "name":  "qianchuan_shop_get",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/shop/get/",
+                      "request_params":  {
+                                             "shop_ids":  "[272308913]"
+                                         },
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "2026060522104296E9A9065DC72D09D245",
+                                       "data":  {
+                                                    "list":  [
+                                                                 {
+                                                                     "shop_id":  272308913,
+                                                                     "shop_name":  "è¶£ç½"
+                                                                 }
+                                                             ]
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "qianchuan_shop_advertiser_list",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/shop/advertiser/list/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "page":  "1",
+                                             "shop_id":  "272308913"
+                                         },
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "20260605221043D19D1B5C73FBA3EF8F01",
+                                       "data":  {
+                                                    "adv_id_list":  [
+                                                                        {
+                                                                            "adv_id":  1860240208332803,
+                                                                            "extra_permission":  [
+
+                                                                                                 ]
+                                                                        }
+                                                                    ],
+                                                    "list":  [
+                                                                 1860240208332803
+                                                             ],
+                                                    "page_info":  {
+                                                                      "page":  1,
+                                                                      "page_size":  100,
+                                                                      "total_number":  1,
+                                                                      "total_page":  1
+                                                                  }
+                                                }
+                                   }
+                  }
+              ],
+    "candidate_adv_ids":  [
+                              "1860240208332803"
+                          ],
+    "public_info_results":  [
+                                {
+                                    "name":  "advertiser_public_info:1860240208332803",
+                                    "url":  "https://api.oceanengine.com/open_api/2/advertiser/public_info/",
+                                    "request_params":  {
+                                                           "advertiser_ids":  "[1860240208332803]"
+                                                       },
+                                    "response":  {
+                                                     "code":  0,
+                                                     "message":  "OK",
+                                                     "request_id":  "202606052210449F878CD215B11C3BAE02",
+                                                     "data":  [
+                                                                  {
+                                                                      "company":  "深圳市趣白科技有限公司",
+                                                                      "id":  1860240208332803,
+                                                                      "second_industry_name":  "个护健康电器",
+                                                                      "first_industry_name":  "3C及电器",
+                                                                      "name":  "趣白企业店"
+                                                                  }
+                                                              ]
+                                                 }
+                                },
+                                {
+                                    "name":  "advertiser_info:1860240208332803",
+                                    "url":  "https://api.oceanengine.com/open_api/2/advertiser/info/",
+                                    "request_params":  {
+                                                           "advertiser_ids":  "[1860240208332803]"
+                                                       },
+                                    "response":  {
+                                                     "code":  0,
+                                                     "message":  "OK",
+                                                     "request_id":  "20260605221045CC6A482B80206C3FED78",
+                                                     "data":  [
+                                                                  {
+                                                                      "first_industry_name":  "3C及电器",
+                                                                      "license_province":  "广东",
+                                                                      "promotion_center_city":  "",
+                                                                      "name":  "趣白企业店",
+                                                                      "promotion_area":  "None",
+                                                                      "reason":  "",
+                                                                      "note":  "",
+                                                                      "license_city":  "深圳",
+                                                                      "license_url":  "https://p6-cert-sign.byteimg.com/cg-audit/cert-70145604d9a3c64d9dad56d7b6533865-a8e23568~tplv-1p99f4z9rz-image.jpeg?rk3s=1dd16a7a\u0026x-expires=1780681738\u0026x-signature=RasSOwKq0oCdMs2hOc%2BouelI1GI%3D",
+                                                                      "status":  "STATUS_ENABLE",
+                                                                      "promotion_center_province":  "",
+                                                                      "second_industry_name":  "个护健康电器",
+                                                                      "id":  1860240208332803,
+                                                                      "company":  "深圳市趣白科技有限公司",
+                                                                      "license_no":  "91440300MAK5E745XQ",
+                                                                      "address":  "",
+                                                                      "role":  "ROLE_ECP_ADVERTISER",
+                                                                      "brand":  "",
+                                                                      "create_time":  "2026-03-21 11:21:49",
+                                                                      "industry":  "生活小家电"
+                                                                  }
+                                                              ]
+                                                 }
+                                }
+                            ],
+    "report_results":  [
+                           {
+                               "name":  "qianchuan_report_advertiser:1860240208332803",
+                               "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/advertiser/get/",
+                               "request_params":  {
+                                                      "advertiser_id":  "1860240208332803",
+                                                      "page_size":  "100",
+                                                      "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+                                                      "start_date":  "2026-06-01",
+                                                      "end_date":  "2026-06-01",
+                                                      "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                                      "page":  "1"
+                                                  },
+                               "response":  {
+                                                "code":  40000,
+                                                "message":  "filtering: parameter \"filtering\" is required, but missing",
+                                                "request_id":  "20260605221045ADE915385298013B5D92"
+                                            }
+                           },
+                           {
+                               "name":  "qianchuan_report_ad:1860240208332803",
+                               "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/ad/get/",
+                               "request_params":  {
+                                                      "advertiser_id":  "1860240208332803",
+                                                      "page_size":  "100",
+                                                      "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+                                                      "start_date":  "2026-06-01",
+                                                      "end_date":  "2026-06-01",
+                                                      "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                                      "page":  "1"
+                                                  },
+                               "response":  {
+                                                "code":  40000,
+                                                "message":  "filtering: parameter \"filtering\" is required, but missing",
+                                                "request_id":  "202606052210467759E54A65B31D7381C2"
+                                            }
+                           }
+                       ]
+}

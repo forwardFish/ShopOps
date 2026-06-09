@@ -1,0 +1,93 @@
+{
+  "task_pack_id": "shopops-goal-2026-06-03",
+  "task_id": "T07",
+  "status": "BLOCKED_BY_ENVIRONMENT",
+  "executed_only": "T07",
+  "completed_at": "2026-06-03T17:55:00+08:00",
+  "task_source": "docs/auto-execute/shopops-goal-tasks/T07-metric-snapshot-delta-engine-refresh.md",
+  "scope": {
+    "allowed_code_scope": [
+      "shopops/services/metric_service.py",
+      "tests/**",
+      "docs/auto-execute/**"
+    ],
+    "changed_product_code": [],
+    "changed_test_code": [],
+    "changed_auto_execute_files": [
+      "docs/auto-execute/results/T07.json",
+      "docs/auto-execute/latest/T07-HANDOFF.md",
+      "docs/auto-execute/logs/T07/verification.txt",
+      "docs/auto-execute/logs/T07/environment-probe.json"
+    ]
+  },
+  "requirements": {
+    "REQ-005": {
+      "status": "PASS_WITH_LIMITATION",
+      "basis": "Local metric snapshot tests verify failed order collection leaves order_count, total_amount, roi, and cac as null instead of polluting metrics with numeric zero.",
+      "evidence": [
+        "tests/test_metric_service.py::test_snapshot_failure_does_not_write_zero",
+        "docs/auto-execute/logs/T07/verification.txt"
+      ]
+    },
+    "REQ-006": {
+      "status": "PASS_WITH_LIMITATION",
+      "basis": "Local metric delta tests verify today cumulative snapshot deltas, ROI/CAC deltas, missing previous snapshot handling, late previous snapshot handling, and decreasing cumulative values as invalid.",
+      "evidence": [
+        "tests/test_metric_service.py::test_delta_normal_and_invalid_decrease",
+        "tests/test_metric_service.py::test_delta_missing_or_late_previous_is_invalid",
+        "tests/test_metric_scheduler_delta.py::test_scheduler_second_run_uses_previous_snapshot_for_10min_delta",
+        "docs/auto-execute/logs/T07/verification.txt"
+      ]
+    },
+    "REQ-010": {
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "basis": "Local abnormal status handling is covered, but live Qianniu/Feishu write-readback evidence cannot be produced without the external runtime and credentials.",
+      "evidence": [
+        "shopops/services/metric_service.py",
+        "docs/auto-execute/logs/T07/environment-probe.json"
+      ]
+    }
+  },
+  "evidence": [
+    {
+      "kind": "stale_result_filter",
+      "status": "PASS",
+      "detail": "Existing docs/auto-execute/results/T07.json was rejected as stale/invalid because ConvertFrom-Json failed and the file did not contain task_pack_id shopops-goal-2026-06-03."
+    },
+    {
+      "kind": "focused_tests",
+      "status": "PASS",
+      "command": "python -m pytest -q -p no:cacheprovider --basetemp .\\.pytest-tmp\\T07-current tests\\test_metric_service.py tests\\test_metric_scheduler_delta.py",
+      "result": "5 passed in 0.13s",
+      "log": "docs/auto-execute/logs/T07/verification.txt"
+    },
+    {
+      "kind": "source_review",
+      "status": "PASS_WITH_LIMITATION",
+      "detail": "shopops/services/metric_service.py currently computes safe ROI/CAC, avoids zero substitution on failed collections, marks missing previous snapshots, invalidates late intervals over 30 minutes, and invalidates decreasing cumulative order, GMV, or cost values."
+    },
+    {
+      "kind": "environment_probe",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "detail": "No live Feishu app/table environment variables were present and Qianniu CDP http://127.0.0.1:9222/json/version was not reachable.",
+      "log": "docs/auto-execute/logs/T07/environment-probe.json"
+    }
+  ],
+  "blockers": [
+    {
+      "type": "BLOCKED_BY_ENVIRONMENT",
+      "surface": "Feishu Bitable",
+      "detail": "FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_APP_TOKEN, FEISHU_TABLE_MONITOR_SNAPSHOT, FEISHU_TABLE_ORDERS_RAW, FEISHU_TABLE_PROMOTION_SNAPSHOT, FEISHU_TABLE_METRICS_10MIN, and FEISHU_TABLE_TASK_LOG were absent, so live snapshot/delta upsert and readback could not be verified."
+    },
+    {
+      "type": "BLOCKED_BY_ENVIRONMENT",
+      "surface": "Qianniu PC CDP",
+      "detail": "QIANNIU_CDP_URL was absent and the fallback probe to http://127.0.0.1:9222/json/version failed, so live Qianniu source collection could not be verified."
+    }
+  ],
+  "next_actions": [
+    "When live Feishu Bitable credentials and table ids are available, rerun only T07 live write/upsert/readback verification.",
+    "When an authenticated Qianniu PC CDP session is available, rerun only T07 live collection and delta verification."
+  ],
+  "handoff": "docs/auto-execute/latest/T07-HANDOFF.md"
+}

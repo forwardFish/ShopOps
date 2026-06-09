@@ -1,0 +1,91 @@
+{
+  "task_pack_id": "shopops-goal-2026-06-03",
+  "task_id": "T12",
+  "status": "PASS_WITH_LIMITATION",
+  "summary": "T12 executed only report-integrity, secret-guard, and code-review evidence. Secret guard passed and report integrity passed. Pure PASS is not claimed because code review found a non-blocking evidence-location limitation: secret_guard.py still writes its built-in log to docs/auto-execute/logs/T09/secret-guard.txt, so T12 records both the T12 wrapper log and the script-produced T09 log.",
+  "executed_only": "T12",
+  "scope": {
+    "task_pack_id": "shopops-goal-2026-06-03",
+    "allowed_paths": [
+      "scripts/acceptance/**",
+      "docs/auto-execute/**"
+    ],
+    "product_code_modified": false,
+    "external_side_effects": false,
+    "t13_executed": false
+  },
+  "evidence": [
+    {
+      "type": "secret_guard",
+      "status": "PASS",
+      "command": "python scripts/acceptance/secret_guard.py",
+      "log": "docs/auto-execute/logs/T12/secret-guard.txt",
+      "script_log": "docs/auto-execute/logs/T09/secret-guard.txt",
+      "summary": "Command exited 0; script-produced log contains SECRET_GUARD: PASS."
+    },
+    {
+      "type": "report_integrity",
+      "status": "PASS",
+      "command": "T12 inline report-integrity check",
+      "result": "docs/auto-execute/results/report-integrity-T12.json",
+      "log": "docs/auto-execute/logs/T12/report-integrity.txt",
+      "summary": "Required inspected inputs existed, JSON parsed, Markdown fences were balanced, T11 task_pack_id matched, T11 handoff existed, and referenced evidence resolved."
+    },
+    {
+      "type": "code_review",
+      "status": "PASS_WITH_LIMITATION",
+      "log": "docs/auto-execute/logs/T12/code-review.md",
+      "diff_log": "docs/auto-execute/logs/T12/code-review-diff.txt",
+      "search_log": "docs/auto-execute/logs/T12/code-review-rg.txt",
+      "summary": "No secret leak, fake PASS, or environment-blocker misclassification found in reviewed T11/T12 guard evidence. Non-blocking limitation: secret_guard.py hardcodes a T09 script log path."
+    },
+    {
+      "type": "dependency_resume_gate",
+      "status": "PASS",
+      "path": "docs/auto-execute/results/T11.json",
+      "handoff": "docs/auto-execute/latest/T11-HANDOFF.md",
+      "summary": "T11 result JSON contains task_pack_id shopops-goal-2026-06-03 and T11 handoff exists."
+    }
+  ],
+  "blockers": [
+    {
+      "id": "T12-SECRET-GUARD-LOG-PATH",
+      "status": "OPEN",
+      "classification": "PASS_WITH_LIMITATION",
+      "summary": "secret_guard.py writes its script-owned log to docs/auto-execute/logs/T09/secret-guard.txt instead of a task-parameterized T12 path. T12 wrapper log and script log are both recorded, and the guard itself passed.",
+      "evidence": [
+        "scripts/acceptance/secret_guard.py",
+        "docs/auto-execute/logs/T12/secret-guard.txt",
+        "docs/auto-execute/logs/T09/secret-guard.txt",
+        "docs/auto-execute/logs/T12/code-review.md"
+      ]
+    }
+  ],
+  "log_paths": [
+    "docs/auto-execute/logs/T12/secret-guard.txt",
+    "docs/auto-execute/logs/T09/secret-guard.txt",
+    "docs/auto-execute/logs/T12/report-integrity.txt",
+    "docs/auto-execute/logs/T12/report-integrity-json-parse.txt",
+    "docs/auto-execute/logs/T12/code-review.md",
+    "docs/auto-execute/logs/T12/code-review-diff.txt",
+    "docs/auto-execute/logs/T12/code-review-rg.txt",
+    "docs/auto-execute/logs/T12/T12-json-parse.txt"
+  ],
+  "changed_files": [
+    "docs/auto-execute/results/report-integrity-T12.json",
+    "docs/auto-execute/results/T12.json",
+    "docs/auto-execute/latest/T12-HANDOFF.md",
+    "docs/auto-execute/logs/T12/secret-guard.txt",
+    "docs/auto-execute/logs/T12/report-integrity.txt",
+    "docs/auto-execute/logs/T12/report-integrity-json-parse.txt",
+    "docs/auto-execute/logs/T12/code-review.md",
+    "docs/auto-execute/logs/T12/code-review-diff.txt",
+    "docs/auto-execute/logs/T12/code-review-rg.txt",
+    "docs/auto-execute/logs/T12/T12-json-parse.txt"
+  ],
+  "json_parse": {
+    "status": "PASS",
+    "command": "python -m json.tool docs/auto-execute/results/T12.json",
+    "log": "docs/auto-execute/logs/T12/T12-json-parse.txt"
+  }
+}

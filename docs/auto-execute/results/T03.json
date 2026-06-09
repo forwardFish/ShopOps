@@ -1,0 +1,91 @@
+{
+  "blockers": [
+    {
+      "classification": "BLOCKED_BY_ENVIRONMENT",
+      "details": {
+        "missing": [
+          "FEISHU_APP_ID",
+          "FEISHU_APP_SECRET",
+          "FEISHU_APP_TOKEN",
+          "FEISHU_TABLE_ALERT_LOG",
+          "FEISHU_TABLE_DAILY_REPORT",
+          "FEISHU_TABLE_METRICS_10MIN",
+          "FEISHU_TABLE_MONITOR_SNAPSHOT",
+          "FEISHU_TABLE_ORDERS_RAW",
+          "FEISHU_TABLE_PROMOTION_SNAPSHOT",
+          "FEISHU_TABLE_SHOP_CONFIG",
+          "FEISHU_TABLE_SYSTEM_CONFIG",
+          "FEISHU_TABLE_TASK_LOG",
+          "lark_oapi"
+        ],
+        "ready": false,
+        "sdk_available": false
+      },
+      "id": "T03-FEISHU-LIVE-ENV",
+      "summary": "Live Feishu Bitable write/upsert/readback is unavailable because credentials/table IDs or lark_oapi are missing."
+    }
+  ],
+  "changed_files": [
+    "shopops/storage/feishu_bitable.py",
+    "shopops/storage/__init__.py",
+    "scripts/acceptance/verify_feishu_data.py",
+    "tests/test_feishu_storage_contract.py",
+    "docs/auto-execute/results/T03.json",
+    "docs/auto-execute/latest/T03-HANDOFF.md",
+    "docs/auto-execute/external-data/T03/local-storage-proof.json"
+  ],
+  "coverage": {
+    "data_ids": [
+      "DATA-001",
+      "DATA-002",
+      "DATA-003",
+      "DATA-004",
+      "DATA-005",
+      "DATA-006",
+      "DATA-007",
+      "DATA-008",
+      "DATA-009"
+    ],
+    "requirements": [
+      "REQ-007",
+      "REQ-008",
+      "REQ-009"
+    ]
+  },
+  "evidence": [
+    {
+      "path": "docs/auto-execute/external-data/T03/local-storage-proof.json",
+      "status": "PASS",
+      "type": "local_storage_proof"
+    },
+    {
+      "path": "docs/auto-execute/external-data/T03/local_feishu.json",
+      "status": "PASS",
+      "type": "local_readback_store"
+    },
+    {
+      "path": "docs/auto-execute/external-data/T03/pending_records_fail.jsonl",
+      "status": "PASS",
+      "type": "pending_replay_store"
+    },
+    {
+      "path": "docs/auto-execute/logs/T03/feishu-environment-probe.json",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "type": "live_environment_probe"
+    }
+  ],
+  "log_paths": [
+    "docs/auto-execute/logs/T03/feishu-environment-probe.json",
+    "docs/auto-execute/logs/T03/verification.txt"
+  ],
+  "security": {
+    "external_side_effects": false,
+    "live_feishu_pass_claimed": false,
+    "secrets_logged": false
+  },
+  "status": "BLOCKED_BY_ENVIRONMENT",
+  "summary": "T03 proves local Feishu-style storage/upsert/pending replay/readback for DATA-001..DATA-009 and fails closed for live Feishu because the environment lacks real credentials/table IDs or SDK.",
+  "task_id": "T03",
+  "task_name": "feishu-bitable-storage-real-and-local-proof",
+  "task_pack_id": "shopops-goal-2026-06-03"
+}

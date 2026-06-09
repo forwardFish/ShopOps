@@ -1,0 +1,71 @@
+{
+  "mode": "qianchuan_live_readonly_today_marketing_token_probe",
+  "generated_at": "2026-06-07T10:09:08+08:00",
+  "date": "2026-06-07",
+  "advertiser_id": "1860240208332803",
+  "note": "Read-only token probe. Tokens/secrets excluded.",
+  "calls": [
+    {
+      "name": "marketing_access_token_uni_promotion_ALL",
+      "url": "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/get/",
+      "request_params": {
+        "advertiser_id": "1860240208332803",
+        "order_platform": "ALL",
+        "fields": "[\"stat_cost\",\"total_pay_order_count_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_cost_per_pay_order_for_roi2\"]",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "marketing_goal": "ALL"
+      },
+      "http_status": 200,
+      "ok": false,
+      "response": {
+        "code": 40102,
+        "message": "access_token已过期",
+        "request_id": "2026060710090624267AD86300ECFA705A"
+      }
+    },
+    {
+      "name": "refresh_oceanengine_marketing_token",
+      "url": "https://ad.oceanengine.com/open_api/oauth2/refresh_token/",
+      "request_body": {
+        "app_id_present": true,
+        "secret_present": true,
+        "grant_type": "refresh_token",
+        "refresh_token_present": true
+      },
+      "http_status": 200,
+      "ok": true,
+      "response": {
+        "code": 0,
+        "message": "OK",
+        "request_id": "202606071009072B067A6E72131FF481F5",
+        "data": {
+          "access_token": "bd28...e6e8",
+          "expires_in": 86400,
+          "refresh_token": "67a6...f144",
+          "refresh_token_expires_in": 2592000
+        }
+      }
+    },
+    {
+      "name": "marketing_refreshed_token_uni_promotion_ALL",
+      "url": "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/get/",
+      "request_params": {
+        "advertiser_id": "1860240208332803",
+        "order_platform": "ALL",
+        "fields": "[\"stat_cost\",\"total_pay_order_count_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_cost_per_pay_order_for_roi2\"]",
+        "start_date": "2026-06-07",
+        "end_date": "2026-06-07",
+        "marketing_goal": "ALL"
+      },
+      "http_status": 200,
+      "ok": false,
+      "response": {
+        "code": 40002,
+        "message": "advertiser does no grant you /qianchuan/report/uni_promotion/get/ permission",
+        "help_message": "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+        "request_id": "20260607100908754218F366D86008063B"
+      }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+﻿{
+    "phase":  "relay-workers",
+    "current":  "T08 completed; next T09 needs freshness check/rerun because existing PASS predates T01-T08 reruns; then T10 and T11",
+    "completed":  {
+                      "T01":  "PASS",
+                      "T02":  "BLOCKED_BY_ENVIRONMENT",
+                      "T03":  "BLOCKED_BY_ENVIRONMENT",
+                      "T04":  "BLOCKED_BY_ENVIRONMENT",
+                      "T05":  "BLOCKED_BY_ENVIRONMENT",
+                      "T06":  "BLOCKED_BY_ENVIRONMENT",
+                      "T07":  "BLOCKED_BY_ENVIRONMENT",
+                      "T08":  "BLOCKED_BY_ENVIRONMENT"
+                  },
+    "existing":  {
+                     "T09":  "PASS old result",
+                     "T11":  "REPAIR_REQUIRED old result"
+                 },
+    "project":  "D:\\lyh\\agent\\agent-frame\\ShopOps",
+    "timestamp":  "2026-06-03T09:25:40.4206329+08:00"
+}

@@ -1,0 +1,18 @@
+{
+  "source_counts": {
+    "ads": 12,
+    "commissions": 5680,
+    "orders": 18281
+  },
+  "summary_rows": 275,
+  "saved_count": 275,
+  "readback_count": 275,
+  "summary_table_id": "tbldpguqBhSjnIPP",
+  "commission_rows": 50,
+  "known_profit_rows": 275,
+  "normal_rows": 1,
+  "operating_profit_rows": 2,
+  "partial_rows": 274,
+  "platform_roi_rows": 2,
+  "roi_rows": 2
+}

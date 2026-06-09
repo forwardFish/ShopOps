@@ -1,0 +1,12 @@
+﻿{
+    "generated_at":  "2026-06-03 18:29:34",
+    "source":  "focused pytest local Feishu double",
+    "scheduler_local_feishu_path":  "docs\\auto-execute\\logs\\T10\\pytest-tmp-rerun\\test_scheduler_persists_task_l0\\local_feishu.json",
+    "upsert_local_feishu_path":  "docs\\auto-execute\\logs\\T10\\pytest-tmp-rerun\\test_daily_report_upsert_preve0\\local_feishu.json",
+    "scheduler_daily_report_count":  1,
+    "scheduler_task_run_log_count":  1,
+    "upsert_daily_report_count_after_two_sends":  1,
+    "unique_key":  "taobao_shop_001_20260602",
+    "local_status":  "PASS",
+    "live_feishu_status":  "BLOCKED_BY_ENVIRONMENT"
+}

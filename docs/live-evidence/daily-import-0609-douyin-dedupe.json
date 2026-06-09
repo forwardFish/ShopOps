@@ -1,0 +1,145 @@
+{
+  "accessory_counts": {
+    "抖音": 12
+  },
+  "ad_count": 7,
+  "ad_dates": [
+    "2026-06-02",
+    "2026-06-03",
+    "2026-06-04",
+    "2026-06-05",
+    "2026-06-06",
+    "2026-06-07",
+    "2026-06-08"
+  ],
+  "batch_dir": "D:\\lyh\\ShopOps\\0609",
+  "feishu_base_url": "https://my.feishu.cn/base/KhbEbksLbauw0fssL6EcKAnlnOe",
+  "field_policy": "existing Feishu fields only; never create, delete, or update table fields during daily import; existing orders update only 交易状态",
+  "files": {
+    "抖音": {
+      "ads": [
+        {
+          "file": "D:\\lyh\\ShopOps\\0609\\抖音\\全域推广数据_商品_2026-06-02 00_00_00-2026-06-08 23_59_59-7649346553810812966.xlsx",
+          "rows": 7
+        }
+      ],
+      "orders": [
+        {
+          "file": "D:\\lyh\\ShopOps\\0609\\抖音\\1780986782_cd252d95cfe5af7cb34aa3dbd6f7cee8fzOmjPIk.csv",
+          "rows": 10061
+        }
+      ]
+    }
+  },
+  "influencer_count": 10061,
+  "order_counts": {
+    "抖音": 10061
+  },
+  "platform_filter": [
+    "抖音"
+  ],
+  "sample_accessory_order_keys": {
+    "抖音": [
+      "douyin_6953507001054139398",
+      "douyin_6953506482307798780",
+      "douyin_6953502075175573085",
+      "douyin_6953302032143553855",
+      "douyin_6953214956134077805",
+      "douyin_6926652321246706765",
+      "douyin_6926624477755506641",
+      "douyin_6953115864033006800",
+      "douyin_6953064837571942313",
+      "douyin_6953051479152989880"
+    ]
+  },
+  "sample_order_keys": {
+    "抖音": [
+      "douyin_6927008817907334424",
+      "douyin_6953541681170093897",
+      "douyin_6927013416551414904",
+      "douyin_6953505929342227978",
+      "douyin_6927015794371361872",
+      "douyin_6953530529042273412",
+      "douyin_6926998644700314820",
+      "douyin_6953546364722288162",
+      "douyin_6953534678363936483",
+      "douyin_6927015759071707005"
+    ]
+  },
+  "status": "success",
+  "unique_rules": {
+    "ads": "ads_platform_code_yyyy-mm-dd; fallback match by platform + date",
+    "influencer": "platform + order_no; fallback match by platform + order_no",
+    "orders": "platform_code + '_' + order_no; fallback match by order_no"
+  },
+  "writes": {
+    "ads": {
+      "created": 1,
+      "dropped_nonexistent_fields": {},
+      "missing_unique_keys": [],
+      "readback_count": 7,
+      "saved": 7,
+      "updated": 6
+    },
+    "influencer": {
+      "created": 0,
+      "dedupe_after_import": {
+        "deleted_duplicate_records": 0,
+        "duplicate_keys": 0,
+        "key_fields": [
+          "平台",
+          "订单号"
+        ],
+        "sample_duplicate_keys": []
+      },
+      "dedupe_before_import": {
+        "deleted_duplicate_records": 5679,
+        "duplicate_keys": 5679,
+        "key_fields": [
+          "平台",
+          "订单号"
+        ],
+        "sample_duplicate_keys": [
+          "抖音|6953469289287521565",
+          "抖音|6926936545140637500",
+          "抖音|6953469185425216639",
+          "抖音|6953444006329259331",
+          "抖音|6926947641947815526",
+          "抖音|6926938679666507631",
+          "抖音|6926943120039575057",
+          "抖音|6926945251123166680",
+          "抖音|6953457880088647060",
+          "抖音|6926947410175295048",
+          "抖音|6926945098150608036",
+          "抖音|6926945112334892332",
+          "抖音|6953457706978645889",
+          "抖音|6953464162628539800",
+          "抖音|6926931816681864363",
+          "抖音|6926925970008735462",
+          "抖音|6926938161779867598",
+          "抖音|6926940395443748074",
+          "抖音|6953450253468899218",
+          "抖音|6926931681230552524"
+        ]
+      },
+      "dropped_nonexistent_fields": {
+        "实收款": 10061,
+        "数量": 10061
+      },
+      "missing_unique_keys": [],
+      "readback_count": 10061,
+      "saved": 10061,
+      "updated": 10061
+    },
+    "orders": {
+      "抖音": {
+        "created": 0,
+        "dropped_nonexistent_fields": {},
+        "missing_unique_keys": [],
+        "readback_count": 10061,
+        "saved": 10061,
+        "updated": 10061
+      }
+    }
+  }
+}

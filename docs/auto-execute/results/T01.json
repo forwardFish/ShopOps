@@ -1,0 +1,84 @@
+{
+  "task_pack_id": "shopops-goal-2026-06-03",
+  "task_id": "T01",
+  "task_name": "source-intake-and-current-implementation-audit",
+  "status": "PASS_WITH_LIMITATION",
+  "summary": "Required sources were read, stale prior T01 evidence was rejected for missing task_pack_id, the current implementation was audited against REQ-001..REQ-014, and fresh local verification passed. The task is not pure PASS because live Feishu and Qianniu proof remain blocked by the current environment.",
+  "scope": "docs/auto-execute/** only; no product code changes and no other Txx task execution.",
+  "evidence": [
+    {
+      "type": "audit",
+      "path": "docs/auto-execute/shopops-goal-implementation-audit.md",
+      "status": "PASS_WITH_LIMITATION",
+      "summary": "REQ-001..REQ-014 current implementation audit refreshed with source-file evidence and external blockers."
+    },
+    {
+      "type": "test",
+      "command": "python -m pytest -q -p no:cacheprovider --basetemp .\\.pytest-tmp\\T01-current",
+      "path": "docs/auto-execute/logs/T01/verification.txt",
+      "status": "PASS",
+      "summary": "22 passed in 0.53s"
+    },
+    {
+      "type": "intake-log",
+      "path": "docs/auto-execute/logs/T01/source-intake-current-audit.txt",
+      "status": "PASS_WITH_LIMITATION",
+      "summary": "Records required inputs read, implementation evidence map, env presence probe, and module probe."
+    },
+    {
+      "type": "handoff",
+      "path": "docs/auto-execute/latest/T01-HANDOFF.md",
+      "status": "PASS_WITH_LIMITATION",
+      "summary": "Current T01 handoff for task_pack_id shopops-goal-2026-06-03."
+    },
+    {
+      "type": "upstream",
+      "path": "docs/auto-execute/latest/T00-HANDOFF.md",
+      "status": "PASS_WITH_LIMITATION",
+      "summary": "T00 selected T01 as the next open task and enforced stale-result handling."
+    }
+  ],
+  "blockers": [
+    {
+      "id": "T01-BLOCKER-FEISHU-LIVE",
+      "classification": "BLOCKED_BY_ENVIRONMENT",
+      "status": "OPEN",
+      "summary": "Live Feishu Bitable write/update/upsert/readback cannot be verified because FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_APP_TOKEN, and required FEISHU_TABLE_* variables are absent, and lark_oapi is missing.",
+      "routes_to": ["T03", "T11", "T13"]
+    },
+    {
+      "id": "T01-BLOCKER-QIANNIU-CDP",
+      "classification": "BLOCKED_BY_ENVIRONMENT",
+      "status": "OPEN",
+      "summary": "Live Qianniu PC order center and promotion center collection cannot be verified because QIANNIU_CDP_URL is absent and no live CDP session evidence exists for this task boundary.",
+      "routes_to": ["T04", "T06", "T11", "T13"]
+    },
+    {
+      "id": "T01-DEFERRED-TAOBAO-API",
+      "classification": "DEFERRED",
+      "status": "OPEN",
+      "summary": "TAOBAO_APP_KEY, TAOBAO_APP_SECRET, and TAOBAO_SESSION_KEY are absent, but this is deferred while ORDER_SOURCE defaults to crawler.",
+      "routes_to": ["T05"]
+    }
+  ],
+  "log_paths": [
+    "docs/auto-execute/logs/T01/verification.txt",
+    "docs/auto-execute/logs/T01/source-intake-current-audit.txt",
+    "docs/auto-execute/logs/T00/orchestrator-20260603-120938.json"
+  ],
+  "changed_files": [
+    "docs/auto-execute/shopops-goal-implementation-audit.md",
+    "docs/auto-execute/logs/T01/verification.txt",
+    "docs/auto-execute/logs/T01/source-intake-current-audit.txt",
+    "docs/auto-execute/results/T01.json",
+    "docs/auto-execute/latest/T01-HANDOFF.md"
+  ],
+  "not_executed": [
+    "No product source files were modified.",
+    "No T02 or later task was executed.",
+    "No live Feishu write/readback was attempted without credentials.",
+    "No live Qianniu collection was attempted without a verified CDP session."
+  ],
+  "next_task": "T02-requirements-traceability-refresh"
+}
+

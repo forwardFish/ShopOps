@@ -1,0 +1,475 @@
+﻿{
+    "generated_at":  "2026-06-06T07:43:27",
+    "advertiser_id":  "1860240208332803",
+    "date_range":  {
+                       "start_date":  "2026-06-01",
+                       "end_date":  "2026-06-06"
+                   },
+    "note":  "UTF-8 decoded Qianchuan evidence. Tokens/secrets excluded.",
+    "calls":  [
+                  {
+                      "name":  "standard_report_advertiser_empty_control",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/advertiser/get/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\"]",
+                                             "filtering":  "{\"marketing_goal\":\"ALL\"}",
+                                             "advertiser_id":  "1860240208332803",
+                                             "start_date":  "2026-06-01",
+                                             "end_date":  "2026-06-06",
+                                             "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                             "page":  "1"
+                                         },
+                      "http_status":  200,
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "20260606074323C06C940823A4A566FC70",
+                                       "data":  {
+                                                    "list":  [
+
+                                                             ],
+                                                    "page_info":  {
+                                                                      "page":  1,
+                                                                      "page_size":  100,
+                                                                      "total_number":  0,
+                                                                      "total_page":  0
+                                                                  }
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "uni_promotion_ECP_AWEME",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/get/",
+                      "request_params":  {
+                                             "advertiser_id":  "1860240208332803",
+                                             "order_platform":  "ECP_AWEME",
+                                             "fields":  "[\"stat_cost\",\"total_cost_per_pay_order_for_roi2\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "start_date":  "2026-06-01",
+                                             "marketing_goal":  "ALL",
+                                             "end_date":  "2026-06-06"
+                                         },
+                      "http_status":  200,
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "20260606074323BCFAD8A7C8544C14B83A",
+                                       "data":  {
+                                                    "stat_cost":  45.76,
+                                                    "total_cost_per_pay_order_for_roi2":  1.12,
+                                                    "total_ecom_platform_subsidy_amount_for_roi2":  9,
+                                                    "total_pay_order_count_for_roi2":  41,
+                                                    "total_pay_order_coupon_amount_for_roi2":  0,
+                                                    "total_pay_order_gmv_for_roi2":  7258,
+                                                    "total_pay_order_gmv_include_coupon_for_roi2":  7267,
+                                                    "total_prepay_and_pay_order_roi2":  158.81,
+                                                    "total_prepay_order_count_for_roi2":  0,
+                                                    "total_prepay_order_gmv_for_roi2":  0,
+                                                    "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "uni_promotion_ALL",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/get/",
+                      "request_params":  {
+                                             "advertiser_id":  "1860240208332803",
+                                             "order_platform":  "ALL",
+                                             "fields":  "[\"stat_cost\",\"total_cost_per_pay_order_for_roi2\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "start_date":  "2026-06-01",
+                                             "marketing_goal":  "ALL",
+                                             "end_date":  "2026-06-06"
+                                         },
+                      "http_status":  200,
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "20260606074324ACBBA90D2E24136BA90E",
+                                       "data":  {
+                                                    "stat_cost":  17538.75,
+                                                    "total_cost_per_pay_order_for_roi2":  55.68,
+                                                    "total_ecom_platform_subsidy_amount_for_roi2":  508.75,
+                                                    "total_pay_order_count_for_roi2":  315,
+                                                    "total_pay_order_coupon_amount_for_roi2":  4956.58,
+                                                    "total_pay_order_gmv_for_roi2":  48679.67,
+                                                    "total_pay_order_gmv_include_coupon_for_roi2":  54145,
+                                                    "total_prepay_and_pay_order_roi2":  3.09,
+                                                    "total_prepay_order_count_for_roi2":  0,
+                                                    "total_prepay_order_gmv_for_roi2":  0,
+                                                    "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "uni_promotion_QIANCHUAN",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/get/",
+                      "request_params":  {
+                                             "advertiser_id":  "1860240208332803",
+                                             "order_platform":  "QIANCHUAN",
+                                             "fields":  "[\"stat_cost\",\"total_cost_per_pay_order_for_roi2\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "start_date":  "2026-06-01",
+                                             "marketing_goal":  "ALL",
+                                             "end_date":  "2026-06-06"
+                                         },
+                      "http_status":  200,
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "2026060607432527DADA7918EE33C2D605",
+                                       "data":  {
+                                                    "stat_cost":  17492.99,
+                                                    "total_cost_per_pay_order_for_roi2":  63.84,
+                                                    "total_ecom_platform_subsidy_amount_for_roi2":  499.75,
+                                                    "total_pay_order_count_for_roi2":  274,
+                                                    "total_pay_order_coupon_amount_for_roi2":  4956.58,
+                                                    "total_pay_order_gmv_for_roi2":  41421.67,
+                                                    "total_pay_order_gmv_include_coupon_for_roi2":  46878,
+                                                    "total_prepay_and_pay_order_roi2":  2.68,
+                                                    "total_prepay_order_count_for_roi2":  0,
+                                                    "total_prepay_order_gmv_for_roi2":  0,
+                                                    "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "aweme_uni_promotion_order_get_VIDEO_PROM_GOODS_no_filter",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/aweme/uni_promotion/order/get/",
+                      "request_params":  {
+                                             "marketing_goal":  "VIDEO_PROM_GOODS",
+                                             "cursor":  "0",
+                                             "order_field":  "order_create_time",
+                                             "count":  "50",
+                                             "advertiser_id":  "1860240208332803"
+                                         },
+                      "http_status":  200,
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "2026060607432500FE00E58D1523B33D86",
+                                       "data":  {
+                                                    "order_list":  [
+                                                                       {
+                                                                           "ad_id":  1866766765396057,
+                                                                           "aweme_info":  {
+                                                                                              "aweme_avatar":  "https://p26.douyinpic.com/img/aweme-avatar/tos-cn-avt-0015_21482f1721b01fd2a522b828eab34966~c5_168x168.webp?from=3782654143",
+                                                                                              "aweme_id":  3826720100319358,
+                                                                                              "aweme_name":  "一只家养白羊🦷",
+                                                                                              "aweme_show_id":  "66799442664"
+                                                                                          },
+                                                                           "marketing_goal":  "VIDEO_PROM_GOODS",
+                                                                           "order_create_time":  "2026-06-01 12:18",
+                                                                           "order_id":  7646275949331398692,
+                                                                           "product_info":  {
+                                                                                                "product_id":  3810515145814311090,
+                                                                                                "product_image":  "https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800",
+                                                                                                "product_name":  "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器"
+                                                                                            },
+                                                                           "stats_info":  {
+                                                                                              "stat_cost_for_roi2":  45.68,
+                                                                                              "total_order_settle_amount_for_roi2_1h":  6929,
+                                                                                              "total_order_settle_count_for_roi2_1h":  39,
+                                                                                              "total_prepay_and_pay_settle_roi2_1h":  151.69
+                                                                                          },
+                                                                           "status":  "OVER",
+                                                                           "support_add_budget":  false
+                                                                       },
+                                                                       {
+                                                                           "ad_id":  1866605330439192,
+                                                                           "aweme_info":  {
+                                                                                              "aweme_avatar":  "https://p26.douyinpic.com/img/aweme-avatar/tos-cn-avt-0015_b1f88a041630fa8f1ec1aa65af6ee083~c5_168x168.webp?from=3782654143",
+                                                                                              "aweme_id":  1830013865038429,
+                                                                                              "aweme_name":  "桃子酱肉",
+                                                                                              "aweme_show_id":  "CJR.141319"
+                                                                                          },
+                                                                           "marketing_goal":  "VIDEO_PROM_GOODS",
+                                                                           "order_create_time":  "2026-05-30 17:32",
+                                                                           "order_id":  7645614695315193910,
+                                                                           "product_info":  {
+                                                                                                "product_id":  3810515145814311090,
+                                                                                                "product_image":  "https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800",
+                                                                                                "product_name":  "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器"
+                                                                                            },
+                                                                           "stats_info":  {
+                                                                                              "stat_cost_for_roi2":  0.33,
+                                                                                              "total_order_settle_amount_for_roi2_1h":  0,
+                                                                                              "total_order_settle_count_for_roi2_1h":  0,
+                                                                                              "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                                          },
+                                                                           "status":  "OVER",
+                                                                           "support_add_budget":  false
+                                                                       },
+                                                                       {
+                                                                           "ad_id":  0,
+                                                                           "aweme_info":  {
+                                                                                              "aweme_avatar":  "https://p26.douyinpic.com/img/aweme-avatar/tos-cn-avt-0015_b1f88a041630fa8f1ec1aa65af6ee083~c5_168x168.webp?from=3782654143",
+                                                                                              "aweme_id":  1830013865038429,
+                                                                                              "aweme_name":  "桃子酱肉",
+                                                                                              "aweme_show_id":  "CJR.141319"
+                                                                                          },
+                                                                           "marketing_goal":  "VIDEO_PROM_GOODS",
+                                                                           "order_create_time":  "2026-05-30 17:32",
+                                                                           "order_id":  7645614854727991302,
+                                                                           "product_info":  {
+                                                                                                "product_id":  3810515145814311090,
+                                                                                                "product_image":  "https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800",
+                                                                                                "product_name":  "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器"
+                                                                                            },
+                                                                           "stats_info":  {
+                                                                                              "stat_cost_for_roi2":  0,
+                                                                                              "total_order_settle_amount_for_roi2_1h":  0,
+                                                                                              "total_order_settle_count_for_roi2_1h":  0,
+                                                                                              "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                                          },
+                                                                           "status":  "TIMEOUT",
+                                                                           "support_add_budget":  false
+                                                                       }
+                                                                   ],
+                                                    "page_info":  {
+                                                                      "count":  50,
+                                                                      "cursor":  1780133549811660,
+                                                                      "has_more":  0
+                                                                  }
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "aweme_uni_promotion_order_get_VIDEO_PROM_GOODS_created_0601_0606",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/aweme/uni_promotion/order/get/",
+                      "request_params":  {
+                                             "advertiser_id":  "1860240208332803",
+                                             "order_field":  "order_create_time",
+                                             "filtering":  "{\"order_create_start_date\":\"2026-06-01\",\"order_create_end_date\":\"2026-06-06\"}",
+                                             "marketing_goal":  "VIDEO_PROM_GOODS",
+                                             "count":  "50",
+                                             "cursor":  "0"
+                                         },
+                      "http_status":  200,
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "20260606074326824200B73A0223A3A387",
+                                       "data":  {
+                                                    "order_list":  [
+                                                                       {
+                                                                           "ad_id":  1866766765396057,
+                                                                           "aweme_info":  {
+                                                                                              "aweme_avatar":  "https://p11.douyinpic.com/img/aweme-avatar/tos-cn-avt-0015_21482f1721b01fd2a522b828eab34966~c5_168x168.webp?from=3782654143",
+                                                                                              "aweme_id":  3826720100319358,
+                                                                                              "aweme_name":  "一只家养白羊🦷",
+                                                                                              "aweme_show_id":  "66799442664"
+                                                                                          },
+                                                                           "marketing_goal":  "VIDEO_PROM_GOODS",
+                                                                           "order_create_time":  "2026-06-01 12:18",
+                                                                           "order_id":  7646275949331398692,
+                                                                           "product_info":  {
+                                                                                                "product_id":  3810515145814311090,
+                                                                                                "product_image":  "https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800",
+                                                                                                "product_name":  "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器"
+                                                                                            },
+                                                                           "stats_info":  {
+                                                                                              "stat_cost_for_roi2":  45.68,
+                                                                                              "total_order_settle_amount_for_roi2_1h":  6929,
+                                                                                              "total_order_settle_count_for_roi2_1h":  39,
+                                                                                              "total_prepay_and_pay_settle_roi2_1h":  151.69
+                                                                                          },
+                                                                           "status":  "OVER",
+                                                                           "support_add_budget":  false
+                                                                       }
+                                                                   ],
+                                                    "page_info":  {
+                                                                      "count":  50,
+                                                                      "cursor":  1780287520343159,
+                                                                      "has_more":  0
+                                                                  }
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "aweme_uni_promotion_order_report_daily",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/aweme/uni_promotion/order/report/get/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "order_type":  "DESC",
+                                             "advertiser_id":  "1860240208332803",
+                                             "start_date":  "2026-06-01",
+                                             "end_date":  "2026-06-06",
+                                             "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                             "order_field":  "stat_cost_for_roi2",
+                                             "page":  "1"
+                                         },
+                      "http_status":  200,
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "20260606074327ADE9153852980165E55F",
+                                       "data":  {
+                                                    "ad_list":  [
+                                                                    {
+                                                                        "ad_id":  1866766765396057,
+                                                                        "start_date_time":  "2026-06-01",
+                                                                        "stat_cost_for_roi2":  30.06,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  1.31,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  7,
+                                                                        "total_order_settle_amount_for_roi2_1h":  4056,
+                                                                        "total_order_settle_count_for_roi2_1h":  23,
+                                                                        "total_pay_order_count_for_roi2":  25,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  4387,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  4394,
+                                                                        "total_prepay_and_pay_order_roi2":  146.17,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  134.93,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    },
+                                                                    {
+                                                                        "ad_id":  1866766765396057,
+                                                                        "start_date_time":  "2026-06-02",
+                                                                        "stat_cost_for_roi2":  11.99,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  1.09,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  2,
+                                                                        "total_order_settle_amount_for_roi2_1h":  1859,
+                                                                        "total_order_settle_count_for_roi2_1h":  11,
+                                                                        "total_pay_order_count_for_roi2":  11,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  1857,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  1859,
+                                                                        "total_prepay_and_pay_order_roi2":  155.05,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  155.05,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    },
+                                                                    {
+                                                                        "ad_id":  1866766765396057,
+                                                                        "start_date_time":  "2026-06-03",
+                                                                        "stat_cost_for_roi2":  3.63,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  0.73,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                        "total_order_settle_amount_for_roi2_1h":  1014,
+                                                                        "total_order_settle_count_for_roi2_1h":  5,
+                                                                        "total_pay_order_count_for_roi2":  5,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  1014,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  1014,
+                                                                        "total_prepay_and_pay_order_roi2":  279.34,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  279.34,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    },
+                                                                    {
+                                                                        "ad_id":  1866766765396057,
+                                                                        "start_date_time":  "2026-06-04",
+                                                                        "stat_cost_for_roi2":  0,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  0,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                        "total_order_settle_amount_for_roi2_1h":  0,
+                                                                        "total_order_settle_count_for_roi2_1h":  0,
+                                                                        "total_pay_order_count_for_roi2":  0,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  0,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                        "total_prepay_and_pay_order_roi2":  0,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  0,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    },
+                                                                    {
+                                                                        "ad_id":  1866766765396057,
+                                                                        "start_date_time":  "2026-06-05",
+                                                                        "stat_cost_for_roi2":  0,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  0,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                        "total_order_settle_amount_for_roi2_1h":  0,
+                                                                        "total_order_settle_count_for_roi2_1h":  0,
+                                                                        "total_pay_order_count_for_roi2":  0,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  0,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                        "total_prepay_and_pay_order_roi2":  0,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  0,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    },
+                                                                    {
+                                                                        "ad_id":  1866605330439192,
+                                                                        "start_date_time":  "2026-06-01",
+                                                                        "stat_cost_for_roi2":  0.08,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  0,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                        "total_order_settle_amount_for_roi2_1h":  0,
+                                                                        "total_order_settle_count_for_roi2_1h":  0,
+                                                                        "total_pay_order_count_for_roi2":  0,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  0,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                        "total_prepay_and_pay_order_roi2":  0,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  0,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    }
+                                                                ],
+                                                    "page_info":  {
+                                                                      "page":  1,
+                                                                      "page_size":  100,
+                                                                      "total_number":  2,
+                                                                      "total_page":  1
+                                                                  }
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "aweme_uni_promotion_order_report_total",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/aweme/uni_promotion/order/report/get/",
+                      "request_params":  {
+                                             "advertiser_id":  "1860240208332803",
+                                             "order_type":  "DESC",
+                                             "page_size":  "100",
+                                             "order_field":  "stat_cost_for_roi2",
+                                             "start_date":  "2026-06-01",
+                                             "end_date":  "2026-06-06",
+                                             "page":  "1"
+                                         },
+                      "http_status":  200,
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "2026060607432814BCD8758B26464ACFB6",
+                                       "data":  {
+                                                    "ad_list":  [
+                                                                    {
+                                                                        "ad_id":  1866766765396057,
+                                                                        "start_date_time":  null,
+                                                                        "stat_cost_for_roi2":  45.68,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  1.17,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  9,
+                                                                        "total_order_settle_amount_for_roi2_1h":  6929,
+                                                                        "total_order_settle_count_for_roi2_1h":  39,
+                                                                        "total_pay_order_count_for_roi2":  41,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  7258,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  7267,
+                                                                        "total_prepay_and_pay_order_roi2":  159.08,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  151.69,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    },
+                                                                    {
+                                                                        "ad_id":  1866605330439192,
+                                                                        "start_date_time":  null,
+                                                                        "stat_cost_for_roi2":  0.08,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  0,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                        "total_order_settle_amount_for_roi2_1h":  0,
+                                                                        "total_order_settle_count_for_roi2_1h":  0,
+                                                                        "total_pay_order_count_for_roi2":  0,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  0,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                        "total_prepay_and_pay_order_roi2":  0,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  0,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    }
+                                                                ],
+                                                    "page_info":  {
+                                                                      "page":  1,
+                                                                      "page_size":  100,
+                                                                      "total_number":  2,
+                                                                      "total_page":  1
+                                                                  }
+                                                }
+                                   }
+                  }
+              ]
+}

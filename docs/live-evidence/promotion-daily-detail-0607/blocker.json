@@ -1,0 +1,38 @@
+{
+  "status": "BLOCKED_BY_CREDENTIAL",
+  "target_table": "tblXLtZsMTaikCeb",
+  "standard_method": "Qianniu promotion API with Cookie/CSRF/loginPointId",
+  "api_url": "https://1bp.taobao.com/report/query.json",
+  "unique_key_rule": "平台+日期",
+  "expected_unique_key_today": "天猫2026-06-07",
+  "missing_env": [
+    "TAOBAO_PROMOTION_COOKIE",
+    "TAOBAO_PROMOTION_CSRF_ID",
+    "TAOBAO_PROMOTION_LOGIN_POINT_ID"
+  ],
+  "credential_recheck": {
+    "checked_historical_candidates": 9,
+    "result": "no currently valid historical Cookie",
+    "evidence_file": "docs/live-evidence/promotion-daily-detail-0607/cookie-candidate-check.json",
+    "observed_errors": [
+      "2103001 cookie abnormal for session",
+      "5002004 loginQueryService#getSession returned abnormal result"
+    ],
+    "note": "A historical Cookie previously returned the correct 2026-06-07 Tmall spend 3087.31, but the same candidate no longer passes a fresh API request."
+  },
+  "latest_cookie_recheck": {
+    "cookie_saved_to": ".env.local",
+    "cookie_secret_printed": false,
+    "cookie_only_probe": "docs/live-evidence/promotion-daily-detail-0607/latest-cookie-probe.json",
+    "page_token_probe": "docs/live-evidence/promotion-daily-detail-0607/page-token-probe.json",
+    "asset_token_probe": "docs/live-evidence/promotion-daily-detail-0607/asset-token-probe.json",
+    "historical_token_pair_probe": "docs/live-evidence/promotion-daily-detail-0607/historical-token-with-new-cookie-probe.json",
+    "result": "Cookie was stored, but the promotion API still requires the matching csrfId and loginPointId from the same live request.",
+    "observed_error": "2102001 bizLogin csrf check failed"
+  },
+  "notes": [
+    "The Feishu table fields were prepared for daily detail rows.",
+    "The run did not write 0 or fake spend.",
+    "Store only a freshly validated Qianniu promotion Cookie, csrfId, and loginPointId in .env.local before running the 5-minute overwrite test."
+  ]
+}

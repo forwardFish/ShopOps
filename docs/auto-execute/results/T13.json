@@ -1,0 +1,63 @@
+{
+  "task_pack_id": "shopops-goal-2026-06-03",
+  "task_id": "T13",
+  "status": "BLOCKED_BY_ENVIRONMENT",
+  "evidence": [
+    {
+      "type": "result_json_gate",
+      "status": "PASS",
+      "path": "docs/auto-execute/logs/T13/final-gate-checks.json",
+      "summary": "T00-T12 result JSON files exist, parse, match task_pack_id shopops-goal-2026-06-03, and include terminal statuses."
+    },
+    {
+      "type": "handoff_gate",
+      "status": "PASS",
+      "path": "docs/auto-execute/latest",
+      "summary": "T00-T12 HANDOFF files exist."
+    },
+    {
+      "type": "log_evidence_gate",
+      "status": "PASS",
+      "path": "docs/auto-execute/logs",
+      "summary": "T00-T12 task log evidence exists, including codex worker logs."
+    },
+    {
+      "type": "live_feishu_gate",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "path": "docs/auto-execute/results/T03.json",
+      "summary": "Live Feishu Bitable write/upsert/readback is unavailable because credentials/table IDs or lark_oapi are missing."
+    },
+    {
+      "type": "live_qianniu_gate",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "path": "docs/auto-execute/results/T11.json",
+      "summary": "Live Qianniu PC/CDP order and promotion-center collection cannot be verified from this surface."
+    },
+    {
+      "type": "final_report",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "path": "docs/auto-execute/logs/T13/final-acceptance-report.md",
+      "summary": "Final gate report explains why pure PASS is not allowed."
+    }
+  ],
+  "blockers": [
+    {
+      "id": "T13-LIVE-FEISHU-EVIDENCE-MISSING",
+      "classification": "BLOCKED_BY_ENVIRONMENT",
+      "status": "OPEN",
+      "summary": "Missing live Feishu Bitable evidence: T03 and T11 show required Feishu credentials/table IDs and lark_oapi are unavailable, so real write/upsert/readback cannot be verified."
+    },
+    {
+      "id": "T13-LIVE-QIANNIU-EVIDENCE-MISSING",
+      "classification": "BLOCKED_BY_ENVIRONMENT",
+      "status": "OPEN",
+      "summary": "Missing live Qianniu evidence: T04, T06, T07, T08, T10, and T11 show no usable live Qianniu PC/CDP session evidence from this surface."
+    },
+    {
+      "id": "T13-LOCAL-ONLY-LIMITATION",
+      "classification": "BLOCKED_BY_ENVIRONMENT",
+      "status": "OPEN",
+      "summary": "Local-only storage, crawler, scheduler, and regression evidence cannot be represented as live Feishu/Qianniu PASS evidence."
+    }
+  ]
+}

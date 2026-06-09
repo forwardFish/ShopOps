@@ -1,0 +1,331 @@
+{
+  "counts_after_first": {
+    "alert_log": 1,
+    "daily_report": 1,
+    "metrics_10min": 1,
+    "monitor_snapshot": 1,
+    "orders_raw": 1,
+    "promotion_snapshot": 1,
+    "shop_config": 1,
+    "system_config": 1,
+    "task_run_log": 1
+  },
+  "counts_after_second": {
+    "alert_log": 1,
+    "daily_report": 1,
+    "metrics_10min": 1,
+    "monitor_snapshot": 1,
+    "orders_raw": 1,
+    "promotion_snapshot": 1,
+    "shop_config": 1,
+    "system_config": 1,
+    "task_run_log": 1
+  },
+  "field_coverage": {
+    "alert_log": [
+      "alert_id",
+      "unique_key",
+      "发送结果",
+      "告警内容",
+      "告警类型",
+      "告警级别",
+      "店铺ID",
+      "当前值",
+      "是否已发送",
+      "触发时间",
+      "阈值"
+    ],
+    "daily_report": [
+      "report_date",
+      "unique_key",
+      "今日ROI",
+      "今日成交额(元)",
+      "今日订单数",
+      "店铺ID",
+      "店铺名称",
+      "异常统计",
+      "总推广消耗(元)",
+      "推广中心花费(元)",
+      "数据状态",
+      "获客成本(元)"
+    ],
+    "metrics_10min": [
+      "unique_key",
+      "周期ROI",
+      "周期获客成本(元)",
+      "店铺ID",
+      "店铺名称",
+      "异常原因",
+      "推广消耗(元)",
+      "数据状态",
+      "新增成交额(元)",
+      "新增订单数",
+      "时间开始",
+      "时间结束"
+    ],
+    "monitor_snapshot": [
+      "unique_key",
+      "今日成交额(元)",
+      "今日订单数",
+      "实时ROI",
+      "店铺ID",
+      "店铺名称",
+      "总推广消耗(元)",
+      "推广中心花费(元)",
+      "推广来源",
+      "数据状态",
+      "是否告警",
+      "获客成本(元)",
+      "订单来源",
+      "采集时间",
+      "错误信息"
+    ],
+    "orders_raw": [
+      "unique_key",
+      "下单时间",
+      "原始数据",
+      "商品名称",
+      "店铺ID",
+      "店铺名称",
+      "支付时间",
+      "支付金额",
+      "数据来源",
+      "订单号",
+      "订单状态",
+      "采集时间"
+    ],
+    "promotion_snapshot": [
+      "unique_key",
+      "今日累计消耗(元)",
+      "原始数据",
+      "店铺ID",
+      "店铺名称",
+      "推广渠道",
+      "曝光",
+      "点击",
+      "状态",
+      "转化",
+      "采集时间",
+      "错误信息"
+    ],
+    "shop_config": [
+      "order_source",
+      "platform",
+      "promotion_source",
+      "qianniu_cdp_url",
+      "remark",
+      "shop_id",
+      "shop_name",
+      "status",
+      "unique_key"
+    ],
+    "system_config": [
+      "config_key",
+      "config_value",
+      "enabled",
+      "remark",
+      "unique_key",
+      "updated_at"
+    ],
+    "task_run_log": [
+      "task_id",
+      "任务类型",
+      "写入数量",
+      "店铺ID",
+      "开始时间",
+      "总状态",
+      "拉取数量",
+      "推广状态",
+      "是否已告警",
+      "结束时间",
+      "耗时秒",
+      "订单状态",
+      "错误信息",
+      "错误码",
+      "飞书写入状态"
+    ]
+  },
+  "generated_files": [
+    "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\auto-execute\\external-data\\T03\\local_feishu.json",
+    "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\auto-execute\\external-data\\T03\\local_feishu_fail.json",
+    "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\auto-execute\\external-data\\T03\\pending_records_fail.jsonl"
+  ],
+  "pending_after_replay": [],
+  "pending_before_replay": [
+    {
+      "created_at": "2026-06-03 18:39:48",
+      "fields": {
+        "unique_key": "taobao_shop_001_202606031200",
+        "今日成交额(元)": 99.9,
+        "今日订单数": 1,
+        "实时ROI": 8.1,
+        "店铺ID": "taobao_shop_001",
+        "店铺名称": "淘宝店铺A",
+        "总推广消耗(元)": 12.34,
+        "推广中心花费(元)": 12.34,
+        "推广来源": "qianniu_pc",
+        "数据状态": "normal",
+        "是否告警": false,
+        "获客成本(元)": 12.34,
+        "订单来源": "crawler",
+        "采集时间": "2026-06-03 12:00:00",
+        "错误信息": null
+      },
+      "reason": "local_fail_table",
+      "table": "monitor_snapshot"
+    }
+  ],
+  "readback": {
+    "alert_log": [
+      {
+        "alert_id": "T03_ALERT_001",
+        "unique_key": "T03_ALERT_001",
+        "发送结果": "pending",
+        "告警内容": "T03 local proof alert",
+        "告警类型": "feishu_failed",
+        "告警级别": "critical",
+        "店铺ID": "taobao_shop_001",
+        "当前值": null,
+        "是否已发送": false,
+        "触发时间": "2026-06-03 12:00:00",
+        "阈值": null
+      }
+    ],
+    "daily_report": [
+      {
+        "report_date": "2026-06-03",
+        "unique_key": "taobao_shop_001_2026-06-03",
+        "今日ROI": 8.1,
+        "今日成交额(元)": 99.9,
+        "今日订单数": 1,
+        "店铺ID": "taobao_shop_001",
+        "店铺名称": "淘宝店铺A",
+        "异常统计": "{}",
+        "总推广消耗(元)": 12.34,
+        "推广中心花费(元)": 12.34,
+        "数据状态": "normal",
+        "获客成本(元)": 12.34
+      }
+    ],
+    "metrics_10min": [
+      {
+        "unique_key": "taobao_shop_001_202606031150_202606031200",
+        "周期ROI": 8.1,
+        "周期获客成本(元)": 12.34,
+        "店铺ID": "taobao_shop_001",
+        "店铺名称": "淘宝店铺A",
+        "异常原因": null,
+        "推广消耗(元)": 12.34,
+        "数据状态": "normal",
+        "新增成交额(元)": 99.9,
+        "新增订单数": 1,
+        "时间开始": "2026-06-03 11:50:00",
+        "时间结束": "2026-06-03 12:00:00"
+      }
+    ],
+    "monitor_snapshot": [
+      {
+        "unique_key": "taobao_shop_001_202606031200",
+        "今日成交额(元)": 99.9,
+        "今日订单数": 2,
+        "实时ROI": 8.1,
+        "店铺ID": "taobao_shop_001",
+        "店铺名称": "淘宝店铺A",
+        "总推广消耗(元)": 12.34,
+        "推广中心花费(元)": 12.34,
+        "推广来源": "qianniu_pc",
+        "数据状态": "normal",
+        "是否告警": false,
+        "获客成本(元)": 12.34,
+        "订单来源": "crawler",
+        "采集时间": "2026-06-03 12:00:00",
+        "错误信息": null
+      }
+    ],
+    "orders_raw": [
+      {
+        "unique_key": "taobao_taobao_shop_001_T03_ORDER_001",
+        "下单时间": "2026-06-03 11:50:00",
+        "原始数据": "{\"source\":\"local-proof\"}",
+        "商品名称": "T03 local proof item",
+        "店铺ID": "taobao_shop_001",
+        "店铺名称": "淘宝店铺A",
+        "支付时间": "2026-06-03 11:51:00",
+        "支付金额": 99.9,
+        "数据来源": "crawler",
+        "订单号": "T03_ORDER_001",
+        "订单状态": "TRADE_FINISHED",
+        "采集时间": "2026-06-03 12:00:00"
+      }
+    ],
+    "promotion_snapshot": [
+      {
+        "unique_key": "taobao_shop_001_tuiguangcenter_202606031200",
+        "今日累计消耗(元)": 12.34,
+        "原始数据": {
+          "source": "local-proof"
+        },
+        "店铺ID": "taobao_shop_001",
+        "店铺名称": "淘宝店铺A",
+        "推广渠道": "推广中心",
+        "曝光": null,
+        "点击": null,
+        "状态": "success",
+        "转化": null,
+        "采集时间": "2026-06-03 12:00:00",
+        "错误信息": null
+      }
+    ],
+    "shop_config": [
+      {
+        "order_source": "crawler",
+        "platform": "taobao",
+        "promotion_source": "qianniu_pc",
+        "qianniu_cdp_url": "http://127.0.0.1:9222",
+        "remark": "T03 local proof",
+        "shop_id": "taobao_shop_001",
+        "shop_name": "淘宝店铺A",
+        "status": "active",
+        "unique_key": "taobao_shop_001"
+      }
+    ],
+    "system_config": [
+      {
+        "config_key": "ORDER_SOURCE",
+        "config_value": "crawler",
+        "enabled": true,
+        "remark": "T03 local proof",
+        "unique_key": "ORDER_SOURCE",
+        "updated_at": "2026-06-03 12:00:00"
+      }
+    ],
+    "task_run_log": [
+      {
+        "task_id": "T03_TASK_LOG_001",
+        "任务类型": "full_collect",
+        "写入数量": 5,
+        "店铺ID": "taobao_shop_001",
+        "开始时间": "2026-06-03 12:00:00",
+        "总状态": "success",
+        "拉取数量": 2,
+        "推广状态": "success",
+        "是否已告警": false,
+        "结束时间": "2026-06-03 12:00:01",
+        "耗时秒": 1.0,
+        "订单状态": "success",
+        "错误信息": null,
+        "错误码": null,
+        "飞书写入状态": "success"
+      }
+    ]
+  },
+  "required_checks": {
+    "all_tables_written": true,
+    "pending_cache_written": true,
+    "pending_replay_cleared": true,
+    "readback_all_tables": true,
+    "unique_key_upsert_no_duplicate": true,
+    "upsert_updated_existing_row": true
+  },
+  "status": "PASS"
+}

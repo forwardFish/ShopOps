@@ -1,0 +1,411 @@
+{
+  "rows": [
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "投流",
+          "type": "text"
+        }
+      ],
+      "orders": 38,
+      "period": "今日",
+      "platform": "天猫",
+      "sales": 7098,
+      "start": "2026-06-08",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "今日-天猫"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "订单,投流",
+          "type": "text"
+        }
+      ],
+      "orders": 0,
+      "period": "今日",
+      "platform": "抖音",
+      "sales": 0,
+      "start": "2026-06-08",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "今日-抖音"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "订单,投流",
+          "type": "text"
+        }
+      ],
+      "orders": 0,
+      "period": "今日",
+      "platform": "拼多多",
+      "sales": 0,
+      "start": "2026-06-08",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "今日-拼多多"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "订单,投流",
+          "type": "text"
+        }
+      ],
+      "orders": 0,
+      "period": "今日",
+      "platform": "淘宝",
+      "sales": 0,
+      "start": "2026-06-08",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "今日-淘宝"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "订单,投流",
+          "type": "text"
+        }
+      ],
+      "orders": 0,
+      "period": "今日",
+      "platform": "视频号",
+      "sales": 0,
+      "start": "2026-06-08",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "今日-视频号"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "投流",
+          "type": "text"
+        }
+      ],
+      "orders": 38,
+      "period": "今日",
+      "platform": "全平台总计",
+      "sales": 6760,
+      "start": "2026-06-08",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "今日-全平台总计"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "投流",
+          "type": "text"
+        }
+      ],
+      "orders": 1061,
+      "period": "最近7天",
+      "platform": "天猫",
+      "sales": 178593,
+      "start": "2026-06-02",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "最近7天-天猫"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "订单",
+          "type": "text"
+        }
+      ],
+      "orders": 0,
+      "period": "最近7天",
+      "platform": "抖音",
+      "sales": 0,
+      "start": "2026-06-02",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "最近7天-抖音"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "订单",
+          "type": "text"
+        }
+      ],
+      "orders": 0,
+      "period": "最近7天",
+      "platform": "拼多多",
+      "sales": 0,
+      "start": "2026-06-02",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "最近7天-拼多多"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "订单",
+          "type": "text"
+        }
+      ],
+      "orders": 0,
+      "period": "最近7天",
+      "platform": "淘宝",
+      "sales": 0,
+      "start": "2026-06-02",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "最近7天-淘宝"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "订单,投流",
+          "type": "text"
+        }
+      ],
+      "orders": 0,
+      "period": "最近7天",
+      "platform": "视频号",
+      "sales": 0,
+      "start": "2026-06-02",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "最近7天-视频号"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": null,
+      "orders": 1061,
+      "period": "最近7天",
+      "platform": "全平台总计",
+      "sales": 109979,
+      "start": "2026-06-02",
+      "status": [
+        {
+          "text": "normal",
+          "type": "text"
+        }
+      ],
+      "unique_key": "最近7天-全平台总计"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "投流",
+          "type": "text"
+        }
+      ],
+      "orders": 6988,
+      "period": "最近30天",
+      "platform": "天猫",
+      "sales": 1164160.45,
+      "start": "2026-05-10",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "最近30天-天猫"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "订单",
+          "type": "text"
+        }
+      ],
+      "orders": 0,
+      "period": "最近30天",
+      "platform": "抖音",
+      "sales": 0,
+      "start": "2026-05-10",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "最近30天-抖音"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "订单",
+          "type": "text"
+        }
+      ],
+      "orders": 0,
+      "period": "最近30天",
+      "platform": "拼多多",
+      "sales": 0,
+      "start": "2026-05-10",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "最近30天-拼多多"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "订单",
+          "type": "text"
+        }
+      ],
+      "orders": 0,
+      "period": "最近30天",
+      "platform": "淘宝",
+      "sales": 0,
+      "start": "2026-05-10",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "最近30天-淘宝"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": [
+        {
+          "text": "订单,投流",
+          "type": "text"
+        }
+      ],
+      "orders": 0,
+      "period": "最近30天",
+      "platform": "视频号",
+      "sales": 0,
+      "start": "2026-05-10",
+      "status": [
+        {
+          "text": "partial",
+          "type": "text"
+        }
+      ],
+      "unique_key": "最近30天-视频号"
+    },
+    {
+      "end": "2026-06-08",
+      "missing": null,
+      "orders": 6988,
+      "period": "最近30天",
+      "platform": "全平台总计",
+      "sales": 482817.630000001,
+      "start": "2026-05-10",
+      "status": [
+        {
+          "text": "normal",
+          "type": "text"
+        }
+      ],
+      "unique_key": "最近30天-全平台总计"
+    }
+  ],
+  "summary": {
+    "old_dated_key_count": 0,
+    "platforms": [
+      "全平台总计",
+      "天猫",
+      "抖音",
+      "拼多多",
+      "淘宝",
+      "视频号"
+    ],
+    "ranges": [
+      [
+        [
+          "今日",
+          "2026-06-08",
+          "2026-06-08"
+        ],
+        6
+      ],
+      [
+        [
+          "最近30天",
+          "2026-05-10",
+          "2026-06-08"
+        ],
+        6
+      ],
+      [
+        [
+          "最近7天",
+          "2026-06-02",
+          "2026-06-08"
+        ],
+        6
+      ]
+    ],
+    "record_count": 18,
+    "total_platform_rows": []
+  }
+}

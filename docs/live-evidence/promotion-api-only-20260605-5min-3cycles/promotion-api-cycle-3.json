@@ -1,0 +1,20 @@
+{
+  "cycle": 3,
+  "started_at": "2026-06-05T15:09:17",
+  "captured_at": "2026-06-05T15:09:17",
+  "query_date": "2026-06-05",
+  "success": true,
+  "api_cost": 2061.85,
+  "api_fields": {
+    "charge": 2061.8491600000057,
+    "adPv": 18934,
+    "click": 956,
+    "roi": 1.8032356935363738,
+    "alipayInshopAmt": 3718.0
+  },
+  "raw_status": {
+    "http_shape": "info.data.list",
+    "info_ok": true,
+    "message": null
+  }
+}

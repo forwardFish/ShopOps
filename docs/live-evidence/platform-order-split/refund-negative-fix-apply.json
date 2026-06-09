@@ -1,0 +1,26 @@
+{
+  "formula_updates": {
+    "天猫": {
+      "expression": "IF(IFBLANK([实收款],0)-IFBLANK([退款金额],0)<0,0,IFBLANK([实收款],0)-IFBLANK([退款金额],0))",
+      "table_id": "tbl0gBiMcAKMCcwI"
+    },
+    "抖音": {
+      "expression": "IF(IFBLANK([实收款],0)-IFBLANK([退款金额],0)<0,0,IFBLANK([实收款],0)-IFBLANK([退款金额],0))",
+      "table_id": "tblTbbFkEepZAGru"
+    },
+    "拼多多": {
+      "expression": "IF(IFBLANK([实收款],0)-IFBLANK([退款金额],0)<0,0,IFBLANK([实收款],0)-IFBLANK([退款金额],0))",
+      "table_id": "tblFI9ZNPzrjR6Jm"
+    },
+    "视频号": {
+      "expression": "IF(IFBLANK([实收款],0)-IFBLANK([退款金额],0)<0,0,IFBLANK([实收款],0)-IFBLANK([退款金额],0))",
+      "table_id": "tblFlMuPnVEn8qkw"
+    }
+  },
+  "tmall_unit_price_updates": {
+    "refund_zero_unit_candidates": 4265,
+    "scanned": 8272,
+    "source_file": "D:\\lyh\\ShopOps\\天猫\\0607\\ExportOrderList26586703454.xlsx",
+    "updated": 4265
+  }
+}

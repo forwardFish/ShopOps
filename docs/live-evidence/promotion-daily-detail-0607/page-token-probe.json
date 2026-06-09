@@ -1,0 +1,58 @@
+[
+  {
+    "url": "https://qn.taobao.com/home.htm/tuiguangcenter_new/",
+    "final_url": "https://qn.taobao.com/home.htm/tuiguangcenter_new/",
+    "http": 200,
+    "content_type": "text/html; charset=utf-8",
+    "length": 8245,
+    "title": "千牛商家工作台",
+    "found": {
+      "csrfId": [],
+      "loginPointId": [],
+      "bizCode": []
+    },
+    "snippet": null
+  },
+  {
+    "url": "https://qn.taobao.com/home.htm",
+    "final_url": "https://qn.taobao.com/home.htm",
+    "http": 200,
+    "content_type": "text/html; charset=utf-8",
+    "length": 8245,
+    "title": "千牛商家工作台",
+    "found": {
+      "csrfId": [],
+      "loginPointId": [],
+      "bizCode": []
+    },
+    "snippet": null
+  },
+  {
+    "url": "https://1bp.taobao.com/index.html",
+    "final_url": "https://1bp.taobao.com/index.html",
+    "http": 200,
+    "content_type": "text/html;charset=utf-8",
+    "length": 10222,
+    "title": "万相台无界版",
+    "found": {
+      "csrfId": [],
+      "loginPointId": [],
+      "bizCode": []
+    },
+    "snippet": null
+  },
+  {
+    "url": "https://1bp.taobao.com/home",
+    "final_url": "https://error.taobao.com?traceId=210702e017808380255943106e0f10&error=referer_forbidden",
+    "http": 200,
+    "content_type": "text/html; charset=utf-8",
+    "length": 12224,
+    "title": "淘宝网 - 淘！我喜欢",
+    "found": {
+      "csrfId": [],
+      "loginPointId": [],
+      "bizCode": []
+    },
+    "snippet": null
+  }
+]

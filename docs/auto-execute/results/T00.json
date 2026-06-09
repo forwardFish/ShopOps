@@ -1,0 +1,61 @@
+{
+  "task_pack_id": "shopops-goal-2026-06-03",
+  "task_id": "T00",
+  "status": "PASS_WITH_LIMITATION",
+  "summary": "Implemented a docs-scoped goal-task relay runner that enforces shopops-goal task paths, exact task_pack_id freshness, result JSON plus HANDOFF validation, one-at-a-time worker selection, and durable repair queue output. Verified in dry-run mode only because this user request explicitly limited execution to T00.",
+  "selected_next_task": "T01",
+  "evidence": [
+    {
+      "type": "implementation",
+      "path": "docs/auto-execute/T00-run-goal-task-relay.ps1",
+      "claim": "Relay runner maps T01-T13 to docs/auto-execute/shopops-goal-tasks, rejects stale result JSON without task_pack_id shopops-goal-2026-06-03, selects only the first open task, and writes repair-queue.md."
+    },
+    {
+      "type": "verification",
+      "path": "docs/auto-execute/logs/T00/orchestrator-20260603-120938.json",
+      "claim": "Dry-run validated 13 downstream tasks, selected T01 as first open task, and did not launch downstream codex exec workers."
+    },
+    {
+      "type": "repair_routing",
+      "path": "docs/auto-execute/repair-queue.md",
+      "claim": "Durable repair queue records stale or missing downstream artifacts for the current task pack."
+    },
+    {
+      "type": "required_handoff",
+      "path": "docs/auto-execute/latest/T00-HANDOFF.md",
+      "claim": "T00 handoff records status, evidence, selected next task, limitations, and resume instructions."
+    }
+  ],
+  "blockers": [],
+  "limitations": [
+    {
+      "status": "PASS_WITH_LIMITATION",
+      "reason": "The user explicitly requested execution of only T00, so the relay runner was tested with -DryRun and did not spawn T01 or any later task."
+    },
+    {
+      "status": "STALE_RESULT",
+      "reason": "Existing T01-T09/T11 result JSON files lack task_pack_id shopops-goal-2026-06-03 and cannot be used as current completion evidence."
+    },
+    {
+      "status": "MISSING_ARTIFACT",
+      "reason": "T10, T12, and T13 currently lack required result JSON and HANDOFF artifacts for this task pack."
+    }
+  ],
+  "security": {
+    "secrets_touched": false,
+    "external_side_effects": false,
+    "downstream_codex_exec_launched": false
+  },
+  "commands": [
+    {
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\docs\\auto-execute\\T00-run-goal-task-relay.ps1 -ProjectRoot \"D:\\lyh\\agent\\agent-frame\\ShopOps\" -DryRun",
+      "status": "PASS",
+      "evidence": "docs/auto-execute/logs/T00/orchestrator-20260603-120938.json"
+    }
+  ],
+  "next_actions": [
+    "Run docs/auto-execute/T00-run-goal-task-relay.ps1 without -DryRun only when the boundary expands from T00-only to executing downstream tasks.",
+    "First downstream task selected by current freshness rules is T01."
+  ],
+  "completed_at": "2026-06-03T12:09:38+08:00"
+}

@@ -1,0 +1,1654 @@
+{
+  "source_fields": [
+    {
+      "field_id": "flduIwBzli",
+      "field_name": "unique_key",
+      "is_extend": false,
+      "is_primary": true,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fld7Gqojcj",
+      "field_name": "平台",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldpP6mYv6",
+      "field_name": "店铺ID",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fld1mxFAT4",
+      "field_name": "店铺名称",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldolBUm6i",
+      "field_name": "采集时间",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "flda82MDNb",
+      "field_name": "订单号",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldxrzKA0g",
+      "field_name": "创建时间",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldmelxGwR",
+      "field_name": "买家昵称",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldsvQBGia",
+      "field_name": "商品名称",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fld2YznemW",
+      "field_name": "单价",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.0"
+      },
+      "type": 2,
+      "ui_type": "Number"
+    },
+    {
+      "field_id": "fldN5WbmTd",
+      "field_name": "数量",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.0"
+      },
+      "type": 2,
+      "ui_type": "Number"
+    },
+    {
+      "field_id": "fldSGoVFy7",
+      "field_name": "履约/售后状态",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldTjUbxy4",
+      "field_name": "交易状态",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fld6WuPSPN",
+      "field_name": "实收款",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.0"
+      },
+      "type": 2,
+      "ui_type": "Number"
+    },
+    {
+      "field_id": "fldGxMEiGu",
+      "field_name": "操作信息",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldneChV3C",
+      "field_name": "页面URL",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldrflfqgn",
+      "field_name": "页面截图",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldVFZsbuk",
+      "field_name": "原始数据",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "flddvcgUcZ",
+      "field_name": "数据来源",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldii121Dz",
+      "field_name": "发货截止时间",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldGzTz97p",
+      "field_name": "发货倒计时",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldWZYjnU0",
+      "field_name": "商品图片说明",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fld0wiEzeS",
+      "field_name": "拼多多订单状态",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldCLKWqNs",
+      "field_name": "拼多多售后状态",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldMs6w0By",
+      "field_name": "拼多多承诺发货时间",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldi74HiCN",
+      "field_name": "拼多多快递单号",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fld52eqVaU",
+      "field_name": "拼多多物流公司",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldcoLaJvN",
+      "field_name": "拼多多商品ID",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldTeYwGYZ",
+      "field_name": "拼多多商品规格",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldbxGMLRO",
+      "field_name": "拼多多商家编码",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldDYGkoXG",
+      "field_name": "拼多多支付方式",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldGBDI0Dc",
+      "field_name": "拼多多用户实付金额",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.0"
+      },
+      "type": 2,
+      "ui_type": "Number"
+    },
+    {
+      "field_id": "fldtsmI1ux",
+      "field_name": "公式_统计日期",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "",
+        "formula_expression": "LEFT(IFBLANK(bitable::$table[tblbPjczqMElVU9a].$field[fldxrzKA0g],bitable::$table[tblbPjczqMElVU9a].$field[fldolBUm6i]),10)"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldTh1LKbT",
+      "field_name": "公式_汇总平台",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "",
+        "formula_expression": "IF(bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj]=\"千牛淘宝\",\"淘宝\",IF(bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj]=\"天猫\",\"淘宝\",IF(bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj].CONTAIN(\"抖音\"),\"抖音\",IF(bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj].CONTAIN(\"拼多多\"),\"拼多多\",IF(bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj].CONTAIN(\"视频号\")||bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj].CONTAIN(\"微信\"),\"视频号\",IF(bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj].CONTAIN(\"淘宝\")||bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj].CONTAIN(\"天猫\")||bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj].CONTAIN(\"千牛\"),\"淘宝\",bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj]))))))"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldCNKGEcQ",
+      "field_name": "公式_销售额",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "IFBLANK(bitable::$table[tblbPjczqMElVU9a].$field[fld6WuPSPN],0)"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldtAoeyct",
+      "field_name": "公式_退款金额",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "0"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldUWVBbXz",
+      "field_name": "公式_有效销售额",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "bitable::$table[tblbPjczqMElVU9a].$field[fldCNKGEcQ]-bitable::$table[tblbPjczqMElVU9a].$field[fldtAoeyct]"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldfgP7weD",
+      "field_name": "公式_商品成本",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "0"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldglv9vMB",
+      "field_name": "公式_运费成本",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "0"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldcdOAbre",
+      "field_name": "公式_平台扣点",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "0"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldgYzuU9g",
+      "field_name": "公式_其他费用",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "0"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    }
+  ],
+  "source_samples": [
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_330570",
+        "买家昵称": "295747",
+        "交易状态": "Sent",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 169,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-31",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 169,
+        "创建时间": "2026-05-31 23:37:56",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6926803521674443949\"], \"amount\": 169, \"as_id\": null, \"buyer_id\": 295747, \"buyer_message\": null, \"buyer_paid_amount\": 119, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:04:20\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": null, \"ext_datas\": \"\", \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 169, \"base_price\": 169, \"buyer_paid_amount\": 119, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7634815254895152410\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":0}\", \"item_pay_amount\": null, \"item_status\": \"Sent\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 330570, \"oi_id\": 345857, \"outer_oi_id\": \"6926803521674443949\", \"pic\": \"https://p3-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 1, \"raw_so_id\": \"6926803521674443949\", \"referrer_id\": \"3212101035235721\", \"referrer_name\": \"趣白\", \"refund_id\": null, \"refund_qty\": null, \"refund_status\": null, \"remark\": null, \"seller_income_amount\": 169, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": \"@JDAZ25563646000\", \"labels\": \"京东配送,小店,平台补贴,店铺老客,抖音,线上发货,高频购买\", \"lc_id\": \"JD\", \"link_o_id\": null, \"logistics_company\": \"京东物流(常用)\", \"merge_so_id\": null, \"modified\": \"2026-06-04 13:07:29\", \"node\": null, \"o_id\": 330570, \"open_id\": \"1@#UJs3dJczkkORLzFlSHFdLXIA62OI1FjPHSQHvli0iKt38C+cSqDnLfPNfYN0jqzgjIS06Alt9DU=\", \"order_date\": \"2026-05-31 23:37:56\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6926803521674443949\", \"outer_so_id\": null, \"paid_amount\": 169, \"pay_amount\": 169, \"pay_date\": \"2026-05-31 23:38:03\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 169, \"buyer_account\": \"1@#UJs3dJczkkORLzFlSHFdLXIA62OI1FjPHSQHvli0iKt38C+cSqDnLfPNfYN0jqzgjIS06Alt9DU=\", \"is_order_pay\": true, \"o_id\": 330570, \"outer_pay_id\": \"6926803521674443949\", \"pay_date\": \"2026-05-31 23:38:03\", \"pay_id\": 436290, \"pay_type\": 1, \"payment\": \"微信\", \"seller_account\": null, \"status\": \"Confirmed\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 50, \"question_desc\": null, \"question_type\": null, \"raw_so_id\": \"6926803521674443949\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"3212101035235721\", \"referrer_name\": \"趣白\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 169, \"send_date\": \"2026-06-01 08:52:58\", \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#UJs3dJczkkORLzFlSHFdLXIA62OI1FjPHSQHvli0iKt38C+cSqDnLfPNfYN0jqzgjIS06Alt9DU=\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"WAIT_BUYER_CONFIRM_GOODS\", \"sign_time\": null, \"skus\": \"1.3651289727850242\", \"so_id\": \"6926803521674443949\", \"status\": \"Sent\", \"tag\": null, \"ts\": 8066243911, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "169",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "1",
+        "订单号": "330570",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqIzHJr4B",
+      "record_id": "recvlzqIzHJr4B"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_333174",
+        "买家昵称": "298243",
+        "交易状态": "Sent",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 507,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-21",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 507,
+        "创建时间": "2026-05-21 04:47:21",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6952989233860581284\"], \"amount\": 507, \"as_id\": null, \"buyer_id\": 298243, \"buyer_message\": null, \"buyer_paid_amount\": 507, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:19\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": \"2026-05-28 11:59:39\", \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 507, \"base_price\": 169, \"buyer_paid_amount\": 507, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_product_card,商品卡\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":8}\", \"item_pay_amount\": null, \"item_status\": \"Sent\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 333174, \"oi_id\": 348463, \"outer_oi_id\": \"6952989233860581284\", \"pic\": \"https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 3, \"raw_so_id\": \"6952989233860581284\", \"referrer_id\": \"\", \"referrer_name\": \"\", \"refund_id\": null, \"refund_qty\": null, \"refund_status\": null, \"remark\": null, \"seller_income_amount\": 507, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": \"@JDAZ25374608605\", \"labels\": \"京东配送,小店,店铺新客,抖音,服务优先,线上发货,高频购买\", \"lc_id\": \"JD\", \"link_o_id\": null, \"logistics_company\": \"京东物流(常用)\", \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:19\", \"node\": null, \"o_id\": 333174, \"open_id\": \"1@#HJE+G1+WlBh2xDQjdNldyg7SJy2jHfM8YS07OT9PGF08q5uYLwH0cYL2t0fzgXdtnkeZ\", \"order_date\": \"2026-05-21 04:47:21\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6952989233860581284\", \"outer_so_id\": null, \"paid_amount\": 507, \"pay_amount\": 507, \"pay_date\": \"2026-05-21 04:47:27\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 507, \"buyer_account\": \"1@#HJE+G1+WlBh2xDQjdNldyg7SJy2jHfM8YS07OT9PGF08q5uYLwH0cYL2t0fzgXdtnkeZ\", \"is_order_pay\": true, \"o_id\": 333174, \"outer_pay_id\": \"6952989233860581284\", \"pay_date\": \"2026-05-21 04:47:27\", \"pay_id\": 439218, \"pay_type\": 1, \"payment\": \"微信\", \"seller_account\": null, \"status\": \"Confirmed\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 0, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6952989233860581284\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": null, \"referrer_name\": null, \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 507, \"send_date\": \"2026-05-21 11:59:39\", \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#HJE+G1+WlBh2xDQjdNldyg7SJy2jHfM8YS07OT9PGF08q5uYLwH0cYL2t0fzgXdtnkeZ\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"TRADE_FINISHED\", \"sign_time\": \"2026-05-28 11:59:39\", \"skus\": \"3.3651289727850242*3\", \"so_id\": \"6952989233860581284\", \"status\": \"Sent\", \"tag\": null, \"ts\": 8066264706, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "507",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "3",
+        "订单号": "333174",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqK3a1k7O",
+      "record_id": "recvlzqK3a1k7O"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_333117",
+        "买家昵称": "298188",
+        "交易状态": "Sent",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 169,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-23",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 169,
+        "创建时间": "2026-05-23 19:23:49",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6953066964791596752\"], \"amount\": 169, \"as_id\": null, \"buyer_id\": 298188, \"buyer_message\": null, \"buyer_paid_amount\": 169, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:19\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": \"2026-05-28 11:46:38\", \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 169, \"base_price\": 169, \"buyer_paid_amount\": 169, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7642237552380558757\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":2}\", \"item_pay_amount\": null, \"item_status\": \"Sent\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 333117, \"oi_id\": 348406, \"outer_oi_id\": \"6953066964791596752\", \"pic\": \"https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 1, \"raw_so_id\": \"6953066964791596752\", \"referrer_id\": \"3149422930967224\", \"referrer_name\": \"peace猫猫✨\", \"refund_id\": null, \"refund_qty\": null, \"refund_status\": null, \"remark\": null, \"seller_income_amount\": 169, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": \"@JDAZ25422091068\", \"labels\": \"京东配送,小店,店铺新客,抖音,精选联盟,线上发货,高频购买\", \"lc_id\": \"JD\", \"link_o_id\": null, \"logistics_company\": \"京东物流(常用)\", \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:19\", \"node\": null, \"o_id\": 333117, \"open_id\": \"1@#wlnUuYMtYq9Cr7P0NaMKoDyq++8qyCwz9DfIrNstaWkPZJh2nssNHNfUDMyuHEA2Ntey6eQi2J4=\", \"order_date\": \"2026-05-23 19:23:49\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6953066964791596752\", \"outer_so_id\": null, \"paid_amount\": 169, \"pay_amount\": 169, \"pay_date\": \"2026-05-23 19:23:58\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 169, \"buyer_account\": \"1@#wlnUuYMtYq9Cr7P0NaMKoDyq++8qyCwz9DfIrNstaWkPZJh2nssNHNfUDMyuHEA2Ntey6eQi2J4=\", \"is_order_pay\": true, \"o_id\": 333117, \"outer_pay_id\": \"6953066964791596752\", \"pay_date\": \"2026-05-23 19:23:58\", \"pay_id\": 439162, \"pay_type\": 1, \"payment\": \"支付宝\", \"seller_account\": null, \"status\": \"Confirmed\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 0, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6953066964791596752\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"3149422930967224\", \"referrer_name\": \"peace猫猫✨\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 169, \"send_date\": \"2026-05-24 09:49:31\", \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#wlnUuYMtYq9Cr7P0NaMKoDyq++8qyCwz9DfIrNstaWkPZJh2nssNHNfUDMyuHEA2Ntey6eQi2J4=\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"TRADE_FINISHED\", \"sign_time\": \"2026-05-28 11:46:38\", \"skus\": \"1.3651289727850242\", \"so_id\": \"6953066964791596752\", \"status\": \"Sent\", \"tag\": null, \"ts\": 8066264763, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "169",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "1",
+        "订单号": "333117",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqL47Rh2n",
+      "record_id": "recvlzqL47Rh2n"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_332980",
+        "买家昵称": "298061",
+        "交易状态": "Sent",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 169,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-25",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 169,
+        "创建时间": "2026-05-25 09:51:35",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6953136133008791158\"], \"amount\": 169, \"as_id\": null, \"buyer_id\": 298061, \"buyer_message\": null, \"buyer_paid_amount\": 151, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:19\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": \"2026-05-28 11:43:00\", \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 169, \"base_price\": 169, \"buyer_paid_amount\": 151, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7637405374764649764\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":0}\", \"item_pay_amount\": null, \"item_status\": \"Sent\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 332980, \"oi_id\": 348269, \"outer_oi_id\": \"6953136133008791158\", \"pic\": \"https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 1, \"raw_so_id\": \"6953136133008791158\", \"referrer_id\": \"3212101035235721\", \"referrer_name\": \"趣白\", \"refund_id\": null, \"refund_qty\": null, \"refund_status\": null, \"remark\": null, \"seller_income_amount\": 169, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": \"@JDAZ25440556572\", \"labels\": \"京东配送,小店,平台补贴,店铺新客,抖音,服务优先,线上发货\", \"lc_id\": \"JD\", \"link_o_id\": null, \"logistics_company\": \"京东物流(常用)\", \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:19\", \"node\": null, \"o_id\": 332980, \"open_id\": \"1@#hAu7iNte4YkcoqWde9FlTRXKrwhRBalp34C/2512/fZF5+JBOKfgSwUX8eU1sEQ/DryX41vtQ/I=\", \"order_date\": \"2026-05-25 09:51:35\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6953136133008791158\", \"outer_so_id\": null, \"paid_amount\": 169, \"pay_amount\": 169, \"pay_date\": \"2026-05-25 09:51:41\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 169, \"buyer_account\": \"1@#hAu7iNte4YkcoqWde9FlTRXKrwhRBalp34C/2512/fZF5+JBOKfgSwUX8eU1sEQ/DryX41vtQ/I=\", \"is_order_pay\": true, \"o_id\": 332980, \"outer_pay_id\": \"6953136133008791158\", \"pay_date\": \"2026-05-25 09:51:41\", \"pay_id\": 439025, \"pay_type\": 1, \"payment\": \"支付宝\", \"seller_account\": null, \"status\": \"Confirmed\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 18, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6953136133008791158\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"3212101035235721\", \"referrer_name\": \"趣白\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 169, \"send_date\": \"2026-05-25 10:35:41\", \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#hAu7iNte4YkcoqWde9FlTRXKrwhRBalp34C/2512/fZF5+JBOKfgSwUX8eU1sEQ/DryX41vtQ/I=\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"TRADE_FINISHED\", \"sign_time\": \"2026-05-28 11:43:00\", \"skus\": \"1.3651289727850242\", \"so_id\": \"6953136133008791158\", \"status\": \"Sent\", \"tag\": null, \"ts\": 8066264901, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "169",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "1",
+        "订单号": "332980",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqLM4otsc",
+      "record_id": "recvlzqLM4otsc"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_332979",
+        "买家昵称": "298060",
+        "交易状态": "Sent",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 169,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-23",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 169,
+        "创建时间": "2026-05-23 19:06:09",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6926572846359477843\"], \"amount\": 169, \"as_id\": null, \"buyer_id\": 298060, \"buyer_message\": null, \"buyer_paid_amount\": 105.47, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:19\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": \"2026-05-28 12:39:12\", \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 169, \"base_price\": 169, \"buyer_paid_amount\": 105.47, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7636693487437499686\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":2}\", \"item_pay_amount\": null, \"item_status\": \"Sent\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 332979, \"oi_id\": 348268, \"outer_oi_id\": \"6926572846359477843\", \"pic\": \"https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 1, \"raw_so_id\": \"6926572846359477843\", \"referrer_id\": \"617275984448250\", \"referrer_name\": \"万泰臻品\", \"refund_id\": null, \"refund_qty\": null, \"refund_status\": null, \"remark\": null, \"seller_income_amount\": 169, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": \"@JDAZ25422091059\", \"labels\": \"京东配送,小店,平台补贴,店铺新客,抖音,精选联盟,线上发货,高频购买\", \"lc_id\": \"JD\", \"link_o_id\": null, \"logistics_company\": \"京东物流(常用)\", \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:19\", \"node\": null, \"o_id\": 332979, \"open_id\": \"1@#dW1D/QKrc3FKbf4tBYxgjA8pYpNJjVSW+Lfwmqaf0FqitVHoM+clrhz8BkgO4Ih8K4llSg==\", \"order_date\": \"2026-05-23 19:06:09\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6926572846359477843\", \"outer_so_id\": null, \"paid_amount\": 169, \"pay_amount\": 169, \"pay_date\": \"2026-05-23 19:06:12\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 169, \"buyer_account\": \"1@#dW1D/QKrc3FKbf4tBYxgjA8pYpNJjVSW+Lfwmqaf0FqitVHoM+clrhz8BkgO4Ih8K4llSg==\", \"is_order_pay\": true, \"o_id\": 332979, \"outer_pay_id\": \"6926572846359477843\", \"pay_date\": \"2026-05-23 19:06:12\", \"pay_id\": 439024, \"pay_type\": 1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Confirmed\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 63.53, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6926572846359477843\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"617275984448250\", \"referrer_name\": \"万泰臻品\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 169, \"send_date\": \"2026-05-24 09:49:31\", \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#dW1D/QKrc3FKbf4tBYxgjA8pYpNJjVSW+Lfwmqaf0FqitVHoM+clrhz8BkgO4Ih8K4llSg==\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"TRADE_FINISHED\", \"sign_time\": \"2026-05-28 12:39:12\", \"skus\": \"1.3651289727850242\", \"so_id\": \"6926572846359477843\", \"status\": \"Sent\", \"tag\": null, \"ts\": 8066264902, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "169",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "1",
+        "订单号": "332979",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqN5F2iW3",
+      "record_id": "recvlzqN5F2iW3"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_332928",
+        "买家昵称": "298011",
+        "交易状态": "Sent",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 338,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-21",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 338,
+        "创建时间": "2026-05-21 05:55:31",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6926497792091454668\"], \"amount\": 338, \"as_id\": null, \"buyer_id\": 298011, \"buyer_message\": null, \"buyer_paid_amount\": 338, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:19\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": \"2026-05-28 12:01:28\", \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 338, \"base_price\": 169, \"buyer_paid_amount\": 338, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7641584553655602459\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":2}\", \"item_pay_amount\": null, \"item_status\": \"Sent\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 332928, \"oi_id\": 348217, \"outer_oi_id\": \"6926497792091454668\", \"pic\": \"https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 2, \"raw_so_id\": \"6926497792091454668\", \"referrer_id\": \"1839953119824300\", \"referrer_name\": \"猛猛爆单好物分享\", \"refund_id\": null, \"refund_qty\": null, \"refund_status\": null, \"remark\": null, \"seller_income_amount\": 338, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": \"@JDAZ25374666896\", \"labels\": \"京东配送,小店,店铺新客,抖音,服务优先,精选联盟,线上发货\", \"lc_id\": \"JD\", \"link_o_id\": null, \"logistics_company\": \"京东物流(常用)\", \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:19\", \"node\": null, \"o_id\": 332928, \"open_id\": \"1@#vXsuTb+WKkqhtAzsizgJSZdr4bulzZVvxdYbxhv8jeU49VIiEwzGgMD1N2kjyOUyXLGrUXD/z6M=\", \"order_date\": \"2026-05-21 05:55:31\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6926497792091454668\", \"outer_so_id\": null, \"paid_amount\": 338, \"pay_amount\": 338, \"pay_date\": \"2026-05-21 05:55:32\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 338, \"buyer_account\": \"1@#vXsuTb+WKkqhtAzsizgJSZdr4bulzZVvxdYbxhv8jeU49VIiEwzGgMD1N2kjyOUyXLGrUXD/z6M=\", \"is_order_pay\": true, \"o_id\": 332928, \"outer_pay_id\": \"6926497792091454668\", \"pay_date\": \"2026-05-21 05:55:32\", \"pay_id\": 438974, \"pay_type\": 1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Confirmed\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 0, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6926497792091454668\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"1839953119824300\", \"referrer_name\": \"猛猛爆单好物分享\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 338, \"send_date\": \"2026-05-21 12:01:28\", \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#vXsuTb+WKkqhtAzsizgJSZdr4bulzZVvxdYbxhv8jeU49VIiEwzGgMD1N2kjyOUyXLGrUXD/z6M=\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"TRADE_FINISHED\", \"sign_time\": \"2026-05-28 12:01:28\", \"skus\": \"2.3651289727850242*2\", \"so_id\": \"6926497792091454668\", \"status\": \"Sent\", \"tag\": null, \"ts\": 8066264953, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "338",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "2",
+        "订单号": "332928",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqNQZTgtt",
+      "record_id": "recvlzqNQZTgtt"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_332922",
+        "买家昵称": "298005",
+        "交易状态": "Sent",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 169,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-25",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 169,
+        "创建时间": "2026-05-25 07:41:19",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6926608468213267568\"], \"amount\": 169, \"as_id\": null, \"buyer_id\": 298005, \"buyer_message\": null, \"buyer_paid_amount\": 131, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:19\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": \"2026-05-28 11:54:57\", \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 169, \"base_price\": 169, \"buyer_paid_amount\": 131, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7637405374764649764\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":0}\", \"item_pay_amount\": null, \"item_status\": \"Sent\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 332922, \"oi_id\": 348211, \"outer_oi_id\": \"6926608468213267568\", \"pic\": \"https://p3-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 1, \"raw_so_id\": \"6926608468213267568\", \"referrer_id\": \"3212101035235721\", \"referrer_name\": \"趣白\", \"refund_id\": null, \"refund_qty\": null, \"refund_status\": null, \"remark\": null, \"seller_income_amount\": 169, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": \"@JDAZ25435569141\", \"labels\": \"京东配送,小店,平台补贴,店铺新客,抖音,线上发货,高频购买\", \"lc_id\": \"JD\", \"link_o_id\": null, \"logistics_company\": \"京东物流(常用)\", \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:19\", \"node\": null, \"o_id\": 332922, \"open_id\": \"1@#KkumI0NwdczahseHSmm5ywqz24DkRBqgpCp8UQzYggfHZyCxb89nqAs8KOPKa7hmr1zN\", \"order_date\": \"2026-05-25 07:41:19\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6926608468213267568\", \"outer_so_id\": null, \"paid_amount\": 169, \"pay_amount\": 169, \"pay_date\": \"2026-05-25 07:41:20\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 169, \"buyer_account\": \"1@#KkumI0NwdczahseHSmm5ywqz24DkRBqgpCp8UQzYggfHZyCxb89nqAs8KOPKa7hmr1zN\", \"is_order_pay\": true, \"o_id\": 332922, \"outer_pay_id\": \"6926608468213267568\", \"pay_date\": \"2026-05-25 07:41:20\", \"pay_id\": 438968, \"pay_type\": 1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Confirmed\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 38, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6926608468213267568\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"3212101035235721\", \"referrer_name\": \"趣白\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 169, \"send_date\": \"2026-05-25 08:10:51\", \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#KkumI0NwdczahseHSmm5ywqz24DkRBqgpCp8UQzYggfHZyCxb89nqAs8KOPKa7hmr1zN\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"TRADE_FINISHED\", \"sign_time\": \"2026-05-28 11:54:57\", \"skus\": \"1.3651289727850242\", \"so_id\": \"6926608468213267568\", \"status\": \"Sent\", \"tag\": null, \"ts\": 8066264959, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "169",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "1",
+        "订单号": "332922",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqOFEREim",
+      "record_id": "recvlzqOFEREim"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_332789",
+        "买家昵称": "297877",
+        "交易状态": "Sent",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 338,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-20",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 338,
+        "创建时间": "2026-05-20 21:31:03",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6952997952620467599\"], \"amount\": 338, \"as_id\": null, \"buyer_id\": 297877, \"buyer_message\": null, \"buyer_paid_amount\": 338, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:19\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": \"2026-05-28 12:01:28\", \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 338, \"base_price\": 169, \"buyer_paid_amount\": 338, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":8}\", \"item_pay_amount\": null, \"item_status\": \"Sent\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 332789, \"oi_id\": 348077, \"outer_oi_id\": \"6952997952620467599\", \"pic\": \"https://p3-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 2, \"raw_so_id\": \"6952997952620467599\", \"referrer_id\": \"\", \"referrer_name\": \"\", \"refund_id\": null, \"refund_qty\": null, \"refund_status\": null, \"remark\": null, \"seller_income_amount\": 338, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": \"@JDAZ25374743506\", \"labels\": \"京东配送,小店,店铺新客,抖音,服务优先,线上发货\", \"lc_id\": \"JD\", \"link_o_id\": null, \"logistics_company\": \"京东物流(常用)\", \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:19\", \"node\": null, \"o_id\": 332789, \"open_id\": \"1@#gBjYRd5ZXpLS/7t71ebuN9OyxaCFcVur/9U8AwcD+WollBgMj5PeTZTYiZOUI+Rn7dEEmidy8Q==\", \"order_date\": \"2026-05-20 21:31:03\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6952997952620467599\", \"outer_so_id\": null, \"paid_amount\": 338, \"pay_amount\": 338, \"pay_date\": \"2026-05-20 21:31:07\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 338, \"buyer_account\": \"1@#gBjYRd5ZXpLS/7t71ebuN9OyxaCFcVur/9U8AwcD+WollBgMj5PeTZTYiZOUI+Rn7dEEmidy8Q==\", \"is_order_pay\": true, \"o_id\": 332789, \"outer_pay_id\": \"6952997952620467599\", \"pay_date\": \"2026-05-20 21:31:07\", \"pay_id\": 438835, \"pay_type\": 1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Confirmed\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 0, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6952997952620467599\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": null, \"referrer_name\": null, \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 338, \"send_date\": \"2026-05-21 12:01:28\", \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#gBjYRd5ZXpLS/7t71ebuN9OyxaCFcVur/9U8AwcD+WollBgMj5PeTZTYiZOUI+Rn7dEEmidy8Q==\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"TRADE_FINISHED\", \"sign_time\": \"2026-05-28 12:01:28\", \"skus\": \"2.3651289727850242*2\", \"so_id\": \"6952997952620467599\", \"status\": \"Sent\", \"tag\": null, \"ts\": 8066265093, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "338",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "2",
+        "订单号": "332789",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqPwCXMnW",
+      "record_id": "recvlzqPwCXMnW"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_332783",
+        "买家昵称": "297871",
+        "交易状态": "Sent",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 338,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-21",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 338,
+        "创建时间": "2026-05-21 05:51:13",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6953020459408627668\"], \"amount\": 338, \"as_id\": null, \"buyer_id\": 297871, \"buyer_message\": null, \"buyer_paid_amount\": 338, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:19\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": \"2026-05-28 12:01:28\", \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 338, \"base_price\": 169, \"buyer_paid_amount\": 338, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7637405405315927315\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":8}\", \"item_pay_amount\": null, \"item_status\": \"Sent\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 332783, \"oi_id\": 348071, \"outer_oi_id\": \"6953020459408627668\", \"pic\": \"https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 2, \"raw_so_id\": \"6953020459408627668\", \"referrer_id\": \"3212101035235721\", \"referrer_name\": \"趣白\", \"refund_id\": null, \"refund_qty\": null, \"refund_status\": null, \"remark\": null, \"seller_income_amount\": 338, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": \"@JDAZ25374750265\", \"labels\": \"京东配送,小店,店铺新客,抖音,服务优先,线上发货,高频购买\", \"lc_id\": \"JD\", \"link_o_id\": null, \"logistics_company\": \"京东物流(常用)\", \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:19\", \"node\": null, \"o_id\": 332783, \"open_id\": \"1@#B2xrXNfS15CUIJUWS+x1KXK75X/K3QaK1i3gYkAeD2YPWKRnCiiAykYFd5rVUMNT7xAZwutSLRU=\", \"order_date\": \"2026-05-21 05:51:13\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6953020459408627668\", \"outer_so_id\": null, \"paid_amount\": 338, \"pay_amount\": 338, \"pay_date\": \"2026-05-21 05:51:14\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 338, \"buyer_account\": \"1@#B2xrXNfS15CUIJUWS+x1KXK75X/K3QaK1i3gYkAeD2YPWKRnCiiAykYFd5rVUMNT7xAZwutSLRU=\", \"is_order_pay\": true, \"o_id\": 332783, \"outer_pay_id\": \"6953020459408627668\", \"pay_date\": \"2026-05-21 05:51:14\", \"pay_id\": 438829, \"pay_type\": 1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Confirmed\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 0, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6953020459408627668\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"3212101035235721\", \"referrer_name\": \"趣白\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 338, \"send_date\": \"2026-05-21 12:01:28\", \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#B2xrXNfS15CUIJUWS+x1KXK75X/K3QaK1i3gYkAeD2YPWKRnCiiAykYFd5rVUMNT7xAZwutSLRU=\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"TRADE_FINISHED\", \"sign_time\": \"2026-05-28 12:01:28\", \"skus\": \"2.3651289727850242*2\", \"so_id\": \"6953020459408627668\", \"status\": \"Sent\", \"tag\": null, \"ts\": 8066265099, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "338",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "2",
+        "订单号": "332783",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqQn7z8hf",
+      "record_id": "recvlzqQn7z8hf"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_333642",
+        "买家昵称": "296460",
+        "交易状态": "Sent",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 338,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-21",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 338,
+        "创建时间": "2026-05-21 02:12:36",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6926511053393198503\"], \"amount\": 338, \"as_id\": null, \"buyer_id\": 296460, \"buyer_message\": null, \"buyer_paid_amount\": 338, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:20\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": \"2026-05-28 12:01:28\", \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 338, \"base_price\": 169, \"buyer_paid_amount\": 338, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7641584553655602459\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":2}\", \"item_pay_amount\": null, \"item_status\": \"Sent\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 333642, \"oi_id\": 348931, \"outer_oi_id\": \"6926511053393198503\", \"pic\": \"https://p3-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 2, \"raw_so_id\": \"6926511053393198503\", \"referrer_id\": \"1839953119824300\", \"referrer_name\": \"猛猛爆单好物分享\", \"refund_id\": null, \"refund_qty\": null, \"refund_status\": null, \"remark\": null, \"seller_income_amount\": 338, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": \"@JDAZ25374671577\", \"labels\": \"京东配送,小店,店铺新客,抖音,服务优先,精选联盟,线上发货,高频购买\", \"lc_id\": \"JD\", \"link_o_id\": null, \"logistics_company\": \"京东物流(常用)\", \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:20\", \"node\": null, \"o_id\": 333642, \"open_id\": \"1@#fC84zIOTWJAV9/Oy5VJuuNBes3ok+tSA+5xUOSktDgYF8az3pJjVMdQcfgua0mOoejE8LN/t2A==\", \"order_date\": \"2026-05-21 02:12:36\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6926511053393198503\", \"outer_so_id\": null, \"paid_amount\": 338, \"pay_amount\": 338, \"pay_date\": \"2026-05-21 02:12:37\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 338, \"buyer_account\": \"1@#fC84zIOTWJAV9/Oy5VJuuNBes3ok+tSA+5xUOSktDgYF8az3pJjVMdQcfgua0mOoejE8LN/t2A==\", \"is_order_pay\": true, \"o_id\": 333642, \"outer_pay_id\": \"6926511053393198503\", \"pay_date\": \"2026-05-21 02:12:37\", \"pay_id\": 439681, \"pay_type\": 1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Confirmed\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 0, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6926511053393198503\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"1839953119824300\", \"referrer_name\": \"猛猛爆单好物分享\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 338, \"send_date\": \"2026-05-21 12:01:28\", \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#fC84zIOTWJAV9/Oy5VJuuNBes3ok+tSA+5xUOSktDgYF8az3pJjVMdQcfgua0mOoejE8LN/t2A==\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"TRADE_FINISHED\", \"sign_time\": \"2026-05-28 12:01:28\", \"skus\": \"2.3651289727850242*2\", \"so_id\": \"6926511053393198503\", \"status\": \"Sent\", \"tag\": null, \"ts\": 8066266322, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "338",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "2",
+        "订单号": "333642",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqRndypi6",
+      "record_id": "recvlzqRndypi6"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_333597",
+        "买家昵称": "298643",
+        "交易状态": "Sent",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 169,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-21",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 169,
+        "创建时间": "2026-05-21 05:17:15",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6926506609385962652\"], \"amount\": 169, \"as_id\": null, \"buyer_id\": 298643, \"buyer_message\": null, \"buyer_paid_amount\": 169, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:20\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": \"2026-05-28 12:01:28\", \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 169, \"base_price\": 169, \"buyer_paid_amount\": 169, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7641950258963991858\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":2}\", \"item_pay_amount\": null, \"item_status\": \"Sent\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 333597, \"oi_id\": 348886, \"outer_oi_id\": \"6926506609385962652\", \"pic\": \"https://p3-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 1, \"raw_so_id\": \"6926506609385962652\", \"referrer_id\": \"95405089683\", \"referrer_name\": \"爱义乌\", \"refund_id\": null, \"refund_qty\": null, \"refund_status\": null, \"remark\": null, \"seller_income_amount\": 169, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": \"@JDAZ25374750248\", \"labels\": \"京东配送,小店,店铺新客,抖音,服务优先,精选联盟,线上发货,高频购买\", \"lc_id\": \"JD\", \"link_o_id\": null, \"logistics_company\": \"京东物流(常用)\", \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:20\", \"node\": null, \"o_id\": 333597, \"open_id\": \"1@#Vs07S4X1GI63ba/IsWLLxF5keE+JAb2xp8qS8MFqQ64A0DPSnt40bLnenEItrYkOUULm\", \"order_date\": \"2026-05-21 05:17:15\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6926506609385962652\", \"outer_so_id\": null, \"paid_amount\": 169, \"pay_amount\": 169, \"pay_date\": \"2026-05-21 05:17:18\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 169, \"buyer_account\": \"1@#Vs07S4X1GI63ba/IsWLLxF5keE+JAb2xp8qS8MFqQ64A0DPSnt40bLnenEItrYkOUULm\", \"is_order_pay\": true, \"o_id\": 333597, \"outer_pay_id\": \"6926506609385962652\", \"pay_date\": \"2026-05-21 05:17:18\", \"pay_id\": 439636, \"pay_type\": 1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Confirmed\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 0, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6926506609385962652\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"95405089683\", \"referrer_name\": \"爱义乌\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 169, \"send_date\": \"2026-05-21 12:01:28\", \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#Vs07S4X1GI63ba/IsWLLxF5keE+JAb2xp8qS8MFqQ64A0DPSnt40bLnenEItrYkOUULm\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"TRADE_FINISHED\", \"sign_time\": \"2026-05-28 12:01:28\", \"skus\": \"1.3651289727850242\", \"so_id\": \"6926506609385962652\", \"status\": \"Sent\", \"tag\": null, \"ts\": 8066266367, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "169",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "1",
+        "订单号": "333597",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqT52Hrnp",
+      "record_id": "recvlzqT52Hrnp"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_333501",
+        "买家昵称": "298552",
+        "交易状态": "Sent",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 338,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-21",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 338,
+        "创建时间": "2026-05-21 07:44:50",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6926511229153541993\"], \"amount\": 338, \"as_id\": null, \"buyer_id\": 298552, \"buyer_message\": null, \"buyer_paid_amount\": 338, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:20\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": \"2026-05-28 12:01:28\", \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 338, \"base_price\": 169, \"buyer_paid_amount\": 338, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7641584553655602459\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":2}\", \"item_pay_amount\": null, \"item_status\": \"Sent\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 333501, \"oi_id\": 348790, \"outer_oi_id\": \"6926511229153541993\", \"pic\": \"https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 2, \"raw_so_id\": \"6926511229153541993\", \"referrer_id\": \"1839953119824300\", \"referrer_name\": \"猛猛爆单好物分享\", \"refund_id\": null, \"refund_qty\": null, \"refund_status\": null, \"remark\": null, \"seller_income_amount\": 338, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": \"@JDAZ25374702780\", \"labels\": \"京东配送,小店,店铺新客,抖音,服务优先,精选联盟,线上发货\", \"lc_id\": \"JD\", \"link_o_id\": null, \"logistics_company\": \"京东物流(常用)\", \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:20\", \"node\": null, \"o_id\": 333501, \"open_id\": \"1@#rDWnMAopzqFl8HN1p4oyPuJITl5VavAGX1MAiLTOPwfeEUq0GePJu/rFObn31dC9LGXP\", \"order_date\": \"2026-05-21 07:44:50\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6926511229153541993\", \"outer_so_id\": null, \"paid_amount\": 338, \"pay_amount\": 338, \"pay_date\": \"2026-05-21 07:45:00\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 338, \"buyer_account\": \"1@#rDWnMAopzqFl8HN1p4oyPuJITl5VavAGX1MAiLTOPwfeEUq0GePJu/rFObn31dC9LGXP\", \"is_order_pay\": true, \"o_id\": 333501, \"outer_pay_id\": \"6926511229153541993\", \"pay_date\": \"2026-05-21 07:45:00\", \"pay_id\": 439540, \"pay_type\": 1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Confirmed\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 0, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6926511229153541993\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"1839953119824300\", \"referrer_name\": \"猛猛爆单好物分享\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 338, \"send_date\": \"2026-05-21 12:01:28\", \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#rDWnMAopzqFl8HN1p4oyPuJITl5VavAGX1MAiLTOPwfeEUq0GePJu/rFObn31dC9LGXP\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"TRADE_FINISHED\", \"sign_time\": \"2026-05-28 12:01:28\", \"skus\": \"2.3651289727850242*2\", \"so_id\": \"6926511229153541993\", \"status\": \"Sent\", \"tag\": null, \"ts\": 8066266464, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "338",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "2",
+        "订单号": "333501",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqUOrcDSx",
+      "record_id": "recvlzqUOrcDSx"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_333472",
+        "买家昵称": "298524",
+        "交易状态": "Sent",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 338,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-20",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 338,
+        "创建时间": "2026-05-20 18:15:56",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6953001644565730723\"], \"amount\": 338, \"as_id\": null, \"buyer_id\": 298524, \"buyer_message\": null, \"buyer_paid_amount\": 338, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:20\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": \"2026-05-28 12:01:28\", \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 338, \"base_price\": 169, \"buyer_paid_amount\": 338, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7640835323463629817\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":2}\", \"item_pay_amount\": null, \"item_status\": \"Sent\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 333472, \"oi_id\": 348761, \"outer_oi_id\": \"6953001644565730723\", \"pic\": \"https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 2, \"raw_so_id\": \"6953001644565730723\", \"referrer_id\": \"3826720100319358\", \"referrer_name\": \"一只家养白羊🦷\", \"refund_id\": null, \"refund_qty\": null, \"refund_status\": null, \"remark\": null, \"seller_income_amount\": 338, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": \"@JDAZ25374666906\", \"labels\": \"京东配送,小店,店铺新客,抖音,服务优先,精选联盟,线上发货\", \"lc_id\": \"JD\", \"link_o_id\": null, \"logistics_company\": \"京东物流(常用)\", \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:20\", \"node\": null, \"o_id\": 333472, \"open_id\": \"1@#mMbi34cdYTCqn6rHzQBg5OC+u6k9m3HiyOK3CwA0Ly+84JSvjPliO7BTUIYxwaduqZ/2XjGnMCU=\", \"order_date\": \"2026-05-20 18:15:56\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6953001644565730723\", \"outer_so_id\": null, \"paid_amount\": 338, \"pay_amount\": 338, \"pay_date\": \"2026-05-20 18:15:59\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 338, \"buyer_account\": \"1@#mMbi34cdYTCqn6rHzQBg5OC+u6k9m3HiyOK3CwA0Ly+84JSvjPliO7BTUIYxwaduqZ/2XjGnMCU=\", \"is_order_pay\": true, \"o_id\": 333472, \"outer_pay_id\": \"6953001644565730723\", \"pay_date\": \"2026-05-20 18:15:59\", \"pay_id\": 439511, \"pay_type\": 1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Confirmed\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 0, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6953001644565730723\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"3826720100319358\", \"referrer_name\": \"一只家养白羊🦷\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 338, \"send_date\": \"2026-05-21 12:01:28\", \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#mMbi34cdYTCqn6rHzQBg5OC+u6k9m3HiyOK3CwA0Ly+84JSvjPliO7BTUIYxwaduqZ/2XjGnMCU=\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"TRADE_FINISHED\", \"sign_time\": \"2026-05-28 12:01:28\", \"skus\": \"2.3651289727850242*2\", \"so_id\": \"6953001644565730723\", \"status\": \"Sent\", \"tag\": null, \"ts\": 8066266493, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "338",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "2",
+        "订单号": "333472",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqVB7kKUq",
+      "record_id": "recvlzqVB7kKUq"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_333467",
+        "买家昵称": "298519",
+        "交易状态": "Cancelled",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 0,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-23",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 0,
+        "创建时间": "2026-05-23 19:58:01",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6953095578056987946\"], \"amount\": 169, \"as_id\": null, \"buyer_id\": 298519, \"buyer_message\": null, \"buyer_paid_amount\": 169, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:20\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": null, \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 169, \"base_price\": 169, \"buyer_paid_amount\": 169, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7642235846715788579\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":2}\", \"item_pay_amount\": null, \"item_status\": \"Cancelled\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 333467, \"oi_id\": 348756, \"outer_oi_id\": \"6953095578056987946\", \"pic\": \"https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 1, \"raw_so_id\": \"6953095578056987946\", \"referrer_id\": \"862485775389007\", \"referrer_name\": \"笑谈天下\", \"refund_id\": null, \"refund_qty\": null, \"refund_status\": null, \"remark\": null, \"seller_income_amount\": 169, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": null, \"labels\": \"京东配送,小店,抖音,精选联盟\", \"lc_id\": null, \"link_o_id\": null, \"logistics_company\": null, \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:20\", \"node\": null, \"o_id\": 333467, \"open_id\": \"1@#tukgbn6xrvJhPgmlw9QGvXHa3kA+3x2yiopbYxZKo7lewPdr/4jfC0eGx4cGp+XPqrwO\", \"order_date\": \"2026-05-23 19:58:01\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": null, \"outer_so_id\": null, \"paid_amount\": 0, \"pay_amount\": 169, \"pay_date\": null, \"pay_free_amount\": 0, \"pays\": [], \"plan_delivery_date\": null, \"platform_free_amount\": 0, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6953095578056987946\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"862485775389007\", \"referrer_name\": \"笑谈天下\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 169, \"send_date\": null, \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#tukgbn6xrvJhPgmlw9QGvXHa3kA+3x2yiopbYxZKo7lewPdr/4jfC0eGx4cGp+XPqrwO\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"4\", \"sign_time\": null, \"skus\": \"0.\", \"so_id\": \"6953095578056987946\", \"status\": \"Cancelled\", \"tag\": null, \"ts\": 8066266498, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "0",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "1",
+        "订单号": "333467",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqWkr1RHr",
+      "record_id": "recvlzqWkr1RHr"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_332876",
+        "买家昵称": "297961",
+        "交易状态": "Cancelled",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 169,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-20",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 169,
+        "创建时间": "2026-05-20 10:51:45",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6926490074484342033\"], \"amount\": 169, \"as_id\": null, \"buyer_id\": 297961, \"buyer_message\": null, \"buyer_paid_amount\": 146.71, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:19\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": null, \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 169, \"base_price\": 169, \"buyer_paid_amount\": 146.71, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7640835323463629817\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":2}\", \"item_pay_amount\": null, \"item_status\": \"Cancelled\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 332876, \"oi_id\": 348165, \"outer_oi_id\": \"6926490074484342033\", \"pic\": \"https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 1, \"raw_so_id\": \"6926490074484342033\", \"referrer_id\": \"3826720100319358\", \"referrer_name\": \"一只家养白羊🦷\", \"refund_id\": null, \"refund_qty\": 1, \"refund_status\": \"success\", \"remark\": null, \"seller_income_amount\": 169, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": null, \"labels\": \"京东配送,发货前售后,小店,平台补贴,店铺新客,抖音极速版,精选联盟,高频购买\", \"lc_id\": null, \"link_o_id\": null, \"logistics_company\": null, \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:33\", \"node\": null, \"o_id\": 332876, \"open_id\": \"1@#yforUcqWmIZcqRI6G5taW2uEAHHDKXQjue5b1igrXYAjtqE/YjKUaVvJAObNY3ENUu9M\", \"order_date\": \"2026-05-20 10:51:45\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6926490074484342033\", \"outer_so_id\": null, \"paid_amount\": 169, \"pay_amount\": 169, \"pay_date\": \"2026-05-20 10:51:49\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 169, \"buyer_account\": \"1@#yforUcqWmIZcqRI6G5taW2uEAHHDKXQjue5b1igrXYAjtqE/YjKUaVvJAObNY3ENUu9M\", \"is_order_pay\": true, \"o_id\": 332876, \"outer_pay_id\": \"6926490074484342033\", \"pay_date\": \"2026-05-20 10:51:49\", \"pay_id\": 438922, \"pay_type\": 1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Confirmed\"}, {\"amount\": 146.71, \"buyer_account\": \"1@#yforUcqWmIZcqRI6G5taW2uEAHHDKXQjue5b1igrXYAjtqE/YjKUaVvJAObNY3ENUu9M\", \"is_order_pay\": false, \"o_id\": 332876, \"outer_pay_id\": \"147501692144960696\", \"pay_date\": \"2026-06-04 13:08:32\", \"pay_id\": 440342, \"pay_type\": -1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Finished\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 22.29, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6926490074484342033\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"3826720100319358\", \"referrer_name\": \"一只家养白羊🦷\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 169, \"send_date\": null, \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#yforUcqWmIZcqRI6G5taW2uEAHHDKXQjue5b1igrXYAjtqE/YjKUaVvJAObNY3ENUu9M\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"22\", \"sign_time\": null, \"skus\": \"0.\", \"so_id\": \"6926490074484342033\", \"status\": \"Cancelled\", \"tag\": null, \"ts\": 8066275247, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "169",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "1",
+        "订单号": "332876",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqX3cxR0H",
+      "record_id": "recvlzqX3cxR0H"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_333249",
+        "买家昵称": "298313",
+        "交易状态": "Cancelled",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 169,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-28",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 169,
+        "创建时间": "2026-05-28 11:04:08",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6953200971148498729\"], \"amount\": 169, \"as_id\": null, \"buyer_id\": 298313, \"buyer_message\": null, \"buyer_paid_amount\": 169, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:19\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": null, \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 169, \"base_price\": 169, \"buyer_paid_amount\": 169, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7644571541409132426\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":2}\", \"item_pay_amount\": null, \"item_status\": \"Cancelled\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 333249, \"oi_id\": 348538, \"outer_oi_id\": \"6953200971148498729\", \"pic\": \"https://p3-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 1, \"raw_so_id\": \"6953200971148498729\", \"referrer_id\": \"3826720100319358\", \"referrer_name\": \"一只家养白羊🦷\", \"refund_id\": null, \"refund_qty\": 1, \"refund_status\": \"success\", \"remark\": null, \"seller_income_amount\": 169, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": null, \"labels\": \"京东配送,发货前售后,小店,店铺新客,抖音,精选联盟,高频购买\", \"lc_id\": null, \"link_o_id\": null, \"logistics_company\": null, \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:33\", \"node\": null, \"o_id\": 333249, \"open_id\": \"1@#iIr+e1mPu2poKhTdgwEIpz+OCxGTbAsZeV3QNow8My+Ie5Vbn1SsdDvNNbeOmT9gPZL/\", \"order_date\": \"2026-05-28 11:04:08\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6953200971148498729\", \"outer_so_id\": null, \"paid_amount\": 169, \"pay_amount\": 169, \"pay_date\": \"2026-05-28 11:04:14\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 169, \"buyer_account\": \"1@#iIr+e1mPu2poKhTdgwEIpz+OCxGTbAsZeV3QNow8My+Ie5Vbn1SsdDvNNbeOmT9gPZL/\", \"is_order_pay\": true, \"o_id\": 333249, \"outer_pay_id\": \"6953200971148498729\", \"pay_date\": \"2026-05-28 11:04:14\", \"pay_id\": 439291, \"pay_type\": 1, \"payment\": \"支付宝\", \"seller_account\": null, \"status\": \"Confirmed\"}, {\"amount\": 169, \"buyer_account\": \"1@#iIr+e1mPu2poKhTdgwEIpz+OCxGTbAsZeV3QNow8My+Ie5Vbn1SsdDvNNbeOmT9gPZL/\", \"is_order_pay\": false, \"o_id\": 333249, \"outer_pay_id\": \"147505956195068552\", \"pay_date\": \"2026-06-04 13:08:32\", \"pay_id\": 440403, \"pay_type\": -1, \"payment\": \"支付宝\", \"seller_account\": null, \"status\": \"Finished\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 0, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6953200971148498729\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"3826720100319358\", \"referrer_name\": \"一只家养白羊🦷\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 169, \"send_date\": null, \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#iIr+e1mPu2poKhTdgwEIpz+OCxGTbAsZeV3QNow8My+Ie5Vbn1SsdDvNNbeOmT9gPZL/\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"21\", \"sign_time\": null, \"skus\": \"0.\", \"so_id\": \"6953200971148498729\", \"status\": \"Cancelled\", \"tag\": null, \"ts\": 8066275481, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "169",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "1",
+        "订单号": "333249",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqXLCGsrN",
+      "record_id": "recvlzqXLCGsrN"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_333531",
+        "买家昵称": "298581",
+        "交易状态": "Cancelled",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 169,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-19",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 169,
+        "创建时间": "2026-05-19 11:24:59",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6952970789349430949\"], \"amount\": 169, \"as_id\": null, \"buyer_id\": 298581, \"buyer_message\": null, \"buyer_paid_amount\": 169, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:20\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": null, \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 169, \"base_price\": 169, \"buyer_paid_amount\": 169, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7640835323463629817\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":2}\", \"item_pay_amount\": null, \"item_status\": \"Cancelled\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 333531, \"oi_id\": 348820, \"outer_oi_id\": \"6952970789349430949\", \"pic\": \"https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 1, \"raw_so_id\": \"6952970789349430949\", \"referrer_id\": \"3826720100319358\", \"referrer_name\": \"一只家养白羊🦷\", \"refund_id\": null, \"refund_qty\": 1, \"refund_status\": \"success\", \"remark\": null, \"seller_income_amount\": 169, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": null, \"labels\": \"京东配送,发货前售后,小店,店铺新客,抖音,精选联盟,高频购买\", \"lc_id\": null, \"link_o_id\": null, \"logistics_company\": null, \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:33\", \"node\": null, \"o_id\": 333531, \"open_id\": \"1@#/kqwvEGEuQN5Y7YcvuMXCbGCs0P4fSlLvF5/ZVyMRsChXHt9vQuHB+Qpa4nkoVaK6o/Au/tV0g==\", \"order_date\": \"2026-05-19 11:24:59\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6952970789349430949\", \"outer_so_id\": null, \"paid_amount\": 169, \"pay_amount\": 169, \"pay_date\": \"2026-05-19 11:25:00\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 169, \"buyer_account\": \"1@#/kqwvEGEuQN5Y7YcvuMXCbGCs0P4fSlLvF5/ZVyMRsChXHt9vQuHB+Qpa4nkoVaK6o/Au/tV0g==\", \"is_order_pay\": true, \"o_id\": 333531, \"outer_pay_id\": \"6952970789349430949\", \"pay_date\": \"2026-05-19 11:25:00\", \"pay_id\": 439570, \"pay_type\": 1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Confirmed\"}, {\"amount\": 169, \"buyer_account\": \"1@#/kqwvEGEuQN5Y7YcvuMXCbGCs0P4fSlLvF5/ZVyMRsChXHt9vQuHB+Qpa4nkoVaK6o/Au/tV0g==\", \"is_order_pay\": false, \"o_id\": 333531, \"outer_pay_id\": \"147502028410081220\", \"pay_date\": \"2026-06-04 13:08:33\", \"pay_id\": 440436, \"pay_type\": -1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Finished\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 0, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6952970789349430949\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"3826720100319358\", \"referrer_name\": \"一只家养白羊🦷\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 169, \"send_date\": null, \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#/kqwvEGEuQN5Y7YcvuMXCbGCs0P4fSlLvF5/ZVyMRsChXHt9vQuHB+Qpa4nkoVaK6o/Au/tV0g==\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"22\", \"sign_time\": null, \"skus\": \"0.\", \"so_id\": \"6952970789349430949\", \"status\": \"Cancelled\", \"tag\": null, \"ts\": 8066275555, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "169",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "1",
+        "订单号": "333531",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqYvCURvJ",
+      "record_id": "recvlzqYvCURvJ"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_333594",
+        "买家昵称": "298640",
+        "交易状态": "Cancelled",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 169,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-23",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 169,
+        "创建时间": "2026-05-23 10:47:21",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6953090772121883697\"], \"amount\": 169, \"as_id\": null, \"buyer_id\": 298640, \"buyer_message\": null, \"buyer_paid_amount\": 169, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:20\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": null, \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 169, \"base_price\": 169, \"buyer_paid_amount\": 169, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7642235846715788579\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":2}\", \"item_pay_amount\": null, \"item_status\": \"Cancelled\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 333594, \"oi_id\": 348883, \"outer_oi_id\": \"6953090772121883697\", \"pic\": \"https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 1, \"raw_so_id\": \"6953090772121883697\", \"referrer_id\": \"862485775389007\", \"referrer_name\": \"笑谈天下\", \"refund_id\": null, \"refund_qty\": 1, \"refund_status\": \"success\", \"remark\": null, \"seller_income_amount\": 169, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": null, \"labels\": \"京东配送,发货前售后,小店,店铺新客,抖音,精选联盟,高频购买\", \"lc_id\": null, \"link_o_id\": null, \"logistics_company\": null, \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:33\", \"node\": null, \"o_id\": 333594, \"open_id\": \"1@#ANdxaxWIrNJJIawfs1CawIwWLbGpCqto2g7Z5kzgsdbVpcBXm2dR5C9th3K57qRG0au9\", \"order_date\": \"2026-05-23 10:47:21\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6953090772121883697\", \"outer_so_id\": null, \"paid_amount\": 169, \"pay_amount\": 169, \"pay_date\": \"2026-05-23 10:47:22\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 169, \"buyer_account\": \"1@#ANdxaxWIrNJJIawfs1CawIwWLbGpCqto2g7Z5kzgsdbVpcBXm2dR5C9th3K57qRG0au9\", \"is_order_pay\": true, \"o_id\": 333594, \"outer_pay_id\": \"6953090772121883697\", \"pay_date\": \"2026-05-23 10:47:22\", \"pay_id\": 439633, \"pay_type\": 1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Confirmed\"}, {\"amount\": 169, \"buyer_account\": \"1@#ANdxaxWIrNJJIawfs1CawIwWLbGpCqto2g7Z5kzgsdbVpcBXm2dR5C9th3K57qRG0au9\", \"is_order_pay\": false, \"o_id\": 333594, \"outer_pay_id\": \"147502706259769475\", \"pay_date\": \"2026-06-04 13:08:33\", \"pay_id\": 440443, \"pay_type\": -1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Finished\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 0, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6953090772121883697\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"862485775389007\", \"referrer_name\": \"笑谈天下\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 169, \"send_date\": null, \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#ANdxaxWIrNJJIawfs1CawIwWLbGpCqto2g7Z5kzgsdbVpcBXm2dR5C9th3K57qRG0au9\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"22\", \"sign_time\": null, \"skus\": \"0.\", \"so_id\": \"6953090772121883697\", \"status\": \"Cancelled\", \"tag\": null, \"ts\": 8066275569, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "169",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "1",
+        "订单号": "333594",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzqZeQuQlE",
+      "record_id": "recvlzqZeQuQlE"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_334000",
+        "买家昵称": "299031",
+        "交易状态": "Cancelled",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 169,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-21",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 169,
+        "创建时间": "2026-05-21 13:31:58",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6953016452541716092\"], \"amount\": 169, \"as_id\": null, \"buyer_id\": 299031, \"buyer_message\": null, \"buyer_paid_amount\": 169, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:21\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": null, \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 169, \"base_price\": 169, \"buyer_paid_amount\": 169, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7640835323463629817\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":2}\", \"item_pay_amount\": null, \"item_status\": \"Cancelled\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 334000, \"oi_id\": 349289, \"outer_oi_id\": \"6953016452541716092\", \"pic\": \"https://p3-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 1, \"raw_so_id\": \"6953016452541716092\", \"referrer_id\": \"3826720100319358\", \"referrer_name\": \"一只家养白羊🦷\", \"refund_id\": null, \"refund_qty\": 1, \"refund_status\": \"success\", \"remark\": null, \"seller_income_amount\": 169, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": null, \"labels\": \"京东配送,发货前售后,小店,店铺新客,抖音,精选联盟,高频购买\", \"lc_id\": null, \"link_o_id\": null, \"logistics_company\": null, \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:33\", \"node\": null, \"o_id\": 334000, \"open_id\": \"1@#uN9+Lujkz+7b5qzgVMnB1ZkGW2Z7PJ8JQqd4Le06Tsq9AF7ue6hzh/mHosbNzrjH4DIZ\", \"order_date\": \"2026-05-21 13:31:58\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6953016452541716092\", \"outer_so_id\": null, \"paid_amount\": 169, \"pay_amount\": 169, \"pay_date\": \"2026-05-21 13:32:04\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 169, \"buyer_account\": \"1@#uN9+Lujkz+7b5qzgVMnB1ZkGW2Z7PJ8JQqd4Le06Tsq9AF7ue6hzh/mHosbNzrjH4DIZ\", \"is_order_pay\": true, \"o_id\": 334000, \"outer_pay_id\": \"6953016452541716092\", \"pay_date\": \"2026-05-21 13:32:04\", \"pay_id\": 440037, \"pay_type\": 1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Confirmed\"}, {\"amount\": 169, \"buyer_account\": \"1@#uN9+Lujkz+7b5qzgVMnB1ZkGW2Z7PJ8JQqd4Le06Tsq9AF7ue6hzh/mHosbNzrjH4DIZ\", \"is_order_pay\": false, \"o_id\": 334000, \"outer_pay_id\": \"147498641962365533\", \"pay_date\": \"2026-06-04 13:08:33\", \"pay_id\": 440490, \"pay_type\": -1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Finished\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 0, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6953016452541716092\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"3826720100319358\", \"referrer_name\": \"一只家养白羊🦷\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 169, \"send_date\": null, \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#uN9+Lujkz+7b5qzgVMnB1ZkGW2Z7PJ8JQqd4Le06Tsq9AF7ue6hzh/mHosbNzrjH4DIZ\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"22\", \"sign_time\": null, \"skus\": \"0.\", \"so_id\": \"6953016452541716092\", \"status\": \"Cancelled\", \"tag\": null, \"ts\": 8066275665, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "169",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "1",
+        "订单号": "334000",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzr03njvfU",
+      "record_id": "recvlzr03njvfU"
+    },
+    {
+      "fields": {
+        "unique_key": "jushuitan_21117346_334057",
+        "买家昵称": "299085",
+        "交易状态": "Cancelled",
+        "公式_其他费用": 0,
+        "公式_商品成本": 0,
+        "公式_平台扣点": 0,
+        "公式_有效销售额": 169,
+        "公式_汇总平台": [
+          {
+            "text": "抖音",
+            "type": "text"
+          }
+        ],
+        "公式_统计日期": [
+          {
+            "text": "2026-05-21",
+            "type": "text"
+          }
+        ],
+        "公式_运费成本": 0,
+        "公式_退款金额": 0,
+        "公式_销售额": 169,
+        "创建时间": "2026-05-21 20:36:14",
+        "单价": "169",
+        "原始数据": "{\"__raw_so_ids__\": [\"21117346:6953018935535212281\"], \"amount\": 169, \"as_id\": null, \"buyer_id\": 299085, \"buyer_message\": null, \"buyer_paid_amount\": 164, \"buyer_tax_no\": null, \"co_id\": 15847392, \"created\": \"2026-06-04 13:08:21\", \"creator_name\": null, \"currency\": null, \"discount_rate\": 1, \"drp_co_id_from\": null, \"drp_co_id_to\": null, \"drp_from\": null, \"drp_to\": null, \"end_time\": null, \"ext_datas\": null, \"f_freight\": null, \"f_weight\": null, \"free_amount\": 0, \"freight\": 0, \"glasses\": \"\", \"government_free_amount\": 0, \"invoice_amount\": null, \"invoice_title\": null, \"invoice_type\": null, \"is_cod\": false, \"is_merge\": null, \"is_split\": null, \"items\": [{\"amount\": 169, \"base_price\": 169, \"buyer_paid_amount\": 164, \"discount_rate\": 1, \"i_id\": \"3810515145814311090\", \"is_gift\": false, \"is_presale\": false, \"item_ext_data\": \"{\\\"room_id\\\":\\\"0\\\",\\\"video_id\\\":\\\"7641950258963991858\\\",\\\"sku_order_tag_ui\\\":\\\"[\\\\\\\"compass_source_not_ad_mark,非广告\\\\\\\",\\\\\\\"compass_source_content_type_video,短视频\\\\\\\"]\\\",\\\"limit_delivery_cps\\\":\\\"JD\\\",\\\"cBiz\\\":2}\", \"item_pay_amount\": null, \"item_status\": \"Cancelled\", \"name\": \"趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器\", \"o_id\": 334057, \"oi_id\": 349346, \"outer_oi_id\": \"6953018935535212281\", \"pic\": \"https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800\", \"price\": 169, \"properties_value\": \"默认:默认\", \"qty\": 1, \"raw_so_id\": \"6953018935535212281\", \"referrer_id\": \"95405089683\", \"referrer_name\": \"爱义乌\", \"refund_id\": null, \"refund_qty\": 1, \"refund_status\": \"success\", \"remark\": null, \"seller_income_amount\": 169, \"send_warehouse\": 0, \"shop_i_id\": \"3810515145814311090\", \"shop_sku_id\": \"3651289727850242\", \"sku_id\": \"3651289727850242\", \"sku_type\": \"normal\", \"src_combine_sku_id\": null}], \"l_id\": null, \"labels\": \"京东配送,发货前售后,小店,店铺新客,抖音,精选联盟,高频购买\", \"lc_id\": null, \"link_o_id\": null, \"logistics_company\": null, \"merge_so_id\": null, \"modified\": \"2026-06-04 13:08:33\", \"node\": null, \"o_id\": 334057, \"open_id\": \"1@#bp9VYrJGEIYjBxkM8QLgJnPAOa0zMaXOzfoTUHYrkH0+6rGxn2GLnI2SFurgXWFZ6QpXiw==\", \"order_date\": \"2026-05-21 20:36:14\", \"order_from\": \"TOUTIAOFXG\", \"order_imgs\": [], \"outer_as_id\": null, \"outer_drp_co_id\": null, \"outer_pay_id\": \"6953018935535212281\", \"outer_so_id\": null, \"paid_amount\": 169, \"pay_amount\": 169, \"pay_date\": \"2026-05-21 20:36:17\", \"pay_free_amount\": 0, \"pays\": [{\"amount\": 169, \"buyer_account\": \"1@#bp9VYrJGEIYjBxkM8QLgJnPAOa0zMaXOzfoTUHYrkH0+6rGxn2GLnI2SFurgXWFZ6QpXiw==\", \"is_order_pay\": true, \"o_id\": 334057, \"outer_pay_id\": \"6953018935535212281\", \"pay_date\": \"2026-05-21 20:36:17\", \"pay_id\": 440094, \"pay_type\": 1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Confirmed\"}, {\"amount\": 164, \"buyer_account\": \"1@#bp9VYrJGEIYjBxkM8QLgJnPAOa0zMaXOzfoTUHYrkH0+6rGxn2GLnI2SFurgXWFZ6QpXiw==\", \"is_order_pay\": false, \"o_id\": 334057, \"outer_pay_id\": \"147501291554725137\", \"pay_date\": \"2026-06-04 13:08:33\", \"pay_id\": 440498, \"pay_type\": -1, \"payment\": \"TouTiaoFXG\", \"seller_account\": null, \"status\": \"Finished\"}], \"plan_delivery_date\": null, \"platform_free_amount\": 5, \"question_desc\": null, \"question_type\": \"\", \"raw_so_id\": \"6953018935535212281\", \"real_co_id\": 15847392, \"receiver_city\": \"[REDACTED]\", \"receiver_country\": \"[REDACTED]\", \"receiver_district\": \"[REDACTED]\", \"receiver_state\": \"[REDACTED]\", \"receiver_town\": \"[REDACTED]\", \"receiver_zip\": \"[REDACTED]\", \"referrer_free_amount\": 0, \"referrer_id\": \"95405089683\", \"referrer_name\": \"爱义乌\", \"remark\": null, \"seller_flag\": null, \"seller_income_amount\": 169, \"send_date\": null, \"service_charge\": 0, \"shipment\": null, \"shop_buyer_id\": \"1@#bp9VYrJGEIYjBxkM8QLgJnPAOa0zMaXOzfoTUHYrkH0+6rGxn2GLnI2SFurgXWFZ6QpXiw==\", \"shop_free_amount\": 0, \"shop_id\": 21117346, \"shop_name\": \"趣白抖音\", \"shop_site\": \"头条放心购\", \"shop_status\": \"22\", \"sign_time\": null, \"skus\": \"0.\", \"so_id\": \"6953018935535212281\", \"status\": \"Cancelled\", \"tag\": null, \"ts\": 8066275677, \"type\": \"普通订单\", \"weight\": 0, \"wms_co_id\": 0}",
+        "商品名称": "趣白全自动洗面奶打泡机感应泡沫机绵密泡沫礼品新品懒人洗脸神器",
+        "实收款": "169",
+        "平台": "抖音",
+        "店铺ID": "21117346",
+        "店铺名称": "趣白抖音",
+        "操作信息": "聚水潭API真实拉取",
+        "数据来源": "聚水潭真实接口",
+        "数量": "1",
+        "订单号": "334057",
+        "采集时间": "2026-06-04 18:53:49"
+      },
+      "id": "recvlzr0MbSwzu",
+      "record_id": "recvlzr0MbSwzu"
+    }
+  ],
+  "summary_fields": [
+    {
+      "field_id": "fldapsBYWf",
+      "field_name": "unique_key",
+      "is_extend": false,
+      "is_primary": true,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldbMR4ysR",
+      "field_name": "统计日期",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fldspQ9Whm",
+      "field_name": "平台",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": null,
+      "type": 1,
+      "ui_type": "Text"
+    },
+    {
+      "field_id": "fld0MzGYbs",
+      "field_name": "汇总key",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "",
+        "formula_expression": "bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&\"-\"&bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldY4Mrxa5",
+      "field_name": "订单数",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0",
+        "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[flduIwBzli].COUNTA()"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldJniAyOW",
+      "field_name": "销售额",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldCNKGEcQ].SUM()"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldbn7ZWuo",
+      "field_name": "投流消耗",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "bitable::$table[tblXLtZsMTaikCeb].FILTER(CurrentValue.$column[fldjawXeCm]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldesiIahP]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldoPlhwkl].SUM()"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "flddWC8Sfl",
+      "field_name": "达人佣金",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "bitable::$table[tblhBsehmQbzWEVm].FILTER(CurrentValue.$column[fldyba5LQb]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldHYmXtvH]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldql1srf4].SUM()"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldHmfsVER",
+      "field_name": "已知费用后利润",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm]-bitable::$table[tblepMIg19Ov1kSw].$field[fldXPRVAuE]-bitable::$table[tblepMIg19Ov1kSw].$field[fldbyNFhKR]-bitable::$table[tblepMIg19Ov1kSw].$field[fld9se3dFe]-bitable::$table[tblepMIg19Ov1kSw].$field[fldI2273Lz]-bitable::$table[tblepMIg19Ov1kSw].$field[flddWC8Sfl]-bitable::$table[tblepMIg19Ov1kSw].$field[fldbn7ZWuo]"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldCrqNYU0",
+      "field_name": "ROI",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,0,IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbn7ZWuo]=0,0,bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm]/bitable::$table[tblepMIg19Ov1kSw].$field[fldbn7ZWuo]))"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldDRNwFc8",
+      "field_name": "平台ROI",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,0,IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldvFI6tUv]=0,0,bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm]/bitable::$table[tblepMIg19Ov1kSw].$field[fldvFI6tUv]))"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "flddzOLMgl",
+      "field_name": "数据状态",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "",
+        "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldY4Mrxa5]=0,\"partial\",IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,\"partial\",\"normal\"))"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldMob3JT2",
+      "field_name": "退款金额",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldtAoeyct].SUM()"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldHXs4Rfm",
+      "field_name": "有效销售额",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldUWVBbXz].SUM()"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldXPRVAuE",
+      "field_name": "商品成本",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldfgP7weD].SUM()"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldbyNFhKR",
+      "field_name": "运费成本",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldglv9vMB].SUM()"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fld9se3dFe",
+      "field_name": "平台扣点",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldcdOAbre].SUM()"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldI2273Lz",
+      "field_name": "其他费用",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldgYzuU9g].SUM()"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fld0rKlFrF",
+      "field_name": "展现",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0",
+        "formula_expression": "bitable::$table[tblXLtZsMTaikCeb].FILTER(CurrentValue.$column[fldjawXeCm]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldesiIahP]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldvvZx8DZ].SUM()"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fld5M9Zh6z",
+      "field_name": "点击",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0",
+        "formula_expression": "bitable::$table[tblXLtZsMTaikCeb].FILTER(CurrentValue.$column[fldjawXeCm]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldesiIahP]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldZBoKlDQ].SUM()"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldvFI6tUv",
+      "field_name": "已知总投入",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,0,bitable::$table[tblepMIg19Ov1kSw].$field[fldbn7ZWuo]+bitable::$table[tblepMIg19Ov1kSw].$field[flddWC8Sfl])"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldZOVJHKp",
+      "field_name": "投流后毛利",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,0,bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm]-bitable::$table[tblepMIg19Ov1kSw].$field[flddWC8Sfl]-bitable::$table[tblepMIg19Ov1kSw].$field[fldbn7ZWuo])"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldlzgJ7Y7",
+      "field_name": "经营利润估算",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,0,bitable::$table[tblepMIg19Ov1kSw].$field[fldHmfsVER])"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldbNCYlNp",
+      "field_name": "投流记录数",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0",
+        "formula_expression": "bitable::$table[tblXLtZsMTaikCeb].FILTER(CurrentValue.$column[fldjawXeCm]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldesiIahP]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fld0bSkOTX].COUNTA()"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldrfFu0t6",
+      "field_name": "已知费用利润率",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm]=0,0,bitable::$table[tblepMIg19Ov1kSw].$field[fldHmfsVER]/bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm])"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fld5T5aO9r",
+      "field_name": "利润率",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "0.00",
+        "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,0,IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm]=0,0,bitable::$table[tblepMIg19Ov1kSw].$field[fldlzgJ7Y7]/bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm]))"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldZHSJZaK",
+      "field_name": "缺失项",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "",
+        "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldY4Mrxa5]=0,IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,\"订单,投流\",\"订单\"),IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,\"投流\",\"\"))"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    },
+    {
+      "field_id": "fldfKCD35b",
+      "field_name": "汇总时间",
+      "is_extend": false,
+      "is_primary": false,
+      "is_synced": false,
+      "property": {
+        "formatter": "",
+        "formula_expression": "NOW()"
+      },
+      "type": 20,
+      "ui_type": "Formula"
+    }
+  ],
+  "tables": [
+    {
+      "name": "订单明细原始表",
+      "table_id": "tblbPjczqMElVU9a"
+    },
+    {
+      "name": "推广数据表",
+      "table_id": "tblXLtZsMTaikCeb"
+    },
+    {
+      "name": "达人佣金明细表",
+      "table_id": "tblhBsehmQbzWEVm"
+    },
+    {
+      "name": "动态经营汇总表",
+      "table_id": "tbldpguqBhSjnIPP"
+    },
+    {
+      "name": "公式动态经营汇总表",
+      "table_id": "tblepMIg19Ov1kSw"
+    },
+    {
+      "name": "全周期平台总计表",
+      "table_id": "tblufREIgBB4VBAg"
+    }
+  ]
+}

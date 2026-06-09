@@ -1,0 +1,81 @@
+{
+  "task_pack_id": "shopops-goal-2026-06-03",
+  "task_id": "T06",
+  "name": "qianniu-promotion-center-cost-crawler",
+  "status": "BLOCKED_BY_ENVIRONMENT",
+  "executed_only": "T06",
+  "checked_at": "2026-06-03T17:47:23.2612722+08:00",
+  "scope": {
+    "requirements": [
+      "REQ-004",
+      "REQ-010"
+    ],
+    "promotion_source": "qianniu_pc",
+    "promotion_center_url": "https://qn.taobao.com/home.htm/tuiguangcenter_new/",
+    "allowed_metric": "promotion center cost only",
+    "channel_split_allowed": false,
+    "ad_mutation_allowed": false,
+    "failed_collection_writes_numeric_zero": false,
+    "taobao_api_credentials_required_for_current_crawler_mvp": false
+  },
+  "evidence": [
+    {
+      "type": "code",
+      "path": "shopops/collectors/taobao_promotion_crawler.py",
+      "summary": "TaobaoPromotionCrawler reads the Qianniu promotion center page through BrowserService CDP, extracts only the cost metric, returns one promotion center item, and returns null cost values on failures."
+    },
+    {
+      "type": "code",
+      "path": "shopops/services/browser_service.py",
+      "summary": "BrowserService checks CDP availability, opens the promotion center URL in an existing Qianniu PC CDP session, captures body text after scrolling, and classifies login or permission failures."
+    },
+    {
+      "type": "test",
+      "path": "tests/test_taobao_promotion_crawler.py",
+      "summary": "Covers cost-only extraction, no channel split, no exposure/click/conversion capture, access failure classification, scheduler promotion snapshot write, monitor snapshot cost propagation, and no-zero failure semantics."
+    },
+    {
+      "type": "command",
+      "command": "python -m pytest -q -p no:cacheprovider --basetemp .\\.pytest-tmp\\T06-current tests\\test_taobao_promotion_crawler.py tests\\test_storage_and_scheduler.py tests\\test_metric_scheduler_delta.py",
+      "status": "PASS",
+      "summary": "12 passed in 0.26s",
+      "log": "docs/auto-execute/logs/T06/verification-current.txt"
+    },
+    {
+      "type": "environment_probe",
+      "command": "PowerShell environment variable presence probe plus Invoke-WebRequest http://127.0.0.1:9222/json/version",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "summary": "Required Feishu credentials/table ids and a reachable Qianniu CDP session were not available.",
+      "log": "docs/auto-execute/logs/T06/environment-probe-current.json"
+    }
+  ],
+  "blockers": [
+    {
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "classification": "MISSING_FEISHU_LIVE_ENV",
+      "summary": "FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_APP_TOKEN, FEISHU_WEBHOOK, FEISHU_TABLE_PROMOTION_SNAPSHOT, FEISHU_TABLE_MONITOR_SNAPSHOT, FEISHU_TABLE_METRICS_10MIN, and FEISHU_TABLE_TASK_LOG were absent, so live Feishu write/upsert/readback proof could not be attempted."
+    },
+    {
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "classification": "MISSING_QIANNIU_CDP_SESSION",
+      "summary": "QIANNIU_CDP_URL was absent and the default http://127.0.0.1:9222/json/version endpoint was unreachable, so live Qianniu PC promotion-center collection could not be attempted."
+    }
+  ],
+  "limitations": [
+    {
+      "status": "PASS_WITH_LIMITATION",
+      "classification": "LOCAL_ONLY_VERIFICATION",
+      "summary": "Local tests verify crawler parsing, scheduler/storage behavior, and no-zero failure semantics. They do not prove live Qianniu or live Feishu acceptance."
+    },
+    {
+      "status": "DEFERRED",
+      "classification": "TAOBAO_API_NOT_REQUIRED",
+      "summary": "Missing TAOBAO_APP_KEY, TAOBAO_APP_SECRET, and TAOBAO_SESSION_KEY do not block the current crawler-first T06 scope."
+    }
+  ],
+  "next_actions": [
+    "Provide a logged-in Qianniu PC client with CDP enabled, or set QIANNIU_CDP_URL to a reachable existing CDP endpoint, then rerun only T06 live promotion-center verification.",
+    "Provide Feishu app credentials, webhook, app token, and the required table ids through environment variables, then rerun only T06 live write/upsert/readback verification."
+  ],
+  "handoff": "docs/auto-execute/latest/T06-HANDOFF.md"
+}

@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "order_table_id": "tbl0gBiMcAKMCcwI",
+  "summary_table_id": "tblepMIg19Ov1kSw",
+  "kpi_table_id": "tblufREIgBB4VBAg",
+  "summary_table_name": "公式动态经营汇总表",
+  "source_names": {
+    "orders": "订单明细-天猫",
+    "ads": "推广数据表",
+    "commissions": "达人佣金明细表"
+  },
+  "ensured_fields": [
+    "??_??????",
+    "??????"
+  ]
+}

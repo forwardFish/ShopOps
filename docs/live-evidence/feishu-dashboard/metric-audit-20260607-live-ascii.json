@@ -1,0 +1,163 @@
+{
+  "app_token": "KhbEbksLbauw0fssL6EcKAnlnOe",
+  "conclusion": "source_summary_table_numbers_are_consistent; dashboard_relative_date_filter_must_use_type5_dashboard_date_not_text_date; screenshot_last7_card_value_is_not_source_last7_total",
+  "dashboard_table_param": "blkXpV41dvvAfRNs",
+  "diff": {
+    "screenshot_last7_sales_minus_source_last7_total_sales": -302157.59
+  },
+  "field_type_audit": {
+    "dashboard_date_field": {
+      "property": {
+        "auto_fill": false,
+        "date_formatter": "yyyy/MM/dd"
+      },
+      "type": 5
+    },
+    "dashboard_date_matching_text_date_count": 2170,
+    "date_text_field": {
+      "property": null,
+      "type": 1
+    }
+  },
+  "last7_platform_rows": 28,
+  "last7_total_rows": 7,
+  "metrics": {
+    "last7_platform_sum": {
+      "ad_cost": 3232.79,
+      "ad_records": 1.0,
+      "commission": 18801.25,
+      "gross_after_ad": 9949.21,
+      "known_input": 3232.79,
+      "known_profit": 315863.99,
+      "operating_profit": 9949.21,
+      "orders": 2470.0,
+      "platform_roi": 104.95,
+      "refund": 80084.61,
+      "roi": 104.95,
+      "sales": 350411.59,
+      "valid_sales": 339278.98
+    },
+    "last7_total": {
+      "ad_cost": 3232.79,
+      "ad_records": 1.0,
+      "commission": 18801.25,
+      "gross_after_ad": 109695.38,
+      "known_input": 3232.79,
+      "known_profit": 315863.99,
+      "operating_profit": 109581.03,
+      "orders": 2470.0,
+      "platform_roi": 104.95,
+      "refund": 80084.61,
+      "roi": 104.95,
+      "sales": 350411.59,
+      "valid_sales": 339278.98
+    },
+    "today_by_platform": {
+      "douyin": {
+        "ad_cost": 0.0,
+        "ad_records": 0.0,
+        "commission": 0.0,
+        "gross_after_ad": 0.0,
+        "known_input": 0.0,
+        "known_profit": 6734.12,
+        "operating_profit": 0.0,
+        "orders": 43.0,
+        "platform_roi": 0,
+        "refund": 652.33,
+        "roi": 0,
+        "sales": 7386.45,
+        "valid_sales": 6734.12
+      },
+      "pinduoduo": {
+        "ad_cost": 0.0,
+        "ad_records": 0.0,
+        "commission": 0.0,
+        "gross_after_ad": 0.0,
+        "known_input": 0.0,
+        "known_profit": 90815.05,
+        "operating_profit": 0.0,
+        "orders": 481.0,
+        "platform_roi": 0,
+        "refund": 0.0,
+        "roi": 0,
+        "sales": 90815.05,
+        "valid_sales": 90815.05
+      },
+      "tmall": {
+        "ad_cost": 3232.79,
+        "ad_records": 1.0,
+        "commission": 0.0,
+        "gross_after_ad": 9949.21,
+        "known_input": 3232.79,
+        "known_profit": 9949.21,
+        "operating_profit": 9949.21,
+        "orders": 90.0,
+        "platform_roi": 4.08,
+        "refund": 1352.0,
+        "roi": 4.08,
+        "sales": 13182.0,
+        "valid_sales": 13182.0
+      },
+      "wechat_channels": {
+        "ad_cost": 0.0,
+        "ad_records": 0.0,
+        "commission": 0.0,
+        "gross_after_ad": 0.0,
+        "known_input": 0.0,
+        "known_profit": 2082.65,
+        "operating_profit": 0.0,
+        "orders": 11.0,
+        "platform_roi": 0,
+        "refund": 0.0,
+        "roi": 0,
+        "sales": 2197.0,
+        "valid_sales": 2197.0
+      }
+    },
+    "today_platform_sum": {
+      "ad_cost": 3232.79,
+      "ad_records": 1.0,
+      "commission": 0.0,
+      "gross_after_ad": 9949.21,
+      "known_input": 3232.79,
+      "known_profit": 109581.03,
+      "operating_profit": 9949.21,
+      "orders": 625.0,
+      "platform_roi": 34.93,
+      "refund": 2004.33,
+      "roi": 34.93,
+      "sales": 113580.5,
+      "valid_sales": 112928.17
+    },
+    "today_total": {
+      "ad_cost": 3232.79,
+      "ad_records": 1.0,
+      "commission": 0.0,
+      "gross_after_ad": 109695.38,
+      "known_input": 3232.79,
+      "known_profit": 109581.03,
+      "operating_profit": 109581.03,
+      "orders": 625.0,
+      "platform_roi": 34.93,
+      "refund": 2004.33,
+      "roi": 34.93,
+      "sales": 113580.5,
+      "valid_sales": 112928.17
+    }
+  },
+  "range": {
+    "last7_end": "2026-06-07",
+    "last7_start": "2026-06-01",
+    "today": "2026-06-07"
+  },
+  "record_count": 2170,
+  "screenshot_observed": {
+    "last7_sales": 48254
+  },
+  "source_table_id": "tblepMIg19Ov1kSw",
+  "source_view_id": "vewQvBlgJF",
+  "status": "PASS",
+  "today_platform_rows": 4,
+  "today_total_rows": 1,
+  "verified_at": "2026-06-07T21:56:39"
+}

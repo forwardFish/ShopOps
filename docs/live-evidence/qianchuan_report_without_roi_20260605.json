@@ -1,0 +1,65 @@
+﻿{
+    "advertiser_id":  "1860240208332803",
+    "calls":  [
+                  {
+                      "name":  "qianchuan_report_advertiser_without_roi",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/advertiser/get/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\"]",
+                                             "filtering":  "{\"marketing_goal\":\"ALL\"}",
+                                             "advertiser_id":  "1860240208332803",
+                                             "start_date":  "2026-06-01",
+                                             "end_date":  "2026-06-01",
+                                             "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                             "page":  "1"
+                                         },
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "2026060522184243B2AEAB47F77936C71E",
+                                       "data":  {
+                                                    "list":  [
+
+                                                             ],
+                                                    "page_info":  {
+                                                                      "page":  1,
+                                                                      "page_size":  100,
+                                                                      "total_number":  0,
+                                                                      "total_page":  0
+                                                                  }
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "qianchuan_report_ad_without_roi",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/ad/get/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\"]",
+                                             "filtering":  "{\"marketing_goal\":\"ALL\"}",
+                                             "advertiser_id":  "1860240208332803",
+                                             "start_date":  "2026-06-01",
+                                             "end_date":  "2026-06-01",
+                                             "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                             "page":  "1"
+                                         },
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "2026060522184455CD454B35B2642AC043",
+                                       "data":  {
+                                                    "list":  [
+
+                                                             ],
+                                                    "page_info":  {
+                                                                      "page":  1,
+                                                                      "page_size":  100,
+                                                                      "total_number":  0,
+                                                                      "total_page":  0
+                                                                  }
+                                                }
+                                   }
+                  }
+              ]
+}

@@ -1,0 +1,79 @@
+{
+  "query_date": "2026-06-07",
+  "pairs_checked": 6,
+  "results": [
+    {
+      "idx": 1,
+      "source": "C:\\Users\\linyanhui\\.codex\\sessions\\2026\\06\\03\\rollout-2026-06-03T22-15-02-019e8dd6-61a6-7a12-82a7-da204b619de2.jsonl",
+      "csrf_len": 38,
+      "login_len": 30,
+      "http": 403,
+      "ok": false,
+      "errorCode": 2102001,
+      "message": "bizLogin csrf检查未通过",
+      "has_charge": false,
+      "cost": null
+    },
+    {
+      "idx": 2,
+      "source": "C:\\Users\\linyanhui\\.codex\\sessions\\2026\\06\\05\\rollout-2026-06-05T14-22-36-019e9672-939e-76f2-b9d8-630d09ca17ab.jsonl",
+      "csrf_len": 179,
+      "login_len": 23,
+      "http": 403,
+      "ok": false,
+      "errorCode": 2102001,
+      "message": "bizLogin csrf检查未通过",
+      "has_charge": false,
+      "cost": null
+    },
+    {
+      "idx": 3,
+      "source": "C:\\Users\\linyanhui\\.codex\\sessions\\2026\\06\\05\\rollout-2026-06-05T14-22-36-019e9672-939e-76f2-b9d8-630d09ca17ab.jsonl",
+      "csrf_len": 17,
+      "login_len": 17,
+      "http": 403,
+      "ok": false,
+      "errorCode": 2102001,
+      "message": "bizLogin csrf检查未通过",
+      "has_charge": false,
+      "cost": null
+    },
+    {
+      "idx": 4,
+      "source": "C:\\Users\\linyanhui\\.codex\\sessions\\2026\\06\\05\\rollout-2026-06-05T14-22-36-019e9672-939e-76f2-b9d8-630d09ca17ab.jsonl",
+      "csrf_len": 13,
+      "login_len": 13,
+      "http": 403,
+      "ok": false,
+      "errorCode": 2102001,
+      "message": "bizLogin csrf检查未通过",
+      "has_charge": false,
+      "cost": null
+    },
+    {
+      "idx": 5,
+      "source": "C:\\Users\\linyanhui\\.codex\\sessions\\2026\\06\\07\\rollout-2026-06-07T20-10-21-019ea1fd-aa19-7ac2-b7a9-7c507b5e01e6.jsonl",
+      "csrf_len": 779,
+      "login_len": 1,
+      "http": 403,
+      "ok": false,
+      "errorCode": 2102001,
+      "message": "bizLogin csrf检查未通过",
+      "has_charge": false,
+      "cost": null
+    },
+    {
+      "idx": 6,
+      "source": "C:\\Users\\linyanhui\\.codex\\sessions\\2026\\06\\07\\rollout-2026-06-07T20-10-21-019ea1fd-aa19-7ac2-b7a9-7c507b5e01e6.jsonl",
+      "csrf_len": 11,
+      "login_len": 11,
+      "http": 403,
+      "ok": false,
+      "errorCode": 2102001,
+      "message": "bizLogin csrf检查未通过",
+      "has_charge": false,
+      "cost": null
+    }
+  ],
+  "chosen": null
+}

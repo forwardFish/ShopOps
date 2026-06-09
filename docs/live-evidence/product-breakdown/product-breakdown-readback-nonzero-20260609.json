@@ -1,0 +1,67 @@
+{
+  "formula_property_samples": {
+    "??": {
+      "?????": null,
+      "????????": null
+    },
+    "???": {
+      "?????": null,
+      "????????": null
+    }
+  },
+  "missing_query_fields": {
+    "??": [
+      "????",
+      "??_??????",
+      "??_?????"
+    ],
+    "???": [
+      "????",
+      "??_??????",
+      "??_?????"
+    ]
+  },
+  "nonzero_samples": {
+    "??": [],
+    "???": []
+  },
+  "product_table_id": "tblkHqQuzSCNh213",
+  "products": [
+    {
+      "keywords": [
+        "喷壶"
+      ],
+      "name": "喷壶"
+    },
+    {
+      "keywords": [
+        "两用喷壶"
+      ],
+      "name": "两用喷壶"
+    },
+    {
+      "keywords": [
+        "皂液器"
+      ],
+      "name": "皂液器"
+    },
+    {
+      "keywords": [
+        "洗面奶"
+      ],
+      "name": "洗面奶"
+    },
+    {
+      "keywords": [
+        "配件"
+      ],
+      "name": "配件"
+    },
+    {
+      "keywords": [
+        "补差价"
+      ],
+      "name": "补差价"
+    }
+  ]
+}

@@ -1,0 +1,318 @@
+{
+  "rows": 8272,
+  "paid": 638454.45,
+  "refund": 733283.71,
+  "effective_current_sum": 637615.37,
+  "refund_gt_paid_rows": 4267,
+  "refund_gt_paid_gap": 732444.63,
+  "refund_gt_paid_refund": 732623.63,
+  "refund_gt_paid_paid": 179.0,
+  "samples": [
+    {
+      "record_id": "recvlQNX8hzofP",
+      "unique_key": "tmall_5119111586217093519",
+      "order_no": "5119111586217093519",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-07",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8h9yVX",
+      "unique_key": "tmall_3306364071233200493",
+      "order_no": "3306364071233200493",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-07",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8hYGqb",
+      "unique_key": "tmall_3306820369356032775",
+      "order_no": "3306820369356032775",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-07",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8hw14b",
+      "unique_key": "tmall_3307013616114063296",
+      "order_no": "3307013616114063296",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-07",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8hE88G",
+      "unique_key": "tmall_3306823321585019183",
+      "order_no": "3306823321585019183",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-07",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8h1TGa",
+      "unique_key": "tmall_3306827749075063296",
+      "order_no": "3306827749075063296",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-07",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8hc4pD",
+      "unique_key": "tmall_5119314840136025125",
+      "order_no": "5119314840136025125",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-07",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8hLETU",
+      "unique_key": "tmall_3306368642723169983",
+      "order_no": "3306368642723169983",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-07",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8h8bSY",
+      "unique_key": "tmall_3306815509058051183",
+      "order_no": "3306815509058051183",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-06",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8hLyCb",
+      "unique_key": "tmall_5118894687322026628",
+      "order_no": "5118894687322026628",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-06",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8hPdw0",
+      "unique_key": "tmall_3306802801635055159",
+      "order_no": "3306802801635055159",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-06",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8hXiZG",
+      "unique_key": "tmall_5119104890211213816",
+      "order_no": "5119104890211213816",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-06",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8hi9Tw",
+      "unique_key": "tmall_3306743221517130580",
+      "order_no": "3306743221517130580",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-06",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8hVdFw",
+      "unique_key": "tmall_5118851091993101307",
+      "order_no": "5118851091993101307",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-06",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8heW0u",
+      "unique_key": "tmall_3306719785428004295",
+      "order_no": "3306719785428004295",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-06",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8hitxa",
+      "unique_key": "tmall_5119350409421002029",
+      "order_no": "5119350409421002029",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-06",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8hAAZL",
+      "unique_key": "tmall_5119061294874006209",
+      "order_no": "5119061294874006209",
+      "paid": 0,
+      "refund": 338.0,
+      "gap": 338.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-06",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8hyAdv",
+      "unique_key": "tmall_3306234543641020770",
+      "order_no": "3306234543641020770",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-06",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8hhQFi",
+      "unique_key": "tmall_5119257024965014924",
+      "order_no": "5119257024965014924",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-05",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "record_id": "recvlQNX8hIVgY",
+      "unique_key": "tmall_5119347493179058546",
+      "order_no": "5119347493179058546",
+      "paid": 0,
+      "refund": 169.0,
+      "gap": 169.0,
+      "status": "",
+      "date": [
+        {
+          "text": "2026-06-05",
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "status_counts": [
+    [
+      "",
+      8272
+    ]
+  ]
+}

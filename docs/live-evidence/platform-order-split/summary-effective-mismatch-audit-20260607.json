@@ -1,0 +1,50 @@
+{
+  "天猫": {
+    "rows": 8272,
+    "paid": 0.0,
+    "refund": 0.0,
+    "row_effective_sum": 0.0,
+    "aggregate_effective": 0.0,
+    "negative_rows": 0,
+    "negative_paid": 0.0,
+    "negative_refund": 0.0,
+    "refund_success_zero": 0,
+    "samples": []
+  },
+  "抖音": {
+    "rows": 9768,
+    "paid": 0.0,
+    "refund": 0.0,
+    "row_effective_sum": 0.0,
+    "aggregate_effective": 0.0,
+    "negative_rows": 0,
+    "negative_paid": 0.0,
+    "negative_refund": 0.0,
+    "refund_success_zero": 0,
+    "samples": []
+  },
+  "拼多多": {
+    "rows": 4784,
+    "paid": 0.0,
+    "refund": 0.0,
+    "row_effective_sum": 0.0,
+    "aggregate_effective": 0.0,
+    "negative_rows": 0,
+    "negative_paid": 0.0,
+    "negative_refund": 0.0,
+    "refund_success_zero": 0,
+    "samples": []
+  },
+  "视频号": {
+    "rows": 404,
+    "paid": 0.0,
+    "refund": 0.0,
+    "row_effective_sum": 0.0,
+    "aggregate_effective": 0.0,
+    "negative_rows": 0,
+    "negative_paid": 0.0,
+    "negative_refund": 0.0,
+    "refund_success_zero": 0,
+    "samples": []
+  }
+}

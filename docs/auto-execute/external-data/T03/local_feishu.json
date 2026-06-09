@@ -1,0 +1,181 @@
+{
+  "alert_log": [
+    {
+      "created_at": "2026-06-03 18:39:48",
+      "fields": {
+        "alert_id": "T03_ALERT_001",
+        "unique_key": "T03_ALERT_001",
+        "发送结果": "pending",
+        "告警内容": "T03 local proof alert",
+        "告警类型": "feishu_failed",
+        "告警级别": "critical",
+        "店铺ID": "taobao_shop_001",
+        "当前值": null,
+        "是否已发送": false,
+        "触发时间": "2026-06-03 12:00:00",
+        "阈值": null
+      },
+      "record_id": "rec_alert_log_000001"
+    }
+  ],
+  "daily_report": [
+    {
+      "created_at": "2026-06-03 18:39:48",
+      "fields": {
+        "report_date": "2026-06-03",
+        "unique_key": "taobao_shop_001_2026-06-03",
+        "今日ROI": 8.1,
+        "今日成交额(元)": 99.9,
+        "今日订单数": 1,
+        "店铺ID": "taobao_shop_001",
+        "店铺名称": "淘宝店铺A",
+        "异常统计": "{}",
+        "总推广消耗(元)": 12.34,
+        "推广中心花费(元)": 12.34,
+        "数据状态": "normal",
+        "获客成本(元)": 12.34
+      },
+      "record_id": "rec_daily_report_000001"
+    }
+  ],
+  "metrics_10min": [
+    {
+      "created_at": "2026-06-03 18:39:48",
+      "fields": {
+        "unique_key": "taobao_shop_001_202606031150_202606031200",
+        "周期ROI": 8.1,
+        "周期获客成本(元)": 12.34,
+        "店铺ID": "taobao_shop_001",
+        "店铺名称": "淘宝店铺A",
+        "异常原因": null,
+        "推广消耗(元)": 12.34,
+        "数据状态": "normal",
+        "新增成交额(元)": 99.9,
+        "新增订单数": 1,
+        "时间开始": "2026-06-03 11:50:00",
+        "时间结束": "2026-06-03 12:00:00"
+      },
+      "record_id": "rec_metrics_10min_000001"
+    }
+  ],
+  "monitor_snapshot": [
+    {
+      "created_at": "2026-06-03 18:39:48",
+      "fields": {
+        "unique_key": "taobao_shop_001_202606031200",
+        "今日成交额(元)": 99.9,
+        "今日订单数": 2,
+        "实时ROI": 8.1,
+        "店铺ID": "taobao_shop_001",
+        "店铺名称": "淘宝店铺A",
+        "总推广消耗(元)": 12.34,
+        "推广中心花费(元)": 12.34,
+        "推广来源": "qianniu_pc",
+        "数据状态": "normal",
+        "是否告警": false,
+        "获客成本(元)": 12.34,
+        "订单来源": "crawler",
+        "采集时间": "2026-06-03 12:00:00",
+        "错误信息": null
+      },
+      "record_id": "rec_monitor_snapshot_000001",
+      "updated_at": "2026-06-03 18:39:48"
+    }
+  ],
+  "orders_raw": [
+    {
+      "created_at": "2026-06-03 18:39:48",
+      "fields": {
+        "unique_key": "taobao_taobao_shop_001_T03_ORDER_001",
+        "下单时间": "2026-06-03 11:50:00",
+        "原始数据": "{\"source\":\"local-proof\"}",
+        "商品名称": "T03 local proof item",
+        "店铺ID": "taobao_shop_001",
+        "店铺名称": "淘宝店铺A",
+        "支付时间": "2026-06-03 11:51:00",
+        "支付金额": 99.9,
+        "数据来源": "crawler",
+        "订单号": "T03_ORDER_001",
+        "订单状态": "TRADE_FINISHED",
+        "采集时间": "2026-06-03 12:00:00"
+      },
+      "record_id": "rec_orders_raw_000001"
+    }
+  ],
+  "promotion_snapshot": [
+    {
+      "created_at": "2026-06-03 18:39:48",
+      "fields": {
+        "unique_key": "taobao_shop_001_tuiguangcenter_202606031200",
+        "今日累计消耗(元)": 12.34,
+        "原始数据": {
+          "source": "local-proof"
+        },
+        "店铺ID": "taobao_shop_001",
+        "店铺名称": "淘宝店铺A",
+        "推广渠道": "推广中心",
+        "曝光": null,
+        "点击": null,
+        "状态": "success",
+        "转化": null,
+        "采集时间": "2026-06-03 12:00:00",
+        "错误信息": null
+      },
+      "record_id": "rec_promotion_snapshot_000001"
+    }
+  ],
+  "shop_config": [
+    {
+      "created_at": "2026-06-03 18:39:48",
+      "fields": {
+        "order_source": "crawler",
+        "platform": "taobao",
+        "promotion_source": "qianniu_pc",
+        "qianniu_cdp_url": "http://127.0.0.1:9222",
+        "remark": "T03 local proof",
+        "shop_id": "taobao_shop_001",
+        "shop_name": "淘宝店铺A",
+        "status": "active",
+        "unique_key": "taobao_shop_001"
+      },
+      "record_id": "rec_shop_config_000001"
+    }
+  ],
+  "system_config": [
+    {
+      "created_at": "2026-06-03 18:39:48",
+      "fields": {
+        "config_key": "ORDER_SOURCE",
+        "config_value": "crawler",
+        "enabled": true,
+        "remark": "T03 local proof",
+        "unique_key": "ORDER_SOURCE",
+        "updated_at": "2026-06-03 12:00:00"
+      },
+      "record_id": "rec_system_config_000001"
+    }
+  ],
+  "task_run_log": [
+    {
+      "created_at": "2026-06-03 18:39:48",
+      "fields": {
+        "task_id": "T03_TASK_LOG_001",
+        "任务类型": "full_collect",
+        "写入数量": 5,
+        "店铺ID": "taobao_shop_001",
+        "开始时间": "2026-06-03 12:00:00",
+        "总状态": "success",
+        "拉取数量": 2,
+        "推广状态": "success",
+        "是否已告警": false,
+        "结束时间": "2026-06-03 12:00:01",
+        "耗时秒": 1.0,
+        "订单状态": "success",
+        "错误信息": null,
+        "错误码": null,
+        "飞书写入状态": "success"
+      },
+      "record_id": "rec_task_run_log_000001"
+    }
+  ]
+}

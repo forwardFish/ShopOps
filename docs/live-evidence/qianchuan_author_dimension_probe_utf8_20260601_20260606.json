@@ -1,0 +1,622 @@
+﻿{
+    "generated_at":  "2026-06-06T07:44:19",
+    "advertiser_id":  "1860240208332803",
+    "note":  "Author dimension probe for aweme ids found from Qianchuan aweme uni promotion orders. Tokens/secrets excluded.",
+    "calls":  [
+                  {
+                      "name":  "author_dimension_3826720100319358_ECP_AWEME",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/dimension_data/author/get/",
+                      "request_params":  {
+                                             "order_field":  "stat_cost",
+                                             "dimension":  "TIME_GRANULARITY_DAILY",
+                                             "advertiser_id":  "1860240208332803",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "marketing_goal":  "ALL",
+                                             "page":  "1",
+                                             "aweme_id":  "3826720100319358",
+                                             "order_type":  "DESC",
+                                             "page_size":  "100",
+                                             "metrics":  "[\"stat_cost\",\"total_pay_order_count_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\"]",
+                                             "filtering":  "{\"order_platform\":\"ECP_AWEME\"}",
+                                             "start_time":  "2026-06-01 00:00:00"
+                                         },
+                      "http_status":  200,
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "2026060607441525C9F9B43C876D646BE7",
+                                       "data":  {
+                                                    "list":  [
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  3826720100319358,
+                                                                     "stat_cost":  30.06,
+                                                                     "stat_datetime":  "2026-06-01",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  7,
+                                                                     "total_order_settle_amount_for_roi2_1h":  4056,
+                                                                     "total_order_settle_count_for_roi2_1h":  23,
+                                                                     "total_pay_order_count_for_roi2":  25,
+                                                                     "total_pay_order_gmv_for_roi2":  4387,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  4394,
+                                                                     "total_prepay_and_pay_order_roi2":  146.17,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  134.93
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  3826720100319358,
+                                                                     "stat_cost":  11.99,
+                                                                     "stat_datetime":  "2026-06-02",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  2,
+                                                                     "total_order_settle_amount_for_roi2_1h":  1859,
+                                                                     "total_order_settle_count_for_roi2_1h":  11,
+                                                                     "total_pay_order_count_for_roi2":  11,
+                                                                     "total_pay_order_gmv_for_roi2":  1857,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  1859,
+                                                                     "total_prepay_and_pay_order_roi2":  155.05,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  155.05
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  3826720100319358,
+                                                                     "stat_cost":  3.63,
+                                                                     "stat_datetime":  "2026-06-03",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  1014,
+                                                                     "total_order_settle_count_for_roi2_1h":  5,
+                                                                     "total_pay_order_count_for_roi2":  5,
+                                                                     "total_pay_order_gmv_for_roi2":  1014,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  1014,
+                                                                     "total_prepay_and_pay_order_roi2":  279.34,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  279.34
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  3826720100319358,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-06",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  3826720100319358,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-05",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  3826720100319358,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-04",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 }
+                                                             ],
+                                                    "page_info":  {
+                                                                      "page":  1,
+                                                                      "page_size":  100,
+                                                                      "total_number":  6,
+                                                                      "total_page":  1
+                                                                  }
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "author_dimension_3826720100319358_ALL",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/dimension_data/author/get/",
+                      "request_params":  {
+                                             "order_field":  "stat_cost",
+                                             "dimension":  "TIME_GRANULARITY_DAILY",
+                                             "advertiser_id":  "1860240208332803",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "marketing_goal":  "ALL",
+                                             "page":  "1",
+                                             "aweme_id":  "3826720100319358",
+                                             "order_type":  "DESC",
+                                             "page_size":  "100",
+                                             "metrics":  "[\"stat_cost\",\"total_pay_order_count_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\"]",
+                                             "filtering":  "{\"order_platform\":\"ALL\"}",
+                                             "start_time":  "2026-06-01 00:00:00"
+                                         },
+                      "http_status":  200,
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "20260606074416B2FC285E14359A35DEE7",
+                                       "data":  {
+                                                    "list":  [
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  3826720100319358,
+                                                                     "stat_cost":  30.06,
+                                                                     "stat_datetime":  "2026-06-01",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  7,
+                                                                     "total_order_settle_amount_for_roi2_1h":  4056,
+                                                                     "total_order_settle_count_for_roi2_1h":  23,
+                                                                     "total_pay_order_count_for_roi2":  25,
+                                                                     "total_pay_order_gmv_for_roi2":  4387,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  4394,
+                                                                     "total_prepay_and_pay_order_roi2":  146.17,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  134.93
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  3826720100319358,
+                                                                     "stat_cost":  11.99,
+                                                                     "stat_datetime":  "2026-06-02",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  2,
+                                                                     "total_order_settle_amount_for_roi2_1h":  1859,
+                                                                     "total_order_settle_count_for_roi2_1h":  11,
+                                                                     "total_pay_order_count_for_roi2":  11,
+                                                                     "total_pay_order_gmv_for_roi2":  1857,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  1859,
+                                                                     "total_prepay_and_pay_order_roi2":  155.05,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  155.05
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  3826720100319358,
+                                                                     "stat_cost":  3.63,
+                                                                     "stat_datetime":  "2026-06-03",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  1014,
+                                                                     "total_order_settle_count_for_roi2_1h":  5,
+                                                                     "total_pay_order_count_for_roi2":  5,
+                                                                     "total_pay_order_gmv_for_roi2":  1014,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  1014,
+                                                                     "total_prepay_and_pay_order_roi2":  279.34,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  279.34
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  3826720100319358,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-06",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  3826720100319358,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-05",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  3826720100319358,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-04",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 }
+                                                             ],
+                                                    "page_info":  {
+                                                                      "page":  1,
+                                                                      "page_size":  100,
+                                                                      "total_number":  6,
+                                                                      "total_page":  1
+                                                                  }
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "author_dimension_3826720100319358_QIANCHUAN",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/dimension_data/author/get/",
+                      "request_params":  {
+                                             "order_field":  "stat_cost",
+                                             "dimension":  "TIME_GRANULARITY_DAILY",
+                                             "advertiser_id":  "1860240208332803",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "marketing_goal":  "ALL",
+                                             "page":  "1",
+                                             "aweme_id":  "3826720100319358",
+                                             "order_type":  "DESC",
+                                             "page_size":  "100",
+                                             "metrics":  "[\"stat_cost\",\"total_pay_order_count_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\"]",
+                                             "filtering":  "{\"order_platform\":\"QIANCHUAN\"}",
+                                             "start_time":  "2026-06-01 00:00:00"
+                                         },
+                      "http_status":  200,
+                      "response":  {
+                                       "code":  40100,
+                                       "message":  "系统请求频率超限，请稍后重试。",
+                                       "help_message":  "您本次触发的是系统级别限流，统计单位时间内接口下所有开发者的请求次数是否超限。当前处于接口流量高峰期，建议您稍后再试",
+                                       "request_id":  "20260606074417766747FA50F78EBA78E2"
+                                   }
+                  },
+                  {
+                      "name":  "author_dimension_1830013865038429_ECP_AWEME",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/dimension_data/author/get/",
+                      "request_params":  {
+                                             "order_field":  "stat_cost",
+                                             "dimension":  "TIME_GRANULARITY_DAILY",
+                                             "advertiser_id":  "1860240208332803",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "marketing_goal":  "ALL",
+                                             "page":  "1",
+                                             "aweme_id":  "1830013865038429",
+                                             "order_type":  "DESC",
+                                             "page_size":  "100",
+                                             "metrics":  "[\"stat_cost\",\"total_pay_order_count_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\"]",
+                                             "filtering":  "{\"order_platform\":\"ECP_AWEME\"}",
+                                             "start_time":  "2026-06-01 00:00:00"
+                                         },
+                      "http_status":  200,
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "2026060607441838D9F079F2BB6274AE45",
+                                       "data":  {
+                                                    "list":  [
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0.08,
+                                                                     "stat_datetime":  "2026-06-01",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-06",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-05",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-04",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-03",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-02",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 }
+                                                             ],
+                                                    "page_info":  {
+                                                                      "page":  1,
+                                                                      "page_size":  100,
+                                                                      "total_number":  6,
+                                                                      "total_page":  1
+                                                                  }
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "author_dimension_1830013865038429_ALL",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/dimension_data/author/get/",
+                      "request_params":  {
+                                             "order_field":  "stat_cost",
+                                             "dimension":  "TIME_GRANULARITY_DAILY",
+                                             "advertiser_id":  "1860240208332803",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "marketing_goal":  "ALL",
+                                             "page":  "1",
+                                             "aweme_id":  "1830013865038429",
+                                             "order_type":  "DESC",
+                                             "page_size":  "100",
+                                             "metrics":  "[\"stat_cost\",\"total_pay_order_count_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\"]",
+                                             "filtering":  "{\"order_platform\":\"ALL\"}",
+                                             "start_time":  "2026-06-01 00:00:00"
+                                         },
+                      "http_status":  200,
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "2026060607441982BADBBCF1B625714681",
+                                       "data":  {
+                                                    "list":  [
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0.08,
+                                                                     "stat_datetime":  "2026-06-01",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-06",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-05",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-04",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-03",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-02",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 }
+                                                             ],
+                                                    "page_info":  {
+                                                                      "page":  1,
+                                                                      "page_size":  100,
+                                                                      "total_number":  6,
+                                                                      "total_page":  1
+                                                                  }
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "author_dimension_1830013865038429_QIANCHUAN",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/dimension_data/author/get/",
+                      "request_params":  {
+                                             "order_field":  "stat_cost",
+                                             "dimension":  "TIME_GRANULARITY_DAILY",
+                                             "advertiser_id":  "1860240208332803",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "marketing_goal":  "ALL",
+                                             "page":  "1",
+                                             "aweme_id":  "1830013865038429",
+                                             "order_type":  "DESC",
+                                             "page_size":  "100",
+                                             "metrics":  "[\"stat_cost\",\"total_pay_order_count_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\"]",
+                                             "filtering":  "{\"order_platform\":\"QIANCHUAN\"}",
+                                             "start_time":  "2026-06-01 00:00:00"
+                                         },
+                      "http_status":  200,
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "2026060607441994FF8A3C62AC05AA7DF4",
+                                       "data":  {
+                                                    "list":  [
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-06",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-05",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-04",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-03",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-02",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 },
+                                                                 {
+                                                                     "advertiser_id":  1860240208332803,
+                                                                     "aweme_id":  1830013865038429,
+                                                                     "stat_cost":  0,
+                                                                     "stat_datetime":  "2026-06-01",
+                                                                     "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                     "total_order_settle_amount_for_roi2_1h":  0,
+                                                                     "total_order_settle_count_for_roi2_1h":  0,
+                                                                     "total_pay_order_count_for_roi2":  0,
+                                                                     "total_pay_order_gmv_for_roi2":  0,
+                                                                     "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                     "total_prepay_and_pay_order_roi2":  0,
+                                                                     "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                 }
+                                                             ],
+                                                    "page_info":  {
+                                                                      "page":  1,
+                                                                      "page_size":  100,
+                                                                      "total_number":  6,
+                                                                      "total_page":  1
+                                                                  }
+                                                }
+                                   }
+                  }
+              ]
+}

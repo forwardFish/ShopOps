@@ -1,0 +1,336 @@
+﻿{
+    "generated_at":  "2026-06-06T07:35:35",
+    "advertiser_id":  "1860240208332803",
+    "start_date":  "2026-06-01",
+    "end_date":  "2026-06-06",
+    "note":  "Qianchuan uni/all promotion probes using true advertiser_id mapped from shop account. Tokens are not included.",
+    "calls":  [
+                  {
+                      "name":  "uni_promotion_ECP_AWEME",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/get/",
+                      "request_params":  {
+                                             "advertiser_id":  "1860240208332803",
+                                             "order_platform":  "ECP_AWEME",
+                                             "fields":  "[\"stat_cost\",\"total_cost_per_pay_order_for_roi2\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "start_date":  "2026-06-01",
+                                             "marketing_goal":  "ALL",
+                                             "end_date":  "2026-06-06"
+                                         },
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "20260606073529F77B86290FD6513FA62B",
+                                       "data":  {
+                                                    "stat_cost":  45.76,
+                                                    "total_cost_per_pay_order_for_roi2":  1.12,
+                                                    "total_ecom_platform_subsidy_amount_for_roi2":  9,
+                                                    "total_pay_order_count_for_roi2":  41,
+                                                    "total_pay_order_coupon_amount_for_roi2":  0,
+                                                    "total_pay_order_gmv_for_roi2":  7258,
+                                                    "total_pay_order_gmv_include_coupon_for_roi2":  7267,
+                                                    "total_prepay_and_pay_order_roi2":  158.81,
+                                                    "total_prepay_order_count_for_roi2":  0,
+                                                    "total_prepay_order_gmv_for_roi2":  0,
+                                                    "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "uni_promotion_ALL",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/get/",
+                      "request_params":  {
+                                             "advertiser_id":  "1860240208332803",
+                                             "order_platform":  "ALL",
+                                             "fields":  "[\"stat_cost\",\"total_cost_per_pay_order_for_roi2\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "start_date":  "2026-06-01",
+                                             "marketing_goal":  "ALL",
+                                             "end_date":  "2026-06-06"
+                                         },
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "20260606073530080FE3DF7538C0D697AD",
+                                       "data":  {
+                                                    "stat_cost":  17538.75,
+                                                    "total_cost_per_pay_order_for_roi2":  55.68,
+                                                    "total_ecom_platform_subsidy_amount_for_roi2":  508.75,
+                                                    "total_pay_order_count_for_roi2":  315,
+                                                    "total_pay_order_coupon_amount_for_roi2":  4956.58,
+                                                    "total_pay_order_gmv_for_roi2":  48679.67,
+                                                    "total_pay_order_gmv_include_coupon_for_roi2":  54145,
+                                                    "total_prepay_and_pay_order_roi2":  3.09,
+                                                    "total_prepay_order_count_for_roi2":  0,
+                                                    "total_prepay_order_gmv_for_roi2":  0,
+                                                    "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "uni_promotion_QIANCHUAN",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/uni_promotion/get/",
+                      "request_params":  {
+                                             "advertiser_id":  "1860240208332803",
+                                             "order_platform":  "QIANCHUAN",
+                                             "fields":  "[\"stat_cost\",\"total_cost_per_pay_order_for_roi2\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "start_date":  "2026-06-01",
+                                             "marketing_goal":  "ALL",
+                                             "end_date":  "2026-06-06"
+                                         },
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "202606060735306D6F1386E1C0B89C1F8F",
+                                       "data":  {
+                                                    "stat_cost":  17492.99,
+                                                    "total_cost_per_pay_order_for_roi2":  63.84,
+                                                    "total_ecom_platform_subsidy_amount_for_roi2":  499.75,
+                                                    "total_pay_order_count_for_roi2":  274,
+                                                    "total_pay_order_coupon_amount_for_roi2":  4956.58,
+                                                    "total_pay_order_gmv_for_roi2":  41421.67,
+                                                    "total_pay_order_gmv_include_coupon_for_roi2":  46878,
+                                                    "total_prepay_and_pay_order_roi2":  2.68,
+                                                    "total_prepay_order_count_for_roi2":  0,
+                                                    "total_prepay_order_gmv_for_roi2":  0,
+                                                    "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "all_promotion_UNI_PROJECT_ECP_AWEME",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/all_promotion/get/",
+                      "request_params":  {
+                                             "advertiser_id":  "1860240208332803",
+                                             "order_platform":  "ECP_AWEME",
+                                             "fields":  "[\"no_refund_ecom_coupon_amount_for_roi2\",\"no_refund_ecom_platform_subsidy_amount_for_roi2\",\"shop_estimated_comission_cost\",\"stat_cost_for_overall_roi2\",\"stat_cost_for_roi2\",\"total_cost_per_pay_order_for_roi2\",\"total_cost_per_pay_order_settle_for_overall_roi2_1h\",\"total_cost_per_pay_order_settle_for_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_order_real_settle_amount_for_roi2_1h\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_amount_rate_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_order_settle_count_rate_for_roi2_1h\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_and_pay_settle_overall_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_refund_order_count_for_roi2_1h\",\"total_refund_order_gmv_for_roi2_1h_all\",\"total_refund_order_gmv_for_roi2_1h_rate\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "adlab_scene":  "UNI_PROJECT",
+                                             "marketing_goal":  "ALL",
+                                             "start_time":  "2026-06-01 00:00:00"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /qianchuan/report/all_promotion/get/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "2026060607353189454DBB6C9FA19860D4"
+                                   }
+                  },
+                  {
+                      "name":  "all_promotion_UNI_PROJECT_ALL",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/all_promotion/get/",
+                      "request_params":  {
+                                             "advertiser_id":  "1860240208332803",
+                                             "order_platform":  "ALL",
+                                             "fields":  "[\"no_refund_ecom_coupon_amount_for_roi2\",\"no_refund_ecom_platform_subsidy_amount_for_roi2\",\"shop_estimated_comission_cost\",\"stat_cost_for_overall_roi2\",\"stat_cost_for_roi2\",\"total_cost_per_pay_order_for_roi2\",\"total_cost_per_pay_order_settle_for_overall_roi2_1h\",\"total_cost_per_pay_order_settle_for_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_order_real_settle_amount_for_roi2_1h\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_amount_rate_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_order_settle_count_rate_for_roi2_1h\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_and_pay_settle_overall_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_refund_order_count_for_roi2_1h\",\"total_refund_order_gmv_for_roi2_1h_all\",\"total_refund_order_gmv_for_roi2_1h_rate\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "adlab_scene":  "UNI_PROJECT",
+                                             "marketing_goal":  "ALL",
+                                             "start_time":  "2026-06-01 00:00:00"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /qianchuan/report/all_promotion/get/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "2026060607353298B232CBDD12314F066D"
+                                   }
+                  },
+                  {
+                      "name":  "all_promotion_UNI_PROJECT_QIANCHUAN",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/all_promotion/get/",
+                      "request_params":  {
+                                             "advertiser_id":  "1860240208332803",
+                                             "order_platform":  "QIANCHUAN",
+                                             "fields":  "[\"no_refund_ecom_coupon_amount_for_roi2\",\"no_refund_ecom_platform_subsidy_amount_for_roi2\",\"shop_estimated_comission_cost\",\"stat_cost_for_overall_roi2\",\"stat_cost_for_roi2\",\"total_cost_per_pay_order_for_roi2\",\"total_cost_per_pay_order_settle_for_overall_roi2_1h\",\"total_cost_per_pay_order_settle_for_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_order_real_settle_amount_for_roi2_1h\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_amount_rate_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_order_settle_count_rate_for_roi2_1h\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_and_pay_settle_overall_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_refund_order_count_for_roi2_1h\",\"total_refund_order_gmv_for_roi2_1h_all\",\"total_refund_order_gmv_for_roi2_1h_rate\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "adlab_scene":  "UNI_PROJECT",
+                                             "marketing_goal":  "ALL",
+                                             "start_time":  "2026-06-01 00:00:00"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /qianchuan/report/all_promotion/get/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "20260606073532AB1DAD45C2FECAB3502B"
+                                   }
+                  },
+                  {
+                      "name":  "all_promotion_OVERALL_PROJECT_ECP_AWEME_ALL_DATA",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/all_promotion/get/",
+                      "request_params":  {
+                                             "adlab_scene":  "OVERALL_PROJECT",
+                                             "start_time":  "2026-06-01 00:00:00",
+                                             "fields":  "[\"no_refund_ecom_coupon_amount_for_roi2\",\"no_refund_ecom_platform_subsidy_amount_for_roi2\",\"shop_estimated_comission_cost\",\"stat_cost_for_overall_roi2\",\"stat_cost_for_roi2\",\"total_cost_per_pay_order_for_roi2\",\"total_cost_per_pay_order_settle_for_overall_roi2_1h\",\"total_cost_per_pay_order_settle_for_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_order_real_settle_amount_for_roi2_1h\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_amount_rate_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_order_settle_count_rate_for_roi2_1h\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_and_pay_settle_overall_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_refund_order_count_for_roi2_1h\",\"total_refund_order_gmv_for_roi2_1h_all\",\"total_refund_order_gmv_for_roi2_1h_rate\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "marketing_goal":  "ALL",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "order_platform":  "ECP_AWEME",
+                                             "advertiser_id":  "1860240208332803",
+                                             "data_period":  "ALL_DATA"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /qianchuan/report/all_promotion/get/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "202606060735329FC65538EC0E5A806A92"
+                                   }
+                  },
+                  {
+                      "name":  "all_promotion_OVERALL_PROJECT_ECP_AWEME_UNI_DATA",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/all_promotion/get/",
+                      "request_params":  {
+                                             "adlab_scene":  "OVERALL_PROJECT",
+                                             "start_time":  "2026-06-01 00:00:00",
+                                             "fields":  "[\"no_refund_ecom_coupon_amount_for_roi2\",\"no_refund_ecom_platform_subsidy_amount_for_roi2\",\"shop_estimated_comission_cost\",\"stat_cost_for_overall_roi2\",\"stat_cost_for_roi2\",\"total_cost_per_pay_order_for_roi2\",\"total_cost_per_pay_order_settle_for_overall_roi2_1h\",\"total_cost_per_pay_order_settle_for_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_order_real_settle_amount_for_roi2_1h\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_amount_rate_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_order_settle_count_rate_for_roi2_1h\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_and_pay_settle_overall_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_refund_order_count_for_roi2_1h\",\"total_refund_order_gmv_for_roi2_1h_all\",\"total_refund_order_gmv_for_roi2_1h_rate\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "marketing_goal":  "ALL",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "order_platform":  "ECP_AWEME",
+                                             "advertiser_id":  "1860240208332803",
+                                             "data_period":  "UNI_DATA"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /qianchuan/report/all_promotion/get/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "20260606073533E07632689C419368E640"
+                                   }
+                  },
+                  {
+                      "name":  "all_promotion_OVERALL_PROJECT_ECP_AWEME_OVER_ALL_DATA",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/all_promotion/get/",
+                      "request_params":  {
+                                             "adlab_scene":  "OVERALL_PROJECT",
+                                             "start_time":  "2026-06-01 00:00:00",
+                                             "fields":  "[\"no_refund_ecom_coupon_amount_for_roi2\",\"no_refund_ecom_platform_subsidy_amount_for_roi2\",\"shop_estimated_comission_cost\",\"stat_cost_for_overall_roi2\",\"stat_cost_for_roi2\",\"total_cost_per_pay_order_for_roi2\",\"total_cost_per_pay_order_settle_for_overall_roi2_1h\",\"total_cost_per_pay_order_settle_for_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_order_real_settle_amount_for_roi2_1h\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_amount_rate_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_order_settle_count_rate_for_roi2_1h\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_and_pay_settle_overall_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_refund_order_count_for_roi2_1h\",\"total_refund_order_gmv_for_roi2_1h_all\",\"total_refund_order_gmv_for_roi2_1h_rate\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "marketing_goal":  "ALL",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "order_platform":  "ECP_AWEME",
+                                             "advertiser_id":  "1860240208332803",
+                                             "data_period":  "OVER_ALL_DATA"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /qianchuan/report/all_promotion/get/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "202606060735336718884D8D2A4350F18D"
+                                   }
+                  },
+                  {
+                      "name":  "all_promotion_OVERALL_PROJECT_ALL_ALL_DATA",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/all_promotion/get/",
+                      "request_params":  {
+                                             "adlab_scene":  "OVERALL_PROJECT",
+                                             "start_time":  "2026-06-01 00:00:00",
+                                             "fields":  "[\"no_refund_ecom_coupon_amount_for_roi2\",\"no_refund_ecom_platform_subsidy_amount_for_roi2\",\"shop_estimated_comission_cost\",\"stat_cost_for_overall_roi2\",\"stat_cost_for_roi2\",\"total_cost_per_pay_order_for_roi2\",\"total_cost_per_pay_order_settle_for_overall_roi2_1h\",\"total_cost_per_pay_order_settle_for_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_order_real_settle_amount_for_roi2_1h\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_amount_rate_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_order_settle_count_rate_for_roi2_1h\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_and_pay_settle_overall_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_refund_order_count_for_roi2_1h\",\"total_refund_order_gmv_for_roi2_1h_all\",\"total_refund_order_gmv_for_roi2_1h_rate\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "marketing_goal":  "ALL",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "order_platform":  "ALL",
+                                             "advertiser_id":  "1860240208332803",
+                                             "data_period":  "ALL_DATA"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /qianchuan/report/all_promotion/get/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "20260606073533284234EF655E4720BD2F"
+                                   }
+                  },
+                  {
+                      "name":  "all_promotion_OVERALL_PROJECT_ALL_UNI_DATA",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/all_promotion/get/",
+                      "request_params":  {
+                                             "adlab_scene":  "OVERALL_PROJECT",
+                                             "start_time":  "2026-06-01 00:00:00",
+                                             "fields":  "[\"no_refund_ecom_coupon_amount_for_roi2\",\"no_refund_ecom_platform_subsidy_amount_for_roi2\",\"shop_estimated_comission_cost\",\"stat_cost_for_overall_roi2\",\"stat_cost_for_roi2\",\"total_cost_per_pay_order_for_roi2\",\"total_cost_per_pay_order_settle_for_overall_roi2_1h\",\"total_cost_per_pay_order_settle_for_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_order_real_settle_amount_for_roi2_1h\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_amount_rate_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_order_settle_count_rate_for_roi2_1h\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_and_pay_settle_overall_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_refund_order_count_for_roi2_1h\",\"total_refund_order_gmv_for_roi2_1h_all\",\"total_refund_order_gmv_for_roi2_1h_rate\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "marketing_goal":  "ALL",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "order_platform":  "ALL",
+                                             "advertiser_id":  "1860240208332803",
+                                             "data_period":  "UNI_DATA"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /qianchuan/report/all_promotion/get/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "20260606073534B24490FEE8D414485DCB"
+                                   }
+                  },
+                  {
+                      "name":  "all_promotion_OVERALL_PROJECT_ALL_OVER_ALL_DATA",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/all_promotion/get/",
+                      "request_params":  {
+                                             "adlab_scene":  "OVERALL_PROJECT",
+                                             "start_time":  "2026-06-01 00:00:00",
+                                             "fields":  "[\"no_refund_ecom_coupon_amount_for_roi2\",\"no_refund_ecom_platform_subsidy_amount_for_roi2\",\"shop_estimated_comission_cost\",\"stat_cost_for_overall_roi2\",\"stat_cost_for_roi2\",\"total_cost_per_pay_order_for_roi2\",\"total_cost_per_pay_order_settle_for_overall_roi2_1h\",\"total_cost_per_pay_order_settle_for_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_order_real_settle_amount_for_roi2_1h\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_amount_rate_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_order_settle_count_rate_for_roi2_1h\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_and_pay_settle_overall_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_refund_order_count_for_roi2_1h\",\"total_refund_order_gmv_for_roi2_1h_all\",\"total_refund_order_gmv_for_roi2_1h_rate\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "marketing_goal":  "ALL",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "order_platform":  "ALL",
+                                             "advertiser_id":  "1860240208332803",
+                                             "data_period":  "OVER_ALL_DATA"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /qianchuan/report/all_promotion/get/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "20260606073534C15C50F7DF6AA76B7456"
+                                   }
+                  },
+                  {
+                      "name":  "all_promotion_OVERALL_PROJECT_QIANCHUAN_ALL_DATA",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/all_promotion/get/",
+                      "request_params":  {
+                                             "adlab_scene":  "OVERALL_PROJECT",
+                                             "start_time":  "2026-06-01 00:00:00",
+                                             "fields":  "[\"no_refund_ecom_coupon_amount_for_roi2\",\"no_refund_ecom_platform_subsidy_amount_for_roi2\",\"shop_estimated_comission_cost\",\"stat_cost_for_overall_roi2\",\"stat_cost_for_roi2\",\"total_cost_per_pay_order_for_roi2\",\"total_cost_per_pay_order_settle_for_overall_roi2_1h\",\"total_cost_per_pay_order_settle_for_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_order_real_settle_amount_for_roi2_1h\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_amount_rate_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_order_settle_count_rate_for_roi2_1h\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_and_pay_settle_overall_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_refund_order_count_for_roi2_1h\",\"total_refund_order_gmv_for_roi2_1h_all\",\"total_refund_order_gmv_for_roi2_1h_rate\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "marketing_goal":  "ALL",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "order_platform":  "QIANCHUAN",
+                                             "advertiser_id":  "1860240208332803",
+                                             "data_period":  "ALL_DATA"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /qianchuan/report/all_promotion/get/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "20260606073535B48DEB09C0F393D6D540"
+                                   }
+                  },
+                  {
+                      "name":  "all_promotion_OVERALL_PROJECT_QIANCHUAN_UNI_DATA",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/all_promotion/get/",
+                      "request_params":  {
+                                             "adlab_scene":  "OVERALL_PROJECT",
+                                             "start_time":  "2026-06-01 00:00:00",
+                                             "fields":  "[\"no_refund_ecom_coupon_amount_for_roi2\",\"no_refund_ecom_platform_subsidy_amount_for_roi2\",\"shop_estimated_comission_cost\",\"stat_cost_for_overall_roi2\",\"stat_cost_for_roi2\",\"total_cost_per_pay_order_for_roi2\",\"total_cost_per_pay_order_settle_for_overall_roi2_1h\",\"total_cost_per_pay_order_settle_for_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_order_real_settle_amount_for_roi2_1h\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_amount_rate_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_order_settle_count_rate_for_roi2_1h\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_and_pay_settle_overall_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_refund_order_count_for_roi2_1h\",\"total_refund_order_gmv_for_roi2_1h_all\",\"total_refund_order_gmv_for_roi2_1h_rate\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "marketing_goal":  "ALL",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "order_platform":  "QIANCHUAN",
+                                             "advertiser_id":  "1860240208332803",
+                                             "data_period":  "UNI_DATA"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /qianchuan/report/all_promotion/get/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "20260606073535ACA3C497C38115708ED2"
+                                   }
+                  },
+                  {
+                      "name":  "all_promotion_OVERALL_PROJECT_QIANCHUAN_OVER_ALL_DATA",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/all_promotion/get/",
+                      "request_params":  {
+                                             "adlab_scene":  "OVERALL_PROJECT",
+                                             "start_time":  "2026-06-01 00:00:00",
+                                             "fields":  "[\"no_refund_ecom_coupon_amount_for_roi2\",\"no_refund_ecom_platform_subsidy_amount_for_roi2\",\"shop_estimated_comission_cost\",\"stat_cost_for_overall_roi2\",\"stat_cost_for_roi2\",\"total_cost_per_pay_order_for_roi2\",\"total_cost_per_pay_order_settle_for_overall_roi2_1h\",\"total_cost_per_pay_order_settle_for_roi2_1h\",\"total_ecom_platform_subsidy_amount_for_roi2\",\"total_order_real_settle_amount_for_roi2_1h\",\"total_order_settle_amount_for_roi2_1h\",\"total_order_settle_amount_rate_for_roi2_1h\",\"total_order_settle_count_for_roi2_1h\",\"total_order_settle_count_rate_for_roi2_1h\",\"total_pay_order_count_for_roi2\",\"total_pay_order_coupon_amount_for_roi2\",\"total_pay_order_gmv_for_roi2\",\"total_pay_order_gmv_include_coupon_for_roi2\",\"total_prepay_and_pay_order_roi2\",\"total_prepay_and_pay_settle_overall_roi2_1h\",\"total_prepay_and_pay_settle_roi2_1h\",\"total_prepay_order_count_for_roi2\",\"total_prepay_order_gmv_for_roi2\",\"total_refund_order_count_for_roi2_1h\",\"total_refund_order_gmv_for_roi2_1h_all\",\"total_refund_order_gmv_for_roi2_1h_rate\",\"total_unfinished_estimate_order_gmv_for_roi2\"]",
+                                             "marketing_goal":  "ALL",
+                                             "end_time":  "2026-06-06 23:59:59",
+                                             "order_platform":  "QIANCHUAN",
+                                             "advertiser_id":  "1860240208332803",
+                                             "data_period":  "OVER_ALL_DATA"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /qianchuan/report/all_promotion/get/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "202606060735353BC2011E24772D7975A3"
+                                   }
+                  }
+              ]
+}

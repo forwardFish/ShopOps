@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "table_id": "tblepMIg19Ov1kSw",
+  "created_field": true,
+  "updated_count": 2170,
+  "skipped_count": 0,
+  "skipped_sample": [],
+  "date_field": [
+    {
+      "field_name": "仪表盘日期",
+      "type": 5,
+      "property": {
+        "auto_fill": false,
+        "date_formatter": "yyyy/MM/dd"
+      }
+    }
+  ],
+  "record_count": 2170
+}

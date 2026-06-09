@@ -1,0 +1,482 @@
+﻿{
+    "calls":  [
+                  {
+                      "name":  "authorized_accounts",
+                      "url":  "https://api.oceanengine.com/open_api/oauth2/advertiser/get/",
+                      "request_params":  null,
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "20260605220348CBC0B0345BD065516D1B",
+                                       "data":  {
+                                                    "list":  [
+                                                                 {
+                                                                     "account_id":  1775021907615757,
+                                                                     "account_name":  "BP-1775021907615757",
+                                                                     "account_role":  "CUSTOMER_OPERATOR",
+                                                                     "account_type":  "CUSTOMER_OPERATOR",
+                                                                     "advertiser_id":  1775021907615757,
+                                                                     "advertiser_name":  "BP-1775021907615757",
+                                                                     "advertiser_role":  5,
+                                                                     "is_valid":  true
+                                                                 },
+                                                                 {
+                                                                     "account_id":  1860239941640323,
+                                                                     "account_name":  "BP-1860239941640323",
+                                                                     "account_role":  "CUSTOMER_OPERATOR",
+                                                                     "account_type":  "CUSTOMER_OPERATOR",
+                                                                     "advertiser_id":  1860239941640323,
+                                                                     "advertiser_name":  "BP-1860239941640323",
+                                                                     "advertiser_role":  5,
+                                                                     "is_valid":  true
+                                                                 },
+                                                                 {
+                                                                     "account_id":  1867141875210348,
+                                                                     "account_name":  "BP-1867141875210348",
+                                                                     "account_role":  "CUSTOMER_ADMIN",
+                                                                     "account_type":  "CUSTOMER_ADMIN",
+                                                                     "advertiser_id":  1867141875210348,
+                                                                     "advertiser_name":  "BP-1867141875210348",
+                                                                     "advertiser_role":  2,
+                                                                     "is_valid":  true
+                                                                 },
+                                                                 {
+                                                                     "account_id":  272308913,
+                                                                     "account_name":  "è¶£ç½",
+                                                                     "account_role":  "PLATFORM_ROLE_SHOP_ACCOUNT",
+                                                                     "account_type":  "PLATFORM_ROLE_SHOP_ACCOUNT",
+                                                                     "advertiser_id":  272308913,
+                                                                     "advertiser_name":  "è¶£ç½",
+                                                                     "advertiser_role":  7,
+                                                                     "is_valid":  true
+                                                                 }
+                                                             ]
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "shop_advertiser_list:1775021907615757",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/shop/advertiser/list/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "page":  "1",
+                                             "advertiser_id":  "1775021907615757"
+                                         },
+                      "response":  {
+                                       "code":  40000,
+                                       "message":  "The advertiser ID is required. Please provide it and retry.",
+                                       "request_id":  "20260605220349F5B1295D33B7BB394463"
+                                   }
+                  },
+                  {
+                      "name":  "agent_advertiser_select:1775021907615757",
+                      "url":  "https://api.oceanengine.com/open_api/2/agent/advertiser/select/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "page":  "1",
+                                             "advertiser_id":  "1775021907615757"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /agent/advertiser/select/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "202606052203500FD853E227DFB94A06FE"
+                                   }
+                  },
+                  {
+                      "name":  "shop_advertiser_list:1860239941640323",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/shop/advertiser/list/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "page":  "1",
+                                             "advertiser_id":  "1860239941640323"
+                                         },
+                      "response":  {
+                                       "code":  40000,
+                                       "message":  "The advertiser ID is required. Please provide it and retry.",
+                                       "request_id":  "202606052203504F6CBE092D53C2923DE3"
+                                   }
+                  },
+                  {
+                      "name":  "agent_advertiser_select:1860239941640323",
+                      "url":  "https://api.oceanengine.com/open_api/2/agent/advertiser/select/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "page":  "1",
+                                             "advertiser_id":  "1860239941640323"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /agent/advertiser/select/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "202606052203517C446E41658171A3970A"
+                                   }
+                  },
+                  {
+                      "name":  "shop_advertiser_list:1867141875210348",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/shop/advertiser/list/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "page":  "1",
+                                             "advertiser_id":  "1867141875210348"
+                                         },
+                      "response":  {
+                                       "code":  40000,
+                                       "message":  "The advertiser ID is required. Please provide it and retry.",
+                                       "request_id":  "20260605220351B0CFB1205DF5BBFFDB6C"
+                                   }
+                  },
+                  {
+                      "name":  "agent_advertiser_select:1867141875210348",
+                      "url":  "https://api.oceanengine.com/open_api/2/agent/advertiser/select/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "page":  "1",
+                                             "advertiser_id":  "1867141875210348"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /agent/advertiser/select/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "20260605220352806E673FDE432239EB0B"
+                                   }
+                  },
+                  {
+                      "name":  "shop_advertiser_list:272308913",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/shop/advertiser/list/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "page":  "1",
+                                             "advertiser_id":  "272308913"
+                                         },
+                      "response":  {
+                                       "code":  40000,
+                                       "message":  "The advertiser ID is required. Please provide it and retry.",
+                                       "request_id":  "20260605220352FF0F6E60DE77F0378525"
+                                   }
+                  },
+                  {
+                      "name":  "agent_advertiser_select:272308913",
+                      "url":  "https://api.oceanengine.com/open_api/2/agent/advertiser/select/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "page":  "1",
+                                             "advertiser_id":  "272308913"
+                                         },
+                      "response":  {
+                                       "code":  40002,
+                                       "message":  "advertiser does no grant you /agent/advertiser/select/ permission",
+                                       "help_message":  "该报错是由于未向客户申请对应功能授权，所以使用AccessToken无对应功能权限。请确保在授权页勾选了相关权限，并确认应用类型是否正确，您可请参考以下文档进行排查和解决：https://open.oceanengine.com/labels/41/docs/1808719975329884",
+                                       "request_id":  "20260605220353EBA57E3C3B70B72F98B4"
+                                   }
+                  }
+              ],
+    "source_accounts":  [
+                            {
+                                "account_id":  1775021907615757,
+                                "account_name":  "BP-1775021907615757",
+                                "account_role":  "CUSTOMER_OPERATOR",
+                                "account_type":  "CUSTOMER_OPERATOR",
+                                "advertiser_id":  1775021907615757,
+                                "advertiser_name":  "BP-1775021907615757",
+                                "advertiser_role":  5,
+                                "is_valid":  true
+                            },
+                            {
+                                "account_id":  1860239941640323,
+                                "account_name":  "BP-1860239941640323",
+                                "account_role":  "CUSTOMER_OPERATOR",
+                                "account_type":  "CUSTOMER_OPERATOR",
+                                "advertiser_id":  1860239941640323,
+                                "advertiser_name":  "BP-1860239941640323",
+                                "advertiser_role":  5,
+                                "is_valid":  true
+                            },
+                            {
+                                "account_id":  1867141875210348,
+                                "account_name":  "BP-1867141875210348",
+                                "account_role":  "CUSTOMER_ADMIN",
+                                "account_type":  "CUSTOMER_ADMIN",
+                                "advertiser_id":  1867141875210348,
+                                "advertiser_name":  "BP-1867141875210348",
+                                "advertiser_role":  2,
+                                "is_valid":  true
+                            },
+                            {
+                                "account_id":  272308913,
+                                "account_name":  "è¶£ç½",
+                                "account_role":  "PLATFORM_ROLE_SHOP_ACCOUNT",
+                                "account_type":  "PLATFORM_ROLE_SHOP_ACCOUNT",
+                                "advertiser_id":  272308913,
+                                "advertiser_name":  "è¶£ç½",
+                                "advertiser_role":  7,
+                                "is_valid":  true
+                            }
+                        ],
+    "mapping_candidate_ids":  [
+                                  "1775021907615757",
+                                  "1860239941640323",
+                                  "1867141875210348",
+                                  "272308913"
+                              ],
+    "public_info_results":  [
+                                {
+                                    "name":  "advertiser_public_info:1775021907615757",
+                                    "url":  "https://api.oceanengine.com/open_api/2/advertiser/public_info/",
+                                    "request_params":  {
+                                                           "advertiser_ids":  "[1775021907615757]"
+                                                       },
+                                    "response":  {
+                                                     "code":  40002,
+                                                     "message":  "Account 1775021907615757 doesn\u0027t exist or the role is wrong",
+                                                     "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                     "request_id":  "20260605220354F8A4DF98AD10174A191B"
+                                                 }
+                                },
+                                {
+                                    "name":  "advertiser_info:1775021907615757",
+                                    "url":  "https://api.oceanengine.com/open_api/2/advertiser/info/",
+                                    "request_params":  {
+                                                           "advertiser_ids":  "[1775021907615757]"
+                                                       },
+                                    "response":  {
+                                                     "code":  40002,
+                                                     "message":  "Account 1775021907615757 doesn\u0027t exist or the role is wrong",
+                                                     "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                     "request_id":  "2026060522035496EC6518C0C1EE71FA00"
+                                                 }
+                                },
+                                {
+                                    "name":  "advertiser_public_info:1860239941640323",
+                                    "url":  "https://api.oceanengine.com/open_api/2/advertiser/public_info/",
+                                    "request_params":  {
+                                                           "advertiser_ids":  "[1860239941640323]"
+                                                       },
+                                    "response":  {
+                                                     "code":  40002,
+                                                     "message":  "Account 1860239941640323 doesn\u0027t exist or the role is wrong",
+                                                     "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                     "request_id":  "20260605220355634101CB4035F31D0FE2"
+                                                 }
+                                },
+                                {
+                                    "name":  "advertiser_info:1860239941640323",
+                                    "url":  "https://api.oceanengine.com/open_api/2/advertiser/info/",
+                                    "request_params":  {
+                                                           "advertiser_ids":  "[1860239941640323]"
+                                                       },
+                                    "response":  {
+                                                     "code":  40002,
+                                                     "message":  "Account 1860239941640323 doesn\u0027t exist or the role is wrong",
+                                                     "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                     "request_id":  "20260605220356EDB60023041F902FB8CD"
+                                                 }
+                                },
+                                {
+                                    "name":  "advertiser_public_info:1867141875210348",
+                                    "url":  "https://api.oceanengine.com/open_api/2/advertiser/public_info/",
+                                    "request_params":  {
+                                                           "advertiser_ids":  "[1867141875210348]"
+                                                       },
+                                    "response":  {
+                                                     "code":  40002,
+                                                     "message":  "Account 1867141875210348 doesn\u0027t exist or the role is wrong",
+                                                     "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                     "request_id":  "20260605220357D1F61C1F0D44E26C4420"
+                                                 }
+                                },
+                                {
+                                    "name":  "advertiser_info:1867141875210348",
+                                    "url":  "https://api.oceanengine.com/open_api/2/advertiser/info/",
+                                    "request_params":  {
+                                                           "advertiser_ids":  "[1867141875210348]"
+                                                       },
+                                    "response":  {
+                                                     "code":  40002,
+                                                     "message":  "Account 1867141875210348 doesn\u0027t exist or the role is wrong",
+                                                     "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                     "request_id":  "20260605220357FB4252D4C13B893CCE1D"
+                                                 }
+                                },
+                                {
+                                    "name":  "advertiser_public_info:272308913",
+                                    "url":  "https://api.oceanengine.com/open_api/2/advertiser/public_info/",
+                                    "request_params":  {
+                                                           "advertiser_ids":  "[272308913]"
+                                                       },
+                                    "response":  {
+                                                     "code":  40002,
+                                                     "message":  "Account 272308913 doesn\u0027t exist or the role is wrong",
+                                                     "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                     "request_id":  "202606052203584E0186F755F6D38BC403"
+                                                 }
+                                },
+                                {
+                                    "name":  "advertiser_info:272308913",
+                                    "url":  "https://api.oceanengine.com/open_api/2/advertiser/info/",
+                                    "request_params":  {
+                                                           "advertiser_ids":  "[272308913]"
+                                                       },
+                                    "response":  {
+                                                     "code":  40002,
+                                                     "message":  "Account 272308913 doesn\u0027t exist or the role is wrong",
+                                                     "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                     "request_id":  "2026060522035992701630B7F63630C88E"
+                                                 }
+                                }
+                            ],
+    "report_results":  [
+                           {
+                               "name":  "qianchuan_report_advertiser:1775021907615757",
+                               "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/advertiser/get/",
+                               "request_params":  {
+                                                      "advertiser_id":  "1775021907615757",
+                                                      "page_size":  "100",
+                                                      "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+                                                      "start_date":  "2026-06-01",
+                                                      "end_date":  "2026-06-01",
+                                                      "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                                      "page":  "1"
+                                                  },
+                               "response":  {
+                                                "code":  40002,
+                                                "message":  "Account 1775021907615757 doesn\u0027t exist or the role is wrong",
+                                                "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                "request_id":  "202606052203595F956854B1BC0D322D97"
+                                            }
+                           },
+                           {
+                               "name":  "qianchuan_report_ad:1775021907615757",
+                               "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/ad/get/",
+                               "request_params":  {
+                                                      "advertiser_id":  "1775021907615757",
+                                                      "page_size":  "100",
+                                                      "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+                                                      "start_date":  "2026-06-01",
+                                                      "end_date":  "2026-06-01",
+                                                      "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                                      "page":  "1"
+                                                  },
+                               "response":  {
+                                                "code":  40002,
+                                                "message":  "Account 1775021907615757 doesn\u0027t exist or the role is wrong",
+                                                "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                "request_id":  "20260605220400CFE3920A615B9D9CD671"
+                                            }
+                           },
+                           {
+                               "name":  "qianchuan_report_advertiser:1860239941640323",
+                               "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/advertiser/get/",
+                               "request_params":  {
+                                                      "advertiser_id":  "1860239941640323",
+                                                      "page_size":  "100",
+                                                      "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+                                                      "start_date":  "2026-06-01",
+                                                      "end_date":  "2026-06-01",
+                                                      "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                                      "page":  "1"
+                                                  },
+                               "response":  {
+                                                "code":  40002,
+                                                "message":  "Account 1860239941640323 doesn\u0027t exist or the role is wrong",
+                                                "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                "request_id":  "2026060522040192A4BD0DFBB06041E7E8"
+                                            }
+                           },
+                           {
+                               "name":  "qianchuan_report_ad:1860239941640323",
+                               "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/ad/get/",
+                               "request_params":  {
+                                                      "advertiser_id":  "1860239941640323",
+                                                      "page_size":  "100",
+                                                      "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+                                                      "start_date":  "2026-06-01",
+                                                      "end_date":  "2026-06-01",
+                                                      "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                                      "page":  "1"
+                                                  },
+                               "response":  {
+                                                "code":  40002,
+                                                "message":  "Account 1860239941640323 doesn\u0027t exist or the role is wrong",
+                                                "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                "request_id":  "2026060522040262E06A7E3AEE133BDF49"
+                                            }
+                           },
+                           {
+                               "name":  "qianchuan_report_advertiser:1867141875210348",
+                               "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/advertiser/get/",
+                               "request_params":  {
+                                                      "advertiser_id":  "1867141875210348",
+                                                      "page_size":  "100",
+                                                      "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+                                                      "start_date":  "2026-06-01",
+                                                      "end_date":  "2026-06-01",
+                                                      "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                                      "page":  "1"
+                                                  },
+                               "response":  {
+                                                "code":  40002,
+                                                "message":  "Account 1867141875210348 doesn\u0027t exist or the role is wrong",
+                                                "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                "request_id":  "20260605220402CFA3AA4043DA6E23B865"
+                                            }
+                           },
+                           {
+                               "name":  "qianchuan_report_ad:1867141875210348",
+                               "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/ad/get/",
+                               "request_params":  {
+                                                      "advertiser_id":  "1867141875210348",
+                                                      "page_size":  "100",
+                                                      "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+                                                      "start_date":  "2026-06-01",
+                                                      "end_date":  "2026-06-01",
+                                                      "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                                      "page":  "1"
+                                                  },
+                               "response":  {
+                                                "code":  40002,
+                                                "message":  "Account 1867141875210348 doesn\u0027t exist or the role is wrong",
+                                                "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                "request_id":  "202606052204033ED81FF8FB37839CA6ED"
+                                            }
+                           },
+                           {
+                               "name":  "qianchuan_report_advertiser:272308913",
+                               "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/advertiser/get/",
+                               "request_params":  {
+                                                      "advertiser_id":  "272308913",
+                                                      "page_size":  "100",
+                                                      "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+                                                      "start_date":  "2026-06-01",
+                                                      "end_date":  "2026-06-01",
+                                                      "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                                      "page":  "1"
+                                                  },
+                               "response":  {
+                                                "code":  40002,
+                                                "message":  "Account 272308913 doesn\u0027t exist or the role is wrong",
+                                                "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                "request_id":  "2026060522040397A6A586269FEA2218BC"
+                                            }
+                           },
+                           {
+                               "name":  "qianchuan_report_ad:272308913",
+                               "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/ad/get/",
+                               "request_params":  {
+                                                      "advertiser_id":  "272308913",
+                                                      "page_size":  "100",
+                                                      "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\",\"roi\"]",
+                                                      "start_date":  "2026-06-01",
+                                                      "end_date":  "2026-06-01",
+                                                      "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                                      "page":  "1"
+                                                  },
+                               "response":  {
+                                                "code":  40002,
+                                                "message":  "Account 272308913 doesn\u0027t exist or the role is wrong",
+                                                "help_message":  "该类报错是由于传入账户ID不存在，或不符合接口要求传入账户类型导致报错。请参考以下文档排查解决：https://open.oceanengine.com/labels/41/docs/1808720038958096",
+                                                "request_id":  "202606052204042ADCBCEF8777354129C5"
+                                            }
+                           }
+                       ]
+}

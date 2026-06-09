@@ -1,0 +1,232 @@
+{
+  "source_helper_fields": {
+    "ads": {
+      "fields": {
+        "公式_展现": {
+          "field_id": "fldvvZx8DZ",
+          "formula_expression": "IFBLANK(bitable::$table[tblXLtZsMTaikCeb].$field[fld9lgXUil],0)",
+          "type": 20
+        },
+        "公式_投流消耗": {
+          "field_id": "fldoPlhwkl",
+          "formula_expression": "IFBLANK(bitable::$table[tblXLtZsMTaikCeb].$field[fldRn3rx5R],IFBLANK(bitable::$table[tblXLtZsMTaikCeb].$field[fldndvVPCk],0))",
+          "type": 20
+        },
+        "公式_汇总平台": {
+          "field_id": "fldesiIahP",
+          "formula_expression": "IF(bitable::$table[tblXLtZsMTaikCeb].$field[fldScAmxcf]=\"千牛淘宝\",\"淘宝\",IF(bitable::$table[tblXLtZsMTaikCeb].$field[fldScAmxcf]=\"天猫\",\"淘宝\",IF(bitable::$table[tblXLtZsMTaikCeb].$field[fldScAmxcf].CONTAIN(\"抖音\"),\"抖音\",IF(bitable::$table[tblXLtZsMTaikCeb].$field[fldScAmxcf].CONTAIN(\"拼多多\"),\"拼多多\",IF(bitable::$table[tblXLtZsMTaikCeb].$field[fldScAmxcf].CONTAIN(\"视频号\")||bitable::$table[tblXLtZsMTaikCeb].$field[fldScAmxcf].CONTAIN(\"微信\"),\"视频号\",IF(bitable::$table[tblXLtZsMTaikCeb].$field[fldScAmxcf].CONTAIN(\"淘宝\")||bitable::$table[tblXLtZsMTaikCeb].$field[fldScAmxcf].CONTAIN(\"天猫\")||bitable::$table[tblXLtZsMTaikCeb].$field[fldScAmxcf].CONTAIN(\"千牛\"),\"淘宝\",bitable::$table[tblXLtZsMTaikCeb].$field[fldScAmxcf]))))))",
+          "type": 20
+        },
+        "公式_点击": {
+          "field_id": "fldZBoKlDQ",
+          "formula_expression": "IFBLANK(bitable::$table[tblXLtZsMTaikCeb].$field[fldhBZKrrz],0)",
+          "type": 20
+        },
+        "公式_统计日期": {
+          "field_id": "fldjawXeCm",
+          "formula_expression": "LEFT(bitable::$table[tblXLtZsMTaikCeb].$field[fldCn4pKjG],10)",
+          "type": 20
+        }
+      },
+      "table_id": "tblXLtZsMTaikCeb"
+    },
+    "commissions": {
+      "fields": {
+        "公式_汇总平台": {
+          "field_id": "fldHYmXtvH",
+          "formula_expression": "IF(bitable::$table[tblhBsehmQbzWEVm].$field[fldvjlrHJB]=\"千牛淘宝\",\"淘宝\",IF(bitable::$table[tblhBsehmQbzWEVm].$field[fldvjlrHJB]=\"天猫\",\"淘宝\",IF(bitable::$table[tblhBsehmQbzWEVm].$field[fldvjlrHJB].CONTAIN(\"抖音\"),\"抖音\",IF(bitable::$table[tblhBsehmQbzWEVm].$field[fldvjlrHJB].CONTAIN(\"拼多多\"),\"拼多多\",IF(bitable::$table[tblhBsehmQbzWEVm].$field[fldvjlrHJB].CONTAIN(\"视频号\")||bitable::$table[tblhBsehmQbzWEVm].$field[fldvjlrHJB].CONTAIN(\"微信\"),\"视频号\",IF(bitable::$table[tblhBsehmQbzWEVm].$field[fldvjlrHJB].CONTAIN(\"淘宝\")||bitable::$table[tblhBsehmQbzWEVm].$field[fldvjlrHJB].CONTAIN(\"天猫\")||bitable::$table[tblhBsehmQbzWEVm].$field[fldvjlrHJB].CONTAIN(\"千牛\"),\"淘宝\",bitable::$table[tblhBsehmQbzWEVm].$field[fldvjlrHJB]))))))",
+          "type": 20
+        },
+        "公式_统计日期": {
+          "field_id": "fldyba5LQb",
+          "formula_expression": "LEFT(IFBLANK(bitable::$table[tblhBsehmQbzWEVm].$field[fldy67Rw9C],IFBLANK(bitable::$table[tblhBsehmQbzWEVm].$field[fldFCBLqo5],IFBLANK(bitable::$table[tblhBsehmQbzWEVm].$field[fld6iK7MzD],bitable::$table[tblhBsehmQbzWEVm].$field[fldCC8HDZO]))),10)",
+          "type": 20
+        },
+        "公式_达人费用": {
+          "field_id": "fldql1srf4",
+          "formula_expression": "IFBLANK(bitable::$table[tblhBsehmQbzWEVm].$field[fldBD3WpiD],)+IFBLANK(bitable::$table[tblhBsehmQbzWEVm].$field[fldw10cGhv],0)",
+          "type": 20
+        }
+      },
+      "table_id": "tblhBsehmQbzWEVm"
+    },
+    "orders": {
+      "fields": {
+        "公式_其他费用": {
+          "field_id": "fldgYzuU9g",
+          "formula_expression": "0",
+          "type": 20
+        },
+        "公式_商品成本": {
+          "field_id": "fldfgP7weD",
+          "formula_expression": "0",
+          "type": 20
+        },
+        "公式_平台扣点": {
+          "field_id": "fldcdOAbre",
+          "formula_expression": "0",
+          "type": 20
+        },
+        "公式_有效销售额": {
+          "field_id": "fldUWVBbXz",
+          "formula_expression": "bitable::$table[tblbPjczqMElVU9a].$field[fldCNKGEcQ]-bitable::$table[tblbPjczqMElVU9a].$field[fldtAoeyct]",
+          "type": 20
+        },
+        "公式_汇总平台": {
+          "field_id": "fldTh1LKbT",
+          "formula_expression": "IF(bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj]=\"千牛淘宝\",\"淘宝\",IF(bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj]=\"天猫\",\"淘宝\",IF(bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj].CONTAIN(\"抖音\"),\"抖音\",IF(bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj].CONTAIN(\"拼多多\"),\"拼多多\",IF(bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj].CONTAIN(\"视频号\")||bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj].CONTAIN(\"微信\"),\"视频号\",IF(bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj].CONTAIN(\"淘宝\")||bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj].CONTAIN(\"天猫\")||bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj].CONTAIN(\"千牛\"),\"淘宝\",bitable::$table[tblbPjczqMElVU9a].$field[fld7Gqojcj]))))))",
+          "type": 20
+        },
+        "公式_统计日期": {
+          "field_id": "fldtsmI1ux",
+          "formula_expression": "LEFT(IFBLANK(bitable::$table[tblbPjczqMElVU9a].$field[fldxrzKA0g],bitable::$table[tblbPjczqMElVU9a].$field[fldolBUm6i]),10)",
+          "type": 20
+        },
+        "公式_运费成本": {
+          "field_id": "fldglv9vMB",
+          "formula_expression": "0",
+          "type": 20
+        },
+        "公式_退款金额": {
+          "field_id": "fldtAoeyct",
+          "formula_expression": "0",
+          "type": 20
+        },
+        "公式_销售额": {
+          "field_id": "fldCNKGEcQ",
+          "formula_expression": "IFBLANK(bitable::$table[tblbPjczqMElVU9a].$field[fld6WuPSPN],0)",
+          "type": 20
+        }
+      },
+      "table_id": "tblbPjczqMElVU9a"
+    }
+  },
+  "summary_formula_fields": {
+    "ROI": {
+      "field_id": "fldCrqNYU0",
+      "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,0,IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbn7ZWuo]=0,0,bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm]/bitable::$table[tblepMIg19Ov1kSw].$field[fldbn7ZWuo]))",
+      "type": 20
+    },
+    "其他费用": {
+      "field_id": "fldI2273Lz",
+      "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldgYzuU9g].SUM()",
+      "type": 20
+    },
+    "利润率": {
+      "field_id": "fld5T5aO9r",
+      "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,0,IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm]=0,0,bitable::$table[tblepMIg19Ov1kSw].$field[fldlzgJ7Y7]/bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm]))",
+      "type": 20
+    },
+    "商品成本": {
+      "field_id": "fldXPRVAuE",
+      "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldfgP7weD].SUM()",
+      "type": 20
+    },
+    "展现": {
+      "field_id": "fld0rKlFrF",
+      "formula_expression": "bitable::$table[tblXLtZsMTaikCeb].FILTER(CurrentValue.$column[fldjawXeCm]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldesiIahP]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldvvZx8DZ].SUM()",
+      "type": 20
+    },
+    "已知总投入": {
+      "field_id": "fldvFI6tUv",
+      "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,0,bitable::$table[tblepMIg19Ov1kSw].$field[fldbn7ZWuo]+bitable::$table[tblepMIg19Ov1kSw].$field[flddWC8Sfl])",
+      "type": 20
+    },
+    "已知费用利润率": {
+      "field_id": "fldrfFu0t6",
+      "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm]=0,0,bitable::$table[tblepMIg19Ov1kSw].$field[fldHmfsVER]/bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm])",
+      "type": 20
+    },
+    "已知费用后利润": {
+      "field_id": "fldHmfsVER",
+      "formula_expression": "bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm]-bitable::$table[tblepMIg19Ov1kSw].$field[fldXPRVAuE]-bitable::$table[tblepMIg19Ov1kSw].$field[fldbyNFhKR]-bitable::$table[tblepMIg19Ov1kSw].$field[fld9se3dFe]-bitable::$table[tblepMIg19Ov1kSw].$field[fldI2273Lz]-bitable::$table[tblepMIg19Ov1kSw].$field[flddWC8Sfl]-bitable::$table[tblepMIg19Ov1kSw].$field[fldbn7ZWuo]",
+      "type": 20
+    },
+    "平台ROI": {
+      "field_id": "fldDRNwFc8",
+      "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,0,IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldvFI6tUv]=0,0,bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm]/bitable::$table[tblepMIg19Ov1kSw].$field[fldvFI6tUv]))",
+      "type": 20
+    },
+    "平台扣点": {
+      "field_id": "fld9se3dFe",
+      "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldcdOAbre].SUM()",
+      "type": 20
+    },
+    "投流后毛利": {
+      "field_id": "fldZOVJHKp",
+      "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,0,bitable::$table[tblepMIg19Ov1kSw].$field[fldHXs4Rfm]-bitable::$table[tblepMIg19Ov1kSw].$field[flddWC8Sfl]-bitable::$table[tblepMIg19Ov1kSw].$field[fldbn7ZWuo])",
+      "type": 20
+    },
+    "投流消耗": {
+      "field_id": "fldbn7ZWuo",
+      "formula_expression": "bitable::$table[tblXLtZsMTaikCeb].FILTER(CurrentValue.$column[fldjawXeCm]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldesiIahP]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldoPlhwkl].SUM()",
+      "type": 20
+    },
+    "投流记录数": {
+      "field_id": "fldbNCYlNp",
+      "formula_expression": "bitable::$table[tblXLtZsMTaikCeb].FILTER(CurrentValue.$column[fldjawXeCm]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldesiIahP]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fld0bSkOTX].COUNTA()",
+      "type": 20
+    },
+    "数据状态": {
+      "field_id": "flddzOLMgl",
+      "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldY4Mrxa5]=0,\"partial\",IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,\"partial\",\"normal\"))",
+      "type": 20
+    },
+    "有效销售额": {
+      "field_id": "fldHXs4Rfm",
+      "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldUWVBbXz].SUM()",
+      "type": 20
+    },
+    "汇总key": {
+      "field_id": "fld0MzGYbs",
+      "formula_expression": "bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&\"-\"&bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]",
+      "type": 20
+    },
+    "汇总时间": {
+      "field_id": "fldfKCD35b",
+      "formula_expression": "NOW()",
+      "type": 20
+    },
+    "点击": {
+      "field_id": "fld5M9Zh6z",
+      "formula_expression": "bitable::$table[tblXLtZsMTaikCeb].FILTER(CurrentValue.$column[fldjawXeCm]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldesiIahP]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldZBoKlDQ].SUM()",
+      "type": 20
+    },
+    "经营利润估算": {
+      "field_id": "fldlzgJ7Y7",
+      "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,0,bitable::$table[tblepMIg19Ov1kSw].$field[fldHmfsVER])",
+      "type": 20
+    },
+    "缺失项": {
+      "field_id": "fldZHSJZaK",
+      "formula_expression": "IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldY4Mrxa5]=0,IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,\"订单,投流\",\"订单\"),IF(bitable::$table[tblepMIg19Ov1kSw].$field[fldbNCYlNp]=0,\"投流\",\"\"))",
+      "type": 20
+    },
+    "订单数": {
+      "field_id": "fldY4Mrxa5",
+      "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[flduIwBzli].COUNTA()",
+      "type": 20
+    },
+    "达人佣金": {
+      "field_id": "flddWC8Sfl",
+      "formula_expression": "bitable::$table[tblhBsehmQbzWEVm].FILTER(CurrentValue.$column[fldyba5LQb]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldHYmXtvH]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldql1srf4].SUM()",
+      "type": 20
+    },
+    "运费成本": {
+      "field_id": "fldbyNFhKR",
+      "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldglv9vMB].SUM()",
+      "type": 20
+    },
+    "退款金额": {
+      "field_id": "fldMob3JT2",
+      "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldtAoeyct].SUM()",
+      "type": 20
+    },
+    "销售额": {
+      "field_id": "fldJniAyOW",
+      "formula_expression": "bitable::$table[tblbPjczqMElVU9a].FILTER(CurrentValue.$column[fldtsmI1ux]=bitable::$table[tblepMIg19Ov1kSw].$field[fldbMR4ysR]&&(bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm]=\"全平台总计\"||CurrentValue.$column[fldTh1LKbT]=bitable::$table[tblepMIg19Ov1kSw].$field[fldspQ9Whm])).$column[fldCNKGEcQ].SUM()",
+      "type": 20
+    }
+  },
+  "summary_table_id": "tblepMIg19Ov1kSw"
+}

@@ -1,0 +1,125 @@
+{
+  "effective_sales_expected_from_fields": 1284974.73,
+  "paid_total": 1602558.52,
+  "record_count": 9768,
+  "refund_success_by_fulfill_status": 1955,
+  "refund_success_samples": [
+    {
+      "effective_formula_value": 0,
+      "paid": 169.0,
+      "refund": 169.0,
+      "status": "退款成功",
+      "unique_key": "douyin_6953489736759121234"
+    },
+    {
+      "effective_formula_value": 0,
+      "paid": 169.0,
+      "refund": 169.0,
+      "status": "退款成功",
+      "unique_key": "douyin_6953482569973962659"
+    },
+    {
+      "effective_formula_value": 0,
+      "paid": 169.0,
+      "refund": 169.0,
+      "status": "退款成功",
+      "unique_key": "douyin_6953482586488837915"
+    },
+    {
+      "effective_formula_value": 0,
+      "paid": 145.33,
+      "refund": 145.33,
+      "status": "退款成功",
+      "unique_key": "douyin_6926951179948949224"
+    },
+    {
+      "effective_formula_value": 0,
+      "paid": 169.0,
+      "refund": 169.0,
+      "status": "退款成功",
+      "unique_key": "douyin_6953453296738834121"
+    },
+    {
+      "effective_formula_value": 0,
+      "paid": 119.0,
+      "refund": 119.0,
+      "status": "退款成功",
+      "unique_key": "douyin_6926934468804312192"
+    },
+    {
+      "effective_formula_value": 0,
+      "paid": 169.0,
+      "refund": 169.0,
+      "status": "退款成功",
+      "unique_key": "douyin_6953466842724767237"
+    },
+    {
+      "effective_formula_value": 0,
+      "paid": 169.0,
+      "refund": 169.0,
+      "status": "退款成功",
+      "unique_key": "douyin_6953464082740090404"
+    },
+    {
+      "effective_formula_value": 0,
+      "paid": 167.0,
+      "refund": 167.0,
+      "status": "退款成功",
+      "unique_key": "douyin_6953446240740382075"
+    },
+    {
+      "effective_formula_value": 0,
+      "paid": 146.54,
+      "refund": 146.54,
+      "status": "退款成功",
+      "unique_key": "douyin_6953447990698710303"
+    }
+  ],
+  "refund_success_zero_refund": 0,
+  "refund_total": 317583.79,
+  "status": "success",
+  "status_counts_top10": [
+    [
+      "",
+      7615
+    ],
+    [
+      "退款成功",
+      1955
+    ],
+    [
+      "售后关闭",
+      74
+    ],
+    [
+      "待收退货",
+      49
+    ],
+    [
+      "待退货",
+      38
+    ],
+    [
+      "换货成功",
+      25
+    ],
+    [
+      "补寄成功",
+      8
+    ],
+    [
+      "售后待处理",
+      2
+    ],
+    [
+      "补寄待收货",
+      1
+    ],
+    [
+      "换货待收货",
+      1
+    ]
+  ],
+  "target_table_id": "tblTbbFkEepZAGru",
+  "zero_refund_samples": []
+}

@@ -1,0 +1,67 @@
+﻿{
+    "advertiser_id":  "1860240208332803",
+    "start_date":  "2026-06-01",
+    "end_date":  "2026-06-05",
+    "calls":  [
+                  {
+                      "name":  "qianchuan_report_advertiser_range",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/advertiser/get/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\"]",
+                                             "filtering":  "{\"marketing_goal\":\"ALL\"}",
+                                             "advertiser_id":  "1860240208332803",
+                                             "start_date":  "2026-06-01",
+                                             "end_date":  "2026-06-05",
+                                             "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                             "page":  "1"
+                                         },
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "202606052220042EE05D737844E906256E",
+                                       "data":  {
+                                                    "list":  [
+
+                                                             ],
+                                                    "page_info":  {
+                                                                      "page":  1,
+                                                                      "page_size":  100,
+                                                                      "total_number":  0,
+                                                                      "total_page":  0
+                                                                  }
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "qianchuan_report_ad_range",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/report/ad/get/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "fields":  "[\"stat_cost\",\"show_cnt\",\"click_cnt\",\"pay_order_count\",\"pay_order_amount\"]",
+                                             "filtering":  "{\"marketing_goal\":\"ALL\"}",
+                                             "advertiser_id":  "1860240208332803",
+                                             "start_date":  "2026-06-01",
+                                             "end_date":  "2026-06-05",
+                                             "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                             "page":  "1"
+                                         },
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "202606052220069BFD6C0343CD2F48A25A",
+                                       "data":  {
+                                                    "list":  [
+
+                                                             ],
+                                                    "page_info":  {
+                                                                      "page":  1,
+                                                                      "page_size":  100,
+                                                                      "total_number":  0,
+                                                                      "total_page":  0
+                                                                  }
+                                                }
+                                   }
+                  }
+              ]
+}

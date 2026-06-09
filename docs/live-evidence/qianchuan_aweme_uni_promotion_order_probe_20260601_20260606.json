@@ -1,0 +1,378 @@
+﻿{
+    "generated_at":  "2026-06-06T07:40:32",
+    "advertiser_id":  "1860240208332803",
+    "start_date":  "2026-06-01",
+    "end_date":  "2026-06-06",
+    "note":  "Qianchuan aweme uni promotion order/list report probes. Tokens are not included.",
+    "calls":  [
+                  {
+                      "name":  "aweme_uni_promotion_order_get_VIDEO_PROM_GOODS_no_filter",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/aweme/uni_promotion/order/get/",
+                      "request_params":  {
+                                             "marketing_goal":  "VIDEO_PROM_GOODS",
+                                             "cursor":  "0",
+                                             "order_field":  "order_create_time",
+                                             "count":  "50",
+                                             "advertiser_id":  "1860240208332803"
+                                         },
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "202606060740300B58D32F1A3D1F690D25",
+                                       "data":  {
+                                                    "order_list":  [
+                                                                       {
+                                                                           "ad_id":  1866766765396057,
+                                                                           "aweme_info":  {
+                                                                                              "aweme_avatar":  "https://p11.douyinpic.com/img/aweme-avatar/tos-cn-avt-0015_21482f1721b01fd2a522b828eab34966~c5_168x168.webp?from=3782654143",
+                                                                                              "aweme_id":  3826720100319358,
+                                                                                              "aweme_name":  "ä¸åªå®¶å\u0085»ç½ç¾ð¦·",
+                                                                                              "aweme_show_id":  "66799442664"
+                                                                                          },
+                                                                           "marketing_goal":  "VIDEO_PROM_GOODS",
+                                                                           "order_create_time":  "2026-06-01 12:18",
+                                                                           "order_id":  7646275949331398692,
+                                                                           "product_info":  {
+                                                                                                "product_id":  3810515145814311090,
+                                                                                                "product_image":  "https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800",
+                                                                                                "product_name":  "è¶£ç½å\u0085¨èªå¨æ´é¢å¥¶ææ³¡æºæåºæ³¡æ²«æºç»µå¯æ³¡æ²«ç¤¼åæ°åæäººæ´è¸ç¥å¨"
+                                                                                            },
+                                                                           "stats_info":  {
+                                                                                              "stat_cost_for_roi2":  45.68,
+                                                                                              "total_order_settle_amount_for_roi2_1h":  6929,
+                                                                                              "total_order_settle_count_for_roi2_1h":  39,
+                                                                                              "total_prepay_and_pay_settle_roi2_1h":  151.69
+                                                                                          },
+                                                                           "status":  "OVER",
+                                                                           "support_add_budget":  false
+                                                                       },
+                                                                       {
+                                                                           "ad_id":  1866605330439192,
+                                                                           "aweme_info":  {
+                                                                                              "aweme_avatar":  "https://p11.douyinpic.com/img/aweme-avatar/tos-cn-avt-0015_b1f88a041630fa8f1ec1aa65af6ee083~c5_168x168.webp?from=3782654143",
+                                                                                              "aweme_id":  1830013865038429,
+                                                                                              "aweme_name":  "æ¡å­é\u0085±è",
+                                                                                              "aweme_show_id":  "CJR.141319"
+                                                                                          },
+                                                                           "marketing_goal":  "VIDEO_PROM_GOODS",
+                                                                           "order_create_time":  "2026-05-30 17:32",
+                                                                           "order_id":  7645614695315193910,
+                                                                           "product_info":  {
+                                                                                                "product_id":  3810515145814311090,
+                                                                                                "product_image":  "https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800",
+                                                                                                "product_name":  "è¶£ç½å\u0085¨èªå¨æ´é¢å¥¶ææ³¡æºæåºæ³¡æ²«æºç»µå¯æ³¡æ²«ç¤¼åæ°åæäººæ´è¸ç¥å¨"
+                                                                                            },
+                                                                           "stats_info":  {
+                                                                                              "stat_cost_for_roi2":  0.33,
+                                                                                              "total_order_settle_amount_for_roi2_1h":  0,
+                                                                                              "total_order_settle_count_for_roi2_1h":  0,
+                                                                                              "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                                          },
+                                                                           "status":  "OVER",
+                                                                           "support_add_budget":  false
+                                                                       },
+                                                                       {
+                                                                           "ad_id":  0,
+                                                                           "aweme_info":  {
+                                                                                              "aweme_avatar":  "https://p11.douyinpic.com/img/aweme-avatar/tos-cn-avt-0015_b1f88a041630fa8f1ec1aa65af6ee083~c5_168x168.webp?from=3782654143",
+                                                                                              "aweme_id":  1830013865038429,
+                                                                                              "aweme_name":  "æ¡å­é\u0085±è",
+                                                                                              "aweme_show_id":  "CJR.141319"
+                                                                                          },
+                                                                           "marketing_goal":  "VIDEO_PROM_GOODS",
+                                                                           "order_create_time":  "2026-05-30 17:32",
+                                                                           "order_id":  7645614854727991302,
+                                                                           "product_info":  {
+                                                                                                "product_id":  3810515145814311090,
+                                                                                                "product_image":  "https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800",
+                                                                                                "product_name":  "è¶£ç½å\u0085¨èªå¨æ´é¢å¥¶ææ³¡æºæåºæ³¡æ²«æºç»µå¯æ³¡æ²«ç¤¼åæ°åæäººæ´è¸ç¥å¨"
+                                                                                            },
+                                                                           "stats_info":  {
+                                                                                              "stat_cost_for_roi2":  0,
+                                                                                              "total_order_settle_amount_for_roi2_1h":  0,
+                                                                                              "total_order_settle_count_for_roi2_1h":  0,
+                                                                                              "total_prepay_and_pay_settle_roi2_1h":  0
+                                                                                          },
+                                                                           "status":  "TIMEOUT",
+                                                                           "support_add_budget":  false
+                                                                       }
+                                                                   ],
+                                                    "page_info":  {
+                                                                      "count":  50,
+                                                                      "cursor":  1780133549811660,
+                                                                      "has_more":  0
+                                                                  }
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "aweme_uni_promotion_order_get_VIDEO_PROM_GOODS_created_0601_0606",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/aweme/uni_promotion/order/get/",
+                      "request_params":  {
+                                             "advertiser_id":  "1860240208332803",
+                                             "order_field":  "order_create_time",
+                                             "filtering":  "{\"order_create_start_date\":\"2026-06-01\",\"order_create_end_date\":\"2026-06-06\"}",
+                                             "marketing_goal":  "VIDEO_PROM_GOODS",
+                                             "count":  "50",
+                                             "cursor":  "0"
+                                         },
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "20260606074030FB25AF8A9438EF5166E9",
+                                       "data":  {
+                                                    "order_list":  [
+                                                                       {
+                                                                           "ad_id":  1866766765396057,
+                                                                           "aweme_info":  {
+                                                                                              "aweme_avatar":  "https://p11.douyinpic.com/img/aweme-avatar/tos-cn-avt-0015_21482f1721b01fd2a522b828eab34966~c5_168x168.webp?from=3782654143",
+                                                                                              "aweme_id":  3826720100319358,
+                                                                                              "aweme_name":  "ä¸åªå®¶å\u0085»ç½ç¾ð¦·",
+                                                                                              "aweme_show_id":  "66799442664"
+                                                                                          },
+                                                                           "marketing_goal":  "VIDEO_PROM_GOODS",
+                                                                           "order_create_time":  "2026-06-01 12:18",
+                                                                           "order_id":  7646275949331398692,
+                                                                           "product_info":  {
+                                                                                                "product_id":  3810515145814311090,
+                                                                                                "product_image":  "https://p9-aio.ecombdimg.com/obj/ecom-shop-material/jpeg_m_226e609e6cafb4fef8f19052d8a69e48_sx_403271_www800-800",
+                                                                                                "product_name":  "è¶£ç½å\u0085¨èªå¨æ´é¢å¥¶ææ³¡æºæåºæ³¡æ²«æºç»µå¯æ³¡æ²«ç¤¼åæ°åæäººæ´è¸ç¥å¨"
+                                                                                            },
+                                                                           "stats_info":  {
+                                                                                              "stat_cost_for_roi2":  45.68,
+                                                                                              "total_order_settle_amount_for_roi2_1h":  6929,
+                                                                                              "total_order_settle_count_for_roi2_1h":  39,
+                                                                                              "total_prepay_and_pay_settle_roi2_1h":  151.69
+                                                                                          },
+                                                                           "status":  "OVER",
+                                                                           "support_add_budget":  false
+                                                                       }
+                                                                   ],
+                                                    "page_info":  {
+                                                                      "count":  50,
+                                                                      "cursor":  1780287520343159,
+                                                                      "has_more":  0
+                                                                  }
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "aweme_uni_promotion_order_get_LIVE_PROM_GOODS_no_filter",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/aweme/uni_promotion/order/get/",
+                      "request_params":  {
+                                             "marketing_goal":  "LIVE_PROM_GOODS",
+                                             "cursor":  "0",
+                                             "order_field":  "order_create_time",
+                                             "count":  "50",
+                                             "advertiser_id":  "1860240208332803"
+                                         },
+                      "response":  {
+                                       "code":  40000,
+                                       "message":  "仅支持创建商品全域投放订单",
+                                       "request_id":  "20260606074031209BE8158967B572DF65"
+                                   }
+                  },
+                  {
+                      "name":  "aweme_uni_promotion_order_get_LIVE_PROM_GOODS_created_0601_0606",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/aweme/uni_promotion/order/get/",
+                      "request_params":  {
+                                             "advertiser_id":  "1860240208332803",
+                                             "order_field":  "order_create_time",
+                                             "filtering":  "{\"order_create_start_date\":\"2026-06-01\",\"order_create_end_date\":\"2026-06-06\"}",
+                                             "marketing_goal":  "LIVE_PROM_GOODS",
+                                             "count":  "50",
+                                             "cursor":  "0"
+                                         },
+                      "response":  {
+                                       "code":  40000,
+                                       "message":  "仅支持创建商品全域投放订单",
+                                       "request_id":  "20260606074032D64AB16DC6602E7B3983"
+                                   }
+                  },
+                  {
+                      "name":  "aweme_uni_promotion_order_report_daily_no_filter",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/aweme/uni_promotion/order/report/get/",
+                      "request_params":  {
+                                             "page_size":  "100",
+                                             "order_type":  "DESC",
+                                             "advertiser_id":  "1860240208332803",
+                                             "start_date":  "2026-06-01",
+                                             "end_date":  "2026-06-06",
+                                             "time_granularity":  "TIME_GRANULARITY_DAILY",
+                                             "order_field":  "stat_cost_for_roi2",
+                                             "page":  "1"
+                                         },
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "20260606074032C06C940823A4A566BE8D",
+                                       "data":  {
+                                                    "ad_list":  [
+                                                                    {
+                                                                        "ad_id":  1866766765396057,
+                                                                        "start_date_time":  "2026-06-01",
+                                                                        "stat_cost_for_roi2":  30.06,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  1.31,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  7,
+                                                                        "total_order_settle_amount_for_roi2_1h":  4056,
+                                                                        "total_order_settle_count_for_roi2_1h":  23,
+                                                                        "total_pay_order_count_for_roi2":  25,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  4387,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  4394,
+                                                                        "total_prepay_and_pay_order_roi2":  146.17,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  134.93,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    },
+                                                                    {
+                                                                        "ad_id":  1866766765396057,
+                                                                        "start_date_time":  "2026-06-02",
+                                                                        "stat_cost_for_roi2":  11.99,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  1.09,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  2,
+                                                                        "total_order_settle_amount_for_roi2_1h":  1859,
+                                                                        "total_order_settle_count_for_roi2_1h":  11,
+                                                                        "total_pay_order_count_for_roi2":  11,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  1857,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  1859,
+                                                                        "total_prepay_and_pay_order_roi2":  155.05,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  155.05,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    },
+                                                                    {
+                                                                        "ad_id":  1866766765396057,
+                                                                        "start_date_time":  "2026-06-03",
+                                                                        "stat_cost_for_roi2":  3.63,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  0.73,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                        "total_order_settle_amount_for_roi2_1h":  1014,
+                                                                        "total_order_settle_count_for_roi2_1h":  5,
+                                                                        "total_pay_order_count_for_roi2":  5,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  1014,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  1014,
+                                                                        "total_prepay_and_pay_order_roi2":  279.34,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  279.34,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    },
+                                                                    {
+                                                                        "ad_id":  1866766765396057,
+                                                                        "start_date_time":  "2026-06-04",
+                                                                        "stat_cost_for_roi2":  0,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  0,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                        "total_order_settle_amount_for_roi2_1h":  0,
+                                                                        "total_order_settle_count_for_roi2_1h":  0,
+                                                                        "total_pay_order_count_for_roi2":  0,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  0,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                        "total_prepay_and_pay_order_roi2":  0,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  0,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    },
+                                                                    {
+                                                                        "ad_id":  1866766765396057,
+                                                                        "start_date_time":  "2026-06-05",
+                                                                        "stat_cost_for_roi2":  0,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  0,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                        "total_order_settle_amount_for_roi2_1h":  0,
+                                                                        "total_order_settle_count_for_roi2_1h":  0,
+                                                                        "total_pay_order_count_for_roi2":  0,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  0,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                        "total_prepay_and_pay_order_roi2":  0,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  0,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    },
+                                                                    {
+                                                                        "ad_id":  1866605330439192,
+                                                                        "start_date_time":  "2026-06-01",
+                                                                        "stat_cost_for_roi2":  0.08,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  0,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                        "total_order_settle_amount_for_roi2_1h":  0,
+                                                                        "total_order_settle_count_for_roi2_1h":  0,
+                                                                        "total_pay_order_count_for_roi2":  0,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  0,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                        "total_prepay_and_pay_order_roi2":  0,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  0,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    }
+                                                                ],
+                                                    "page_info":  {
+                                                                      "page":  1,
+                                                                      "page_size":  100,
+                                                                      "total_number":  2,
+                                                                      "total_page":  1
+                                                                  }
+                                                }
+                                   }
+                  },
+                  {
+                      "name":  "aweme_uni_promotion_order_report_total_no_filter",
+                      "url":  "https://api.oceanengine.com/open_api/v1.0/qianchuan/aweme/uni_promotion/order/report/get/",
+                      "request_params":  {
+                                             "advertiser_id":  "1860240208332803",
+                                             "order_type":  "DESC",
+                                             "page_size":  "100",
+                                             "order_field":  "stat_cost_for_roi2",
+                                             "start_date":  "2026-06-01",
+                                             "end_date":  "2026-06-06",
+                                             "page":  "1"
+                                         },
+                      "response":  {
+                                       "code":  0,
+                                       "message":  "OK",
+                                       "request_id":  "20260606074033DC3ADCD0A319034C9469",
+                                       "data":  {
+                                                    "ad_list":  [
+                                                                    {
+                                                                        "ad_id":  1866766765396057,
+                                                                        "start_date_time":  null,
+                                                                        "stat_cost_for_roi2":  45.68,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  1.17,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  9,
+                                                                        "total_order_settle_amount_for_roi2_1h":  6929,
+                                                                        "total_order_settle_count_for_roi2_1h":  39,
+                                                                        "total_pay_order_count_for_roi2":  41,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  7258,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  7267,
+                                                                        "total_prepay_and_pay_order_roi2":  159.08,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  151.69,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    },
+                                                                    {
+                                                                        "ad_id":  1866605330439192,
+                                                                        "start_date_time":  null,
+                                                                        "stat_cost_for_roi2":  0.08,
+                                                                        "total_cost_per_pay_order_settle_for_roi2_1h":  0,
+                                                                        "total_ecom_platform_subsidy_amount_for_roi2":  0,
+                                                                        "total_order_settle_amount_for_roi2_1h":  0,
+                                                                        "total_order_settle_count_for_roi2_1h":  0,
+                                                                        "total_pay_order_count_for_roi2":  0,
+                                                                        "total_pay_order_coupon_amount_for_roi2":  0,
+                                                                        "total_pay_order_gmv_for_roi2":  0,
+                                                                        "total_pay_order_gmv_include_coupon_for_roi2":  0,
+                                                                        "total_prepay_and_pay_order_roi2":  0,
+                                                                        "total_prepay_and_pay_settle_roi2_1h":  0,
+                                                                        "total_unfinished_estimate_order_gmv_for_roi2":  0
+                                                                    }
+                                                                ],
+                                                    "page_info":  {
+                                                                      "page":  1,
+                                                                      "page_size":  100,
+                                                                      "total_number":  2,
+                                                                      "total_page":  1
+                                                                  }
+                                                }
+                                   }
+                  }
+              ]
+}

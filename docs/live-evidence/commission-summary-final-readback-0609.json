@@ -1,0 +1,693 @@
+{
+  "expected_by_date": {
+    "2026-04-15": {
+      "actual": 25.35,
+      "estimated": 25.35,
+      "rows": 1
+    },
+    "2026-04-16": {
+      "actual": 25.35,
+      "estimated": 25.35,
+      "rows": 1
+    },
+    "2026-04-24": {
+      "actual": 67.6,
+      "estimated": 67.6,
+      "rows": 2
+    },
+    "2026-04-25": {
+      "actual": 141.96,
+      "estimated": 197.73,
+      "rows": 7
+    },
+    "2026-04-26": {
+      "actual": 91.26,
+      "estimated": 91.26,
+      "rows": 3
+    },
+    "2026-04-27": {
+      "actual": 226.46,
+      "estimated": 260.26,
+      "rows": 8
+    },
+    "2026-04-28": {
+      "actual": 135.2,
+      "estimated": 270.4,
+      "rows": 8
+    },
+    "2026-04-29": {
+      "actual": 133.78,
+      "estimated": 202.8,
+      "rows": 6
+    },
+    "2026-04-30": {
+      "actual": 245.05,
+      "estimated": 278.85,
+      "rows": 8
+    },
+    "2026-05-01": {
+      "actual": 101.4,
+      "estimated": 135.2,
+      "rows": 4
+    },
+    "2026-05-02": {
+      "actual": 101.4,
+      "estimated": 101.4,
+      "rows": 3
+    },
+    "2026-05-03": {
+      "actual": 202.8,
+      "estimated": 236.6,
+      "rows": 6
+    },
+    "2026-05-04": {
+      "actual": 253.5,
+      "estimated": 523.9,
+      "rows": 14
+    },
+    "2026-05-05": {
+      "actual": 182.52,
+      "estimated": 457.99,
+      "rows": 13
+    },
+    "2026-05-06": {
+      "actual": 1093.43,
+      "estimated": 1336.79,
+      "rows": 18
+    },
+    "2026-05-07": {
+      "actual": 177.45,
+      "estimated": 212.94,
+      "rows": 6
+    },
+    "2026-05-08": {
+      "actual": 324.48,
+      "estimated": 501.93,
+      "rows": 13
+    },
+    "2026-05-09": {
+      "actual": 283.92,
+      "estimated": 457.99,
+      "rows": 13
+    },
+    "2026-05-10": {
+      "actual": 432.64,
+      "estimated": 572.91,
+      "rows": 16
+    },
+    "2026-05-11": {
+      "actual": 707.1,
+      "estimated": 990.34,
+      "rows": 27
+    },
+    "2026-05-12": {
+      "actual": 1417.91,
+      "estimated": 1590.29,
+      "rows": 27
+    },
+    "2026-05-13": {
+      "actual": 246.74,
+      "estimated": 353.21,
+      "rows": 10
+    },
+    "2026-05-14": {
+      "actual": 672.62,
+      "estimated": 885.56,
+      "rows": 25
+    },
+    "2026-05-15": {
+      "actual": 353.56,
+      "estimated": 398.07,
+      "rows": 11
+    },
+    "2026-05-16": {
+      "actual": 709.51,
+      "estimated": 998.02,
+      "rows": 24
+    },
+    "2026-05-17": {
+      "actual": 1578.46,
+      "estimated": 2127.71,
+      "rows": 51
+    },
+    "2026-05-18": {
+      "actual": 1127.44,
+      "estimated": 2149.89,
+      "rows": 50
+    },
+    "2026-05-19": {
+      "actual": 3638.57,
+      "estimated": 38960.98,
+      "rows": 897
+    },
+    "2026-05-20": {
+      "actual": 2883.14,
+      "estimated": 22159.87,
+      "rows": 449
+    },
+    "2026-05-21": {
+      "actual": 5294.82,
+      "estimated": 53942.42,
+      "rows": 1146
+    },
+    "2026-05-22": {
+      "actual": 2955.86,
+      "estimated": 38327.01,
+      "rows": 814
+    },
+    "2026-05-23": {
+      "actual": 510.38,
+      "estimated": 22397.02,
+      "rows": 467
+    },
+    "2026-05-24": {
+      "actual": 47.32,
+      "estimated": 14899.83,
+      "rows": 304
+    },
+    "2026-05-25": {
+      "actual": 0.0,
+      "estimated": 14242.78,
+      "rows": 290
+    },
+    "2026-05-26": {
+      "actual": 0.0,
+      "estimated": 8434.74,
+      "rows": 172
+    },
+    "2026-05-27": {
+      "actual": 0.0,
+      "estimated": 4801.29,
+      "rows": 88
+    },
+    "2026-05-28": {
+      "actual": 0.0,
+      "estimated": 2842.58,
+      "rows": 57
+    },
+    "2026-05-29": {
+      "actual": 0.0,
+      "estimated": 2163.2,
+      "rows": 44
+    },
+    "2026-05-30": {
+      "actual": 0.0,
+      "estimated": 2213.9,
+      "rows": 48
+    },
+    "2026-05-31": {
+      "actual": 0.0,
+      "estimated": 2487.68,
+      "rows": 52
+    },
+    "2026-06-01": {
+      "actual": 0.0,
+      "estimated": 3212.69,
+      "rows": 67
+    },
+    "2026-06-02": {
+      "actual": 0.0,
+      "estimated": 2933.84,
+      "rows": 63
+    },
+    "2026-06-03": {
+      "actual": 0.0,
+      "estimated": 2019.55,
+      "rows": 44
+    },
+    "2026-06-04": {
+      "actual": 0.0,
+      "estimated": 1003.86,
+      "rows": 22
+    },
+    "2026-06-05": {
+      "actual": 0.0,
+      "estimated": 2303.47,
+      "rows": 48
+    },
+    "2026-06-06": {
+      "actual": 0.0,
+      "estimated": 3564.21,
+      "rows": 73
+    },
+    "2026-06-07": {
+      "actual": 0.0,
+      "estimated": 4079.66,
+      "rows": 77
+    },
+    "2026-06-08": {
+      "actual": 0.0,
+      "estimated": 4628.91,
+      "rows": 87
+    },
+    "2026-06-09": {
+      "actual": 0.0,
+      "estimated": 7082.79,
+      "rows": 133
+    }
+  },
+  "summary_checks": [
+    {
+      "date": "2026-04-15",
+      "excel_rows": 1,
+      "expected_actual": 25.35,
+      "expected_estimated": 25.35,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-04-16",
+      "excel_rows": 1,
+      "expected_actual": 25.35,
+      "expected_estimated": 25.35,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-04-24",
+      "excel_rows": 2,
+      "expected_actual": 67.6,
+      "expected_estimated": 67.6,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-04-25",
+      "excel_rows": 7,
+      "expected_actual": 141.96,
+      "expected_estimated": 197.73,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-04-26",
+      "excel_rows": 3,
+      "expected_actual": 91.26,
+      "expected_estimated": 91.26,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-04-27",
+      "excel_rows": 8,
+      "expected_actual": 226.46,
+      "expected_estimated": 260.26,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-04-28",
+      "excel_rows": 8,
+      "expected_actual": 135.2,
+      "expected_estimated": 270.4,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-04-29",
+      "excel_rows": 6,
+      "expected_actual": 133.78,
+      "expected_estimated": 202.8,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-04-30",
+      "excel_rows": 8,
+      "expected_actual": 245.05,
+      "expected_estimated": 278.85,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-01",
+      "excel_rows": 4,
+      "expected_actual": 101.4,
+      "expected_estimated": 135.2,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-02",
+      "excel_rows": 3,
+      "expected_actual": 101.4,
+      "expected_estimated": 101.4,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-03",
+      "excel_rows": 6,
+      "expected_actual": 202.8,
+      "expected_estimated": 236.6,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-04",
+      "excel_rows": 14,
+      "expected_actual": 253.5,
+      "expected_estimated": 523.9,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-05",
+      "excel_rows": 13,
+      "expected_actual": 182.52,
+      "expected_estimated": 457.99,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-06",
+      "excel_rows": 18,
+      "expected_actual": 1093.43,
+      "expected_estimated": 1336.79,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-07",
+      "excel_rows": 6,
+      "expected_actual": 177.45,
+      "expected_estimated": 212.94,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-08",
+      "excel_rows": 13,
+      "expected_actual": 324.48,
+      "expected_estimated": 501.93,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-09",
+      "excel_rows": 13,
+      "expected_actual": 283.92,
+      "expected_estimated": 457.99,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-10",
+      "excel_rows": 16,
+      "expected_actual": 432.64,
+      "expected_estimated": 572.91,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-11",
+      "excel_rows": 27,
+      "expected_actual": 707.1,
+      "expected_estimated": 990.34,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-12",
+      "excel_rows": 27,
+      "expected_actual": 1417.91,
+      "expected_estimated": 1590.29,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-13",
+      "excel_rows": 10,
+      "expected_actual": 246.74,
+      "expected_estimated": 353.21,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-14",
+      "excel_rows": 25,
+      "expected_actual": 672.62,
+      "expected_estimated": 885.56,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-15",
+      "excel_rows": 11,
+      "expected_actual": 353.56,
+      "expected_estimated": 398.07,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-16",
+      "excel_rows": 24,
+      "expected_actual": 709.51,
+      "expected_estimated": 998.02,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-17",
+      "excel_rows": 51,
+      "expected_actual": 1578.46,
+      "expected_estimated": 2127.71,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-18",
+      "excel_rows": 50,
+      "expected_actual": 1127.44,
+      "expected_estimated": 2149.89,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-19",
+      "excel_rows": 897,
+      "expected_actual": 3638.57,
+      "expected_estimated": 38960.98,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-20",
+      "excel_rows": 449,
+      "expected_actual": 2883.14,
+      "expected_estimated": 22159.87,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-21",
+      "excel_rows": 1146,
+      "expected_actual": 5294.82,
+      "expected_estimated": 53942.42,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-22",
+      "excel_rows": 814,
+      "expected_actual": 2955.86,
+      "expected_estimated": 38327.01,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-23",
+      "excel_rows": 467,
+      "expected_actual": 510.38,
+      "expected_estimated": 22397.02,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-24",
+      "excel_rows": 304,
+      "expected_actual": 47.32,
+      "expected_estimated": 14899.83,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-25",
+      "excel_rows": 290,
+      "expected_actual": 0.0,
+      "expected_estimated": 14242.78,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-26",
+      "excel_rows": 172,
+      "expected_actual": 0.0,
+      "expected_estimated": 8434.74,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-27",
+      "excel_rows": 88,
+      "expected_actual": 0.0,
+      "expected_estimated": 4801.29,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-28",
+      "excel_rows": 57,
+      "expected_actual": 0.0,
+      "expected_estimated": 2842.58,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-29",
+      "excel_rows": 44,
+      "expected_actual": 0.0,
+      "expected_estimated": 2163.2,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-30",
+      "excel_rows": 48,
+      "expected_actual": 0.0,
+      "expected_estimated": 2213.9,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-05-31",
+      "excel_rows": 52,
+      "expected_actual": 0.0,
+      "expected_estimated": 2487.68,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-06-01",
+      "excel_rows": 67,
+      "expected_actual": 0.0,
+      "expected_estimated": 3212.69,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-06-02",
+      "excel_rows": 63,
+      "expected_actual": 0.0,
+      "expected_estimated": 2933.84,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-06-03",
+      "excel_rows": 44,
+      "expected_actual": 0.0,
+      "expected_estimated": 2019.55,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-06-04",
+      "excel_rows": 22,
+      "expected_actual": 0.0,
+      "expected_estimated": 1003.86,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-06-05",
+      "excel_rows": 48,
+      "expected_actual": 0.0,
+      "expected_estimated": 2303.47,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-06-06",
+      "excel_rows": 73,
+      "expected_actual": 0.0,
+      "expected_estimated": 3564.21,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-06-07",
+      "excel_rows": 77,
+      "expected_actual": 0.0,
+      "expected_estimated": 4079.66,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-06-08",
+      "excel_rows": 87,
+      "expected_actual": 0.0,
+      "expected_estimated": 4628.91,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    },
+    {
+      "date": "2026-06-09",
+      "excel_rows": 133,
+      "expected_actual": 0.0,
+      "expected_estimated": 7082.79,
+      "summary_actual": null,
+      "summary_estimated": null,
+      "summary_influencer_commission": null
+    }
+  ],
+  "total_douyin_rows": []
+}

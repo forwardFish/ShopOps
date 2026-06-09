@@ -1,0 +1,72 @@
+{
+  "task_pack_id": "shopops-goal-2026-06-03",
+  "task_id": "T08",
+  "status": "BLOCKED_BY_ENVIRONMENT",
+  "executed_only": "T08",
+  "timestamp": "2026-06-03T18:06:19+08:00",
+  "summary": "Focused local regression evidence passes for no failure-as-zero, data_status propagation, pending replay, upsert/readback local double, and fail-closed Feishu environment behavior. Live external acceptance remains blocked by missing real Feishu credentials/table IDs and missing usable Qianniu PC CDP session.",
+  "evidence": [
+    {
+      "type": "pytest",
+      "status": "PASS",
+      "path": "docs/auto-execute/logs/T08/focused-pytest-20260603-refresh-workspace-basetemp.txt",
+      "summary": "12 passed in 0.19s with pytest --basetemp inside docs/auto-execute/logs/T08/pytest-basetemp."
+    },
+    {
+      "type": "pytest_environment_issue",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "path": "docs/auto-execute/logs/T08/focused-pytest-20260603-refresh.txt",
+      "summary": "Initial focused pytest run could not create default temp directories under C:/Users/linyanhui/AppData/Local/Temp/pytest-of-linyanhui; rerun with workspace basetemp passed."
+    },
+    {
+      "type": "pytest_environment_issue",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "path": "docs/auto-execute/logs/T08/focused-pytest-20260603-refresh-basetemp.txt",
+      "summary": "D:/tmp/pytest-t08 was not writable in this surface; rerun with workspace basetemp passed."
+    },
+    {
+      "type": "external_data_local_proof",
+      "status": "PASS_WITH_LIMITATION",
+      "path": "docs/auto-execute/external-data/T08/feishu-data-proof.json",
+      "summary": "Existing local proof shows field mapping, upsert, pending replay, local readback, and no failure-as-zero behavior; it is local/fake evidence only."
+    },
+    {
+      "type": "environment_probe",
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "path": "docs/auto-execute/logs/T08/environment-probe-refresh-20260603.json",
+      "summary": "Fresh probe: Feishu required env values are absent and Qianniu CDP at http://127.0.0.1:9222 is not reachable."
+    },
+    {
+      "type": "task_boundary",
+      "status": "PASS",
+      "path": "docs/auto-execute/latest/T08-HANDOFF.md",
+      "summary": "This run updated only T08 durable result/handoff/log evidence and did not execute other Txx tasks."
+    }
+  ],
+  "blockers": [
+    {
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "surface": "Feishu Bitable live write/readback",
+      "reason": "Missing FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_APP_TOKEN, FEISHU_TABLE_MONITOR_SNAPSHOT, FEISHU_TABLE_ORDERS_RAW, FEISHU_TABLE_PROMOTION_SNAPSHOT, FEISHU_TABLE_METRICS_10MIN, and FEISHU_TABLE_TASK_LOG in the current environment.",
+      "impact": "Cannot truthfully verify real Feishu Bitable writes, Chinese table/field mapping against live tables, upsert, duplicate-run idempotency, pending replay to live Feishu, or readback."
+    },
+    {
+      "status": "BLOCKED_BY_ENVIRONMENT",
+      "surface": "Qianniu PC live collection",
+      "reason": "QIANNIU_CDP_URL defaults to http://127.0.0.1:9222, but /json/version is not reachable in the current surface.",
+      "impact": "Cannot truthfully verify live Qianniu order/promotion failure propagation or live page data status beyond local regression tests."
+    }
+  ],
+  "local_verification": {
+    "status": "PASS",
+    "command": "python -m pytest -q --basetemp .\\docs\\auto-execute\\logs\\T08\\pytest-basetemp tests/test_metric_service.py tests/test_metric_scheduler_delta.py tests/test_storage_and_scheduler.py::test_pending_cache_and_replay tests/test_storage_and_scheduler.py::test_scheduler_replays_pending_cache_before_full_collect tests/test_storage_and_scheduler.py::test_scheduler_records_pending_replay_failure_without_aborting_collect tests/test_storage_and_scheduler.py::test_promotion_center_failure_does_not_write_zero tests/test_feishu_storage_contract.py",
+    "log": "docs/auto-execute/logs/T08/focused-pytest-20260603-refresh-workspace-basetemp.txt"
+  },
+  "not_executed": [
+    "T09",
+    "T10",
+    "T11",
+    "T12",
+    "T13"
+  ]
+}

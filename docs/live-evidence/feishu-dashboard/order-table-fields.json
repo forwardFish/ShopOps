@@ -1,0 +1,142 @@
+[
+  {
+    "field_name": "unique_key",
+    "type": 1
+  },
+  {
+    "field_name": "平台",
+    "type": 1
+  },
+  {
+    "field_name": "数据来源",
+    "type": 1
+  },
+  {
+    "field_name": "店铺ID",
+    "type": 1
+  },
+  {
+    "field_name": "店铺名称",
+    "type": 1
+  },
+  {
+    "field_name": "采集时间",
+    "type": 1
+  },
+  {
+    "field_name": "订单号",
+    "type": 1
+  },
+  {
+    "field_name": "创建时间",
+    "type": 1
+  },
+  {
+    "field_name": "买家昵称",
+    "type": 1
+  },
+  {
+    "field_name": "商品名称",
+    "type": 1
+  },
+  {
+    "field_name": "单价",
+    "type": 2
+  },
+  {
+    "field_name": "数量",
+    "type": 2
+  },
+  {
+    "field_name": "履约/售后状态",
+    "type": 1
+  },
+  {
+    "field_name": "交易状态",
+    "type": 1
+  },
+  {
+    "field_name": "实收款",
+    "type": 2
+  },
+  {
+    "field_name": "退款金额",
+    "type": 2
+  },
+  {
+    "field_name": "商品成本",
+    "type": 2
+  },
+  {
+    "field_name": "运费成本",
+    "type": 2
+  },
+  {
+    "field_name": "平台扣点",
+    "type": 2
+  },
+  {
+    "field_name": "其他费用",
+    "type": 2
+  },
+  {
+    "field_name": "操作信息",
+    "type": 1
+  },
+  {
+    "field_name": "页面URL",
+    "type": 1
+  },
+  {
+    "field_name": "页面截图",
+    "type": 1
+  },
+  {
+    "field_name": "原始数据",
+    "type": 1
+  },
+  {
+    "field_name": "公式_统计日期",
+    "type": 20
+  },
+  {
+    "field_name": "公式_汇总平台",
+    "type": 20
+  },
+  {
+    "field_name": "公式_销售额",
+    "type": 20
+  },
+  {
+    "field_name": "公式_退款金额",
+    "type": 20
+  },
+  {
+    "field_name": "公式_有效销售额",
+    "type": 20
+  },
+  {
+    "field_name": "公式_商品成本",
+    "type": 20
+  },
+  {
+    "field_name": "公式_运费成本",
+    "type": 20
+  },
+  {
+    "field_name": "公式_平台扣点",
+    "type": 20
+  },
+  {
+    "field_name": "公式_其他费用",
+    "type": 20
+  },
+  {
+    "field_name": "公式_实际卖出数量",
+    "type": 20
+  },
+  {
+    "field_name": "??_??????",
+    "type": 20
+  }
+]

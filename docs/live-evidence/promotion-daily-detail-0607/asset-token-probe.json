@@ -1,0 +1,27 @@
+{
+  "asset_count": 2,
+  "assets": [
+    {
+      "url": "https://g.alicdn.com/mm/onebp/20260604.175022.647/boot.js",
+      "http": 200,
+      "length": 254300,
+      "interesting": false,
+      "found": {
+        "csrfId": [],
+        "loginPointId": [],
+        "query_json": false
+      }
+    },
+    {
+      "url": "https://g.alicdn.com/alilog/mlog/aplus_v2.js",
+      "http": 200,
+      "length": 15555,
+      "interesting": false,
+      "found": {
+        "csrfId": [],
+        "loginPointId": [],
+        "query_json": false
+      }
+    }
+  ]
+}
