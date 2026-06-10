@@ -25,7 +25,8 @@ def test_product_rules_use_catalog_keywords_and_build_two_fields_per_product():
 
     assert set(formulas) == {"喷壶数量", "喷壶有效销售额", "两用喷壶数量", "两用喷壶有效销售额"}
     assert '[商品名称].CONTAIN("喷壶")' in formulas["喷壶数量"]["expression"]
-    assert "[公式_实际卖出数量]" in formulas["喷壶数量"]["expression"]
+    assert "[数量]" in formulas["喷壶数量"]["expression"]
+    assert "[公式_实际卖出数量]" not in formulas["喷壶数量"]["expression"]
     assert "[公式_有效销售额]" in formulas["喷壶有效销售额"]["expression"]
 
 
@@ -71,6 +72,44 @@ def test_product_breakdown_values_copy_existing_metrics_to_best_keyword_match():
 
     assert values["两用喷壶数量"] == 1
     assert values["喷壶数量"] == 0
+
+
+def test_product_breakdown_quantity_uses_source_quantity_for_accessories_and_price_diff():
+    rules = product_rules_from_records(
+        [
+            {"fields": {"商品名称": "配件", "搜索关键词": "配件"}},
+            {"fields": {"商品名称": "补差价", "搜索关键词": "补差价"}},
+        ]
+    )
+
+    values = product_breakdown_values(rules, product_name="洁面乳打泡机配件", actual_quantity=8, valid_sales=14)
+
+    assert values["配件数量"] == 8
+    assert values["配件有效销售额"] == 14
+
+    values = product_breakdown_values(rules, product_name="补差价专用", actual_quantity=6, valid_sales=16)
+
+    assert values["补差价数量"] == 6
+    assert values["补差价有效销售额"] == 16
+
+
+def test_price_difference_rule_matches_pdd_alias_product_names():
+    rules = product_rules_from_records([{"fields": {"商品名称": "补差价", "搜索关键词": "补差价"}}])
+
+    values = product_breakdown_values(rules, product_name="【购买前须联系客服确认】补收差价专用商品", actual_quantity=1, valid_sales=8)
+
+    assert rules[0].keywords == ("补差价", "补收差价", "差价专用", "补差")
+    assert values["补差价数量"] == 1
+    assert values["补差价有效销售额"] == 8
+
+
+def test_product_breakdown_quantity_requires_positive_valid_sales():
+    rules = product_rules_from_records([{"fields": {"商品名称": "补差价", "搜索关键词": "补差价"}}])
+
+    values = product_breakdown_values(rules, product_name="补差价专用", actual_quantity=800, valid_sales=0)
+
+    assert values["补差价数量"] == 0
+    assert values["补差价有效销售额"] == 0
 
 
 def test_effective_sales_amount_matches_existing_formula_floor():

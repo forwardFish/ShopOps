@@ -1,0 +1,39 @@
+{
+  "deleted_mojibake_fields": {
+    "douyin": [],
+    "pinduoduo": [],
+    "tmall": [],
+    "wechat_channels": []
+  },
+  "status": "success",
+  "updated": {
+    "douyin": {
+      "expression": "IFBLANK([喷壶数量],0)+IFBLANK([两用喷壶数量],0)+IFBLANK([皂液器数量],0)+IFBLANK([洗面奶数量],0)",
+      "field": "公式_实际卖出数量",
+      "field_id": "fld62zmvz5",
+      "table_id": "tblTbbFkEepZAGru",
+      "type": 20
+    },
+    "pinduoduo": {
+      "expression": "IFBLANK([喷壶数量],0)+IFBLANK([两用喷壶数量],0)+IFBLANK([皂液器数量],0)+IFBLANK([洗面奶数量],0)",
+      "field": "公式_实际卖出数量",
+      "field_id": "fldaEBv3sY",
+      "table_id": "tblFI9ZNPzrjR6Jm",
+      "type": 20
+    },
+    "tmall": {
+      "expression": "IFBLANK([喷壶数量],0)+IFBLANK([两用喷壶数量],0)+IFBLANK([皂液器数量],0)+IFBLANK([洗面奶数量],0)",
+      "field": "公式_实际卖出数量",
+      "field_id": "fldnuxjMi5",
+      "table_id": "tbl0gBiMcAKMCcwI",
+      "type": 20
+    },
+    "wechat_channels": {
+      "expression": "IFBLANK([喷壶数量],0)+IFBLANK([两用喷壶数量],0)+IFBLANK([皂液器数量],0)+IFBLANK([洗面奶数量],0)",
+      "field": "公式_实际卖出数量",
+      "field_id": "fldSrJwCYu",
+      "table_id": "tblFlMuPnVEn8qkw",
+      "type": 20
+    }
+  }
+}

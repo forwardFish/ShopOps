@@ -5,18 +5,31 @@ from pathlib import Path
 
 from openpyxl import Workbook
 
+from shopops.services.product_breakdown import product_rules_from_records
 from scripts.import_daily_files_to_feishu import (
     F_ACCESSORY_FLAG,
+    F_AMOUNT_PER_DEAL,
+    AD_FIELD_TYPES,
     F_CREATED_AT,
     F_DATE,
+    F_DEAL_COUNT,
+    F_DEAL_SPEND,
+    F_NET_ACTUAL_ROI,
+    F_NET_DEAL_COUNT,
+    F_NET_TRADE_AMOUNT,
+    INTERNAL_PRODUCT_BREAKDOWN_QUANTITY,
     F_ORDER_NO,
     F_PAID_AMOUNT,
     F_PLATFORM,
     F_QUANTITY,
     F_REFUND_AMOUNT,
+    F_SETTLED_TRADE_AMOUNT,
+    F_TOTAL_SPEND,
+    F_TRADE_AMOUNT,
     F_UNIQUE_KEY,
     FeishuDailyClient,
     actual_sold_quantity,
+    add_product_breakdown_to_orders,
     ad_unique_key,
     classify_file,
     collapse_order_rows,
@@ -27,6 +40,7 @@ from scripts.import_daily_files_to_feishu import (
     parse_influencer_rows,
     parse_ad_rows,
     parse_order_rows,
+    run_import,
 )
 
 
@@ -174,7 +188,7 @@ def test_regular_product_keeps_actual_quantity():
     ) == 2
 
 
-def test_collapsed_order_preserves_accessory_flag():
+def test_collapsed_order_does_not_let_accessory_line_zero_main_product():
     rows = collapse_order_rows(
         [
             {
@@ -184,6 +198,31 @@ def test_collapsed_order_preserves_accessory_flag():
                 F_PAID_AMOUNT: 39.9,
                 F_REFUND_AMOUNT: 0,
                 F_ACCESSORY_FLAG: "否",
+            },
+            {
+                F_UNIQUE_KEY: "douyin_O1",
+                F_ORDER_NO: "O1",
+                F_QUANTITY: 0,
+                F_PAID_AMOUNT: 0,
+                F_REFUND_AMOUNT: 0,
+                F_ACCESSORY_FLAG: "是",
+            },
+        ]
+    )
+
+    assert rows[0][F_ACCESSORY_FLAG] == "否"
+
+
+def test_collapsed_order_marks_accessory_only_order_as_accessory():
+    rows = collapse_order_rows(
+        [
+            {
+                F_UNIQUE_KEY: "douyin_O1",
+                F_ORDER_NO: "O1",
+                F_QUANTITY: 0,
+                F_PAID_AMOUNT: 0,
+                F_REFUND_AMOUNT: 0,
+                F_ACCESSORY_FLAG: "是",
             },
             {
                 F_UNIQUE_KEY: "douyin_O1",
@@ -218,6 +257,78 @@ def test_parse_ad_rows_aggregates_by_platform_date(tmp_path: Path):
     assert rows[0]["成交金额"] == 380
 
 
+def test_parse_pdd_ad_rows_preserves_platform_specific_metrics(tmp_path: Path):
+    path = tmp_path / "商品推广_账户_分天数据.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(
+        [
+            "日期",
+            "成交花费(元)",
+            "交易额(元)",
+            "实际投产比",
+            "总花费(元)",
+            "净交易额(元)",
+            "净实际投产比",
+            "净成交笔数",
+            "结算交易额(元)",
+            "成交笔数",
+            "每笔成交金额(元)",
+            "曝光量",
+            "点击量",
+        ]
+    )
+    sheet.append(["2026-06-07", 1426.86, 5407.68, 3.79, 1426.86, 5069.7, 3.55, 30, 5069.7, 32, 168.99, 26765, 1028])
+    workbook.save(path)
+
+    rows = parse_ad_rows("拼多多", path)
+
+    assert len(rows) == 1
+    row = rows[0]
+    assert row[F_UNIQUE_KEY] == ad_unique_key("拼多多", "2026-06-07")
+    assert row[F_DEAL_SPEND] == 1426.86
+    assert row[F_TOTAL_SPEND] == 1426.86
+    assert row[F_TRADE_AMOUNT] == 5407.68
+    assert row["成交金额"] == 5407.68
+    assert row[F_NET_TRADE_AMOUNT] == 5069.7
+    assert row[F_NET_ACTUAL_ROI] == 3.55
+    assert row[F_NET_DEAL_COUNT] == 30
+    assert row[F_SETTLED_TRADE_AMOUNT] == 5069.7
+    assert row[F_DEAL_COUNT] == 32
+    assert row[F_AMOUNT_PER_DEAL] == 168.99
+
+
+def test_run_import_can_filter_pdd_ads_to_requested_dates(tmp_path: Path):
+    batch = tmp_path / "0609"
+    pdd_dir = batch / "拼多多"
+    pdd_dir.mkdir(parents=True)
+    path = pdd_dir / "商品推广_账户_分天数据.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(["日期", "成交花费(元)", "交易额(元)", "总花费(元)", "成交笔数", "曝光量", "点击量"])
+    sheet.append(["2026-06-06", 100, 300, 100, 2, 1000, 50])
+    sheet.append(["2026-06-07", 1426.86, 5407.68, 1426.86, 32, 26765, 1028])
+    sheet.append(["2026-06-08", 568.23, 2027.88, 568.23, 12, 5861, 253])
+    workbook.save(path)
+
+    evidence = tmp_path / "evidence.json"
+    summary = run_import(
+        batch_dir=batch,
+        dry_run=True,
+        evidence=evidence,
+        platforms={"拼多多"},
+        kinds={"ads"},
+        dates={"2026-06-07", "2026-06-08"},
+    )
+
+    assert summary["ad_count"] == 2
+    assert summary["ad_dates"] == ["2026-06-07", "2026-06-08"]
+    assert summary["date_filter"] == ["2026-06-07", "2026-06-08"]
+    assert summary["files"]["拼多多"]["ads"][0]["rows"] == 2
+    assert [row[F_DATE] for row in summary["sample_ad_rows"]] == ["2026-06-07", "2026-06-08"]
+    assert summary["sample_ad_rows"][0][F_DEAL_SPEND] == 1426.86
+
+
 def test_upsert_rows_does_not_create_or_require_nonexistent_optional_fields():
     calls: list[tuple[str, str, dict | None, dict | None]] = []
 
@@ -248,6 +359,36 @@ def test_upsert_rows_does_not_create_or_require_nonexistent_optional_fields():
     assert calls[0][0] == "POST"
     assert "/fields" not in calls[0][1]
     assert calls[0][2]["records"][0]["fields"] == {"unique_key": "tmall_T1", "订单号": "T1", "平台": "天猫"}
+
+
+def test_ensure_missing_fields_for_rows_creates_only_typed_nonempty_fields():
+    calls: list[tuple[str, str, dict | None, dict | None]] = []
+
+    class FakeClient(FeishuDailyClient):
+        def __init__(self) -> None:
+            self.app_token = "app"
+
+        def field_names(self, table_id: str) -> set[str]:
+            return {"unique_key", "平台", "投放日期"}
+
+        def request(self, method: str, path: str, payload=None, params=None):
+            calls.append((method, path, payload, params))
+            return {}
+
+    created = FakeClient().ensure_missing_fields_for_rows(
+        "tbl",
+        [
+            {"unique_key": "ads_pdd_2026-06-07", "成交花费(元)": 1426.86, "净交易额(元)": 5069.7, "不支持字段": 1},
+            {"unique_key": "ads_pdd_2026-06-08", "成交花费(元)": 568.23, "结算交易额(元)": None},
+        ],
+        AD_FIELD_TYPES,
+    )
+
+    assert created == ["净交易额(元)", "成交花费(元)"]
+    assert [call[2] for call in calls] == [
+        {"field_name": "净交易额(元)", "type": 2},
+        {"field_name": "成交花费(元)", "type": 2},
+    ]
 
 
 def test_existing_order_update_can_be_limited_to_trade_status():
@@ -375,6 +516,42 @@ def test_douyin_order_export_never_generates_influencer_rows(tmp_path: Path):
     assert parse_influencer_rows("抖音", path) == []
 
 
+def test_order_rows_can_be_enriched_with_product_breakdown_fields():
+    rules = product_rules_from_records([{"fields": {"商品名称": "洗面奶", "搜索关键词": "洗面奶"}}])
+    rows = [
+        {
+            "商品名称": "趣白全自动洗面奶打泡机",
+            "数量": 2,
+            "实收款": 338,
+            "退款金额": 0,
+        }
+    ]
+
+    add_product_breakdown_to_orders(rows, rules)
+
+    assert rows[0]["洗面奶数量"] == 2
+    assert rows[0]["洗面奶有效销售额"] == 338
+
+
+def test_order_breakdown_uses_internal_source_quantity_before_accessory_zeroing():
+    rules = product_rules_from_records([{"fields": {"商品名称": "配件", "搜索关键词": "配件"}}])
+    rows = [
+        {
+            "商品名称": "洁面乳打泡机配件",
+            "数量": 0,
+            INTERNAL_PRODUCT_BREAKDOWN_QUANTITY: 8,
+            "实收款": 14,
+            "退款金额": 0,
+        }
+    ]
+
+    add_product_breakdown_to_orders(rows, rules)
+
+    assert rows[0]["配件数量"] == 8
+    assert rows[0]["配件有效销售额"] == 14
+    assert INTERNAL_PRODUCT_BREAKDOWN_QUANTITY not in rows[0]
+
+
 def test_douyin_influencer_rows_require_commission_excel(tmp_path: Path):
     path = tmp_path / "48a95f74-af9d-088a-e36e-81eab8857874_3824661741573898566.xlsx"
     workbook = Workbook()
@@ -390,7 +567,29 @@ def test_douyin_influencer_rows_require_commission_excel(tmp_path: Path):
     assert rows[0]["订单号"] == "6953547102608758621"
     assert rows[0]["作者账号"] == "作者A"
     assert rows[0]["预估佣金支出"] == 54.08
+    assert rows[0]["带货达人ID"] == "66799442664"
+    assert rows[0]["带货达人昵称"] == "作者A"
+    assert rows[0]["带货佣金率"] == "32.0"
+    assert rows[0]["带货费用"] == 54.08
+    assert rows[0]["带货费用口径"] == "预估佣金支出"
     assert rows[0]["流量来源"] == "视频"
+
+
+def test_wechat_influencer_rows_fill_estimated_commission_from_cost(tmp_path: Path):
+    path = tmp_path / "微信小店订单.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(["订单号", "订单下单时间", "支付时间", "订单状态", "商品名称", "商品编码(平台)", "商品数量", "订单实际支付金额", "带货账号昵称", "带货费用", "带货佣金率", "带货费用类型"])
+    sheet.append(["W1", "2026-06-08 12:00:00", "2026-06-08 12:01:00", "已付款", "商品B", "P1", 1, 169, "达人B", 8.8, "5%", "佣金"])
+    workbook.save(path)
+
+    rows = parse_influencer_rows("视频号", path)
+
+    assert rows[0]["unique_key"] == "视频号W1"
+    assert rows[0]["带货费用"] == 8.8
+    assert rows[0]["预估佣金支出"] == 8.8
+    assert rows[0]["实际佣金支出"] is None
+    assert rows[0]["佣金率"] == 5
 
 
 def test_unique_key_rules_are_stable():

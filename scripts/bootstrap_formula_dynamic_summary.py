@@ -193,13 +193,14 @@ class FormulaSummaryBootstrap:
         self.ensure_formula_field(order_table_id, "公式_汇总平台", NORMALIZE_PLATFORM_EXPR, formatter="")
         self.ensure_formula_field(order_table_id, "公式_销售额", first_number_expr(order_fields, ORDER_SALES_FIELDS), formatter="0.00")
         self.ensure_formula_field(order_table_id, "公式_退款金额", first_number_expr(order_fields, ORDER_REFUND_FIELDS), formatter="0.00")
-        self.ensure_formula_field(order_table_id, "公式_实际卖出数量", accessory_adjusted_quantity_expr(order_fields), formatter="0")
         self.ensure_formula_field(
             order_table_id,
             "公式_有效销售额",
             first_number_expr(order_fields, ORDER_VALID_SALES_FIELDS, default="[公式_销售额]-[公式_退款金额]"),
             formatter="0.00",
         )
+        order_fields = self.field_index(order_table_id)
+        self.ensure_formula_field(order_table_id, "公式_实际卖出数量", actual_sold_quantity_expr(order_fields, product_rules), formatter="0")
         self.ensure_formula_field(order_table_id, "公式_商品成本", first_number_expr(order_fields, PRODUCT_COST_FIELDS), formatter="0.00")
         self.ensure_formula_field(order_table_id, "公式_运费成本", first_number_expr(order_fields, FREIGHT_COST_FIELDS), formatter="0.00")
         self.ensure_formula_field(order_table_id, "公式_平台扣点", first_number_expr(order_fields, PLATFORM_FEE_FIELDS), formatter="0.00")
@@ -689,11 +690,29 @@ def first_number_expr(existing_fields: dict[str, dict[str, Any]], aliases: tuple
     return expr
 
 
-def accessory_adjusted_quantity_expr(existing_fields: dict[str, dict[str, Any]]) -> str:
+def effective_sales_quantity_expr(existing_fields: dict[str, dict[str, Any]]) -> str:
     quantity = first_number_expr(existing_fields, ORDER_QUANTITY_FIELDS)
-    if ACCESSORY_FLAG_FIELD not in existing_fields:
-        return quantity
-    return f'IF([{ACCESSORY_FLAG_FIELD}]="是",0,{quantity})'
+    valid_sales = first_number_expr(existing_fields, ("公式_有效销售额",), default="0")
+    if not valid_sales:
+        valid_sales = first_number_expr(existing_fields, ORDER_VALID_SALES_FIELDS, default="[公式_销售额]-[公式_退款金额]")
+    if not valid_sales:
+        valid_sales = "0"
+    return f"IF(({valid_sales})>0,{quantity},0)"
+
+
+def actual_sold_quantity_expr(existing_fields: dict[str, dict[str, Any]], product_rules: list[ProductRule] | None = None) -> str:
+    product_quantity_fields = [
+        rule.quantity_field
+        for rule in product_rules or []
+        if rule.name not in {"配件", "补差价"} and rule.quantity_field in existing_fields
+    ]
+    if product_quantity_fields:
+        return "+".join(f"IFBLANK([{field}],0)" for field in product_quantity_fields)
+    return effective_sales_quantity_expr(existing_fields)
+
+
+def accessory_adjusted_quantity_expr(existing_fields: dict[str, dict[str, Any]]) -> str:
+    return effective_sales_quantity_expr(existing_fields)
 
 
 def first_commission_expr(existing_fields: dict[str, dict[str, Any]]) -> str:

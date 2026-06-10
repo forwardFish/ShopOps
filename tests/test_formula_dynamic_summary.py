@@ -5,6 +5,7 @@ from typing import Any
 from scripts.bootstrap_formula_dynamic_summary import (
     FormulaSummaryBootstrap,
     ORDER_FORMULA_DATE_ALIASES,
+    actual_sold_quantity_expr,
     accessory_adjusted_quantity_expr,
     dimension_row_matches,
     formula_date_expr,
@@ -12,6 +13,7 @@ from scripts.bootstrap_formula_dynamic_summary import (
     total_dimension_row_matches,
     total_summary_formulas,
 )
+from shopops.services.product_breakdown import ProductRule
 
 
 def test_summary_formulas_reference_source_tables_with_filter_expressions():
@@ -119,10 +121,32 @@ def test_order_formula_date_aliases_use_created_time_before_payment_or_import_ti
     assert "采集时间" not in expression
 
 
-def test_accessory_quantity_formula_zeroes_accessory_rows():
-    expression = accessory_adjusted_quantity_expr({"是否是配件": {}, "数量": {}})
+def test_actual_quantity_formula_uses_valid_sales_gate():
+    expression = accessory_adjusted_quantity_expr({"是否是配件": {}, "数量": {}, "公式_有效销售额": {}})
 
-    assert expression == 'IF([是否是配件]="是",0,IFBLANK([数量],0))'
+    assert expression == "IF((IFBLANK([公式_有效销售额],0))>0,IFBLANK([数量],0),0)"
+
+
+def test_actual_sold_quantity_formula_uses_main_product_quantities_when_available():
+    rules = [
+        ProductRule("洗面奶", ("洗面奶",)),
+        ProductRule("皂液器", ("皂液器",)),
+        ProductRule("配件", ("配件",)),
+        ProductRule("补差价", ("补差价",)),
+    ]
+    expression = actual_sold_quantity_expr(
+        {
+            "数量": {},
+            "公式_有效销售额": {},
+            "洗面奶数量": {},
+            "皂液器数量": {},
+            "配件数量": {},
+            "补差价数量": {},
+        },
+        rules,
+    )
+
+    assert expression == "IFBLANK([洗面奶数量],0)+IFBLANK([皂液器数量],0)"
 
 
 def test_upsert_dimension_rows_skips_unchanged_existing_rows():

@@ -18,6 +18,7 @@ sys.path.insert(0, str(ROOT))
 
 from shopops.config import load_settings
 from shopops.storage.feishu_bootstrap import FEISHU_BASE_URL, FeishuOpenApiClient
+from scripts.write_douyin_influencer_excel_to_feishu import parse_doudian_xlsx
 
 
 TEXT_FIELD = 1
@@ -39,6 +40,9 @@ F_INFLUENCER_NICK = "带货达人昵称"
 F_COMMISSION_RATE = "带货佣金率"
 F_COMMISSION = "带货费用"
 F_COMMISSION_BASIS = "带货费用口径"
+F_COMMISSION_RATE_NUM = "佣金率"
+F_ESTIMATED_COMMISSION = "预估佣金支出"
+F_ACTUAL_COMMISSION = "实际佣金支出"
 F_SHOP_ID = "店铺ID"
 F_SHOP_NAME = "店铺名称"
 F_FETCHED_AT = "采集时间"
@@ -62,6 +66,9 @@ TARGET_FIELDS = [
     (F_COMMISSION_RATE, TEXT_FIELD),
     (F_COMMISSION, NUMBER_FIELD),
     (F_COMMISSION_BASIS, TEXT_FIELD),
+    (F_COMMISSION_RATE_NUM, NUMBER_FIELD),
+    (F_ESTIMATED_COMMISSION, NUMBER_FIELD),
+    (F_ACTUAL_COMMISSION, NUMBER_FIELD),
     (F_SHOP_ID, TEXT_FIELD),
     (F_SHOP_NAME, TEXT_FIELD),
     (F_FETCHED_AT, TEXT_FIELD),
@@ -205,6 +212,32 @@ def latest_file(directory: Path) -> Path | None:
     return sorted(candidates, key=lambda item: item.stat().st_mtime, reverse=True)[0]
 
 
+def influencer_source_file(platform: str, directory: Path) -> Path | None:
+    candidates = sorted(
+        [path for path in directory.iterdir() if path.suffix.lower() in {".csv", ".xlsx"}],
+        key=lambda item: item.stat().st_mtime,
+        reverse=True,
+    )
+    if platform == "抖音":
+        for path in candidates:
+            if path.suffix.lower() != ".xlsx":
+                continue
+            try:
+                rows = parse_doudian_xlsx(path)
+            except Exception:
+                continue
+            if any(first_present(row, "订单id") and first_present(row, "作者账号", "抖音/火山号") for row in rows[:20]):
+                return path
+    if platform == "视频号":
+        for path in candidates:
+            if path.suffix.lower() != ".xlsx":
+                continue
+            headers, _ = load_rows(path)
+            if {"订单号", "带货费用"}.issubset(set(headers)):
+                return path
+    return candidates[0] if candidates else None
+
+
 def load_rows(path: Path) -> tuple[list[str], list[dict[str, Any]]]:
     if path.suffix.lower() == ".csv":
         with path.open("r", encoding="utf-8-sig", newline="") as fh:
@@ -229,7 +262,11 @@ def load_rows(path: Path) -> tuple[list[str], list[dict[str, Any]]]:
 
 def build_rows_for_file(platform: str, path: Path, fetched_at: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     headers, source_rows = load_rows(path)
-    if platform == "抖音":
+    if platform == "抖音" and path.suffix.lower() == ".xlsx":
+        source_rows = parse_doudian_xlsx(path)
+        headers = list(source_rows[0].keys()) if source_rows else headers
+        rows = douyin_commission_excel_rows(source_rows, path, fetched_at)
+    elif platform == "抖音":
         rows = douyin_rows(source_rows, path, fetched_at)
     elif platform == "视频号":
         rows = wechat_channels_rows(source_rows, path, fetched_at)
@@ -260,9 +297,52 @@ def collapse_rows_by_unique_key(rows: list[dict[str, Any]]) -> list[dict[str, An
             current[field] = join_unique(current.get(field), row.get(field))
         current[F_QUANTITY] = add_numbers(current.get(F_QUANTITY), row.get(F_QUANTITY))
         current[F_COMMISSION] = add_numbers(current.get(F_COMMISSION), row.get(F_COMMISSION))
+        current[F_ESTIMATED_COMMISSION] = add_numbers(current.get(F_ESTIMATED_COMMISSION), row.get(F_ESTIMATED_COMMISSION))
+        current[F_ACTUAL_COMMISSION] = add_numbers(current.get(F_ACTUAL_COMMISSION), row.get(F_ACTUAL_COMMISSION))
         current[F_PAID_AMOUNT] = first_number(current.get(F_PAID_AMOUNT), row.get(F_PAID_AMOUNT))
         current[F_RAW] = json.dumps(raw_rows[unique_key], ensure_ascii=False, sort_keys=True, default=str)
     return list(collapsed.values())
+
+
+def douyin_commission_excel_rows(source_rows: list[dict[str, Any]], source_file: Path, fetched_at: str) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for row in source_rows:
+        order_no = clean_text(first_present(row, "订单id", "订单ID", "订单号"))
+        influencer_id = clean_text(first_present(row, "抖音/火山号", "达人ID"))
+        influencer_nick = clean_text(first_present(row, "作者账号", "达人昵称"))
+        estimated_commission = number_value(first_present(row, "预估佣金支出"))
+        actual_commission = number_value(first_present(row, "实际佣金支出"))
+        commission = actual_commission if actual_commission and actual_commission > 0 else estimated_commission
+        if not order_no or not any((influencer_id, influencer_nick, commission)):
+            continue
+        rows.append(
+            base_row(
+                platform="抖音",
+                source="抖店达人佣金Excel导出",
+                order_no=order_no,
+                created_at=clean_text(first_present(row, "付款时间", "订单提交时间")),
+                pay_at=clean_text(first_present(row, "付款时间", "支付完成时间")),
+                order_status=clean_text(row.get("订单状态")),
+                product_id=clean_text(first_present(row, "商品id", "商品ID")),
+                product_name=clean_text(first_present(row, "商品名称", "选购商品")),
+                quantity=number_value(row.get("商品数量")),
+                paid_amount=number_value(first_present(row, "支付金额", "订单应付金额")),
+                influencer_id=influencer_id,
+                influencer_nick=influencer_nick,
+                commission_rate=clean_text(row.get("佣金率")),
+                commission=commission,
+                commission_basis="实际佣金支出" if actual_commission and actual_commission > 0 else "预估佣金支出",
+                shop_id=clean_text(first_present(row, "店铺id", "店铺ID")),
+                shop_name=clean_text(row.get("店铺名称")) or "抖音",
+                fetched_at=fetched_at,
+                source_file=source_file,
+                raw=row,
+                commission_rate_number=number_value(row.get("佣金率")),
+                estimated_commission=estimated_commission,
+                actual_commission=actual_commission,
+            )
+        )
+    return rows
 
 
 def douyin_rows(source_rows: list[dict[str, Any]], source_file: Path, fetched_at: str) -> list[dict[str, Any]]:
@@ -296,6 +376,7 @@ def douyin_rows(source_rows: list[dict[str, Any]], source_file: Path, fetched_at
                 fetched_at=fetched_at,
                 source_file=source_file,
                 raw=row,
+                estimated_commission=commission,
             )
         )
     return rows
@@ -331,6 +412,8 @@ def wechat_channels_rows(source_rows: list[dict[str, Any]], source_file: Path, f
                 fetched_at=fetched_at,
                 source_file=source_file,
                 raw=redact_row(row),
+                commission_rate_number=number_value(row.get("带货佣金率")),
+                estimated_commission=commission,
             )
         )
     return rows
@@ -358,6 +441,9 @@ def base_row(
     fetched_at: str,
     source_file: Path,
     raw: dict[str, Any],
+    commission_rate_number: float | None = None,
+    estimated_commission: float | None = None,
+    actual_commission: float | None = None,
 ) -> dict[str, Any]:
     return {
         F_UNIQUE_KEY: canonical_unique_key(platform, order_no),
@@ -376,6 +462,9 @@ def base_row(
         F_COMMISSION_RATE: commission_rate,
         F_COMMISSION: commission,
         F_COMMISSION_BASIS: commission_basis,
+        F_COMMISSION_RATE_NUM: commission_rate_number,
+        F_ESTIMATED_COMMISSION: estimated_commission,
+        F_ACTUAL_COMMISSION: actual_commission,
         F_SHOP_ID: shop_id,
         F_SHOP_NAME: shop_name,
         F_FETCHED_AT: fetched_at,
@@ -478,11 +567,13 @@ def main() -> int:
     files: dict[str, Any] = {}
     missing_platform_dirs: list[str] = []
     for platform in ("抖音", "视频号"):
-        platform_dir = data_root / platform / args.date_dir
+        platform_dir = data_root / args.date_dir / platform
+        if not platform_dir.exists():
+            platform_dir = data_root / platform / args.date_dir
         if not platform_dir.exists():
             missing_platform_dirs.append(str(platform_dir))
             continue
-        source_file = latest_file(platform_dir)
+        source_file = influencer_source_file(platform, platform_dir)
         if not source_file:
             files[platform] = {"status": "missing_export_file", "directory": str(platform_dir)}
             continue

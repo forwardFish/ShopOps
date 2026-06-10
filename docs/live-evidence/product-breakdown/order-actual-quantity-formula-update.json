@@ -1,0 +1,59 @@
+{
+  "deleted_mojibake_fields": {
+    "douyin": [
+      {
+        "field": "??_??????",
+        "field_id": "fldObxHtDr"
+      }
+    ],
+    "pinduoduo": [
+      {
+        "field": "??_??????",
+        "field_id": "fldRWZVPGS"
+      }
+    ],
+    "tmall": [
+      {
+        "field": "??_??????",
+        "field_id": "fldN6FWDo2"
+      }
+    ],
+    "wechat_channels": [
+      {
+        "field": "??_??????",
+        "field_id": "fldKS0ae0Y"
+      }
+    ]
+  },
+  "status": "success",
+  "updated": {
+    "douyin": {
+      "expression": "IF((IFBLANK([公式_有效销售额],0))>0,IFBLANK([数量],IFBLANK([商品数量],0)),0)",
+      "field": "公式_实际卖出数量",
+      "field_id": "fld62zmvz5",
+      "table_id": "tblTbbFkEepZAGru",
+      "type": 20
+    },
+    "pinduoduo": {
+      "expression": "IF((IFBLANK([公式_有效销售额],0))>0,IFBLANK([数量],0),0)",
+      "field": "公式_实际卖出数量",
+      "field_id": "fldaEBv3sY",
+      "table_id": "tblFI9ZNPzrjR6Jm",
+      "type": 20
+    },
+    "tmall": {
+      "expression": "IF((IFBLANK([公式_有效销售额],0))>0,IFBLANK([数量],0),0)",
+      "field": "公式_实际卖出数量",
+      "field_id": "fldnuxjMi5",
+      "table_id": "tbl0gBiMcAKMCcwI",
+      "type": 20
+    },
+    "wechat_channels": {
+      "expression": "IF((IFBLANK([公式_有效销售额],0))>0,IFBLANK([数量],0),0)",
+      "field": "公式_实际卖出数量",
+      "field_id": "fldSrJwCYu",
+      "table_id": "tblFlMuPnVEn8qkw",
+      "type": 20
+    }
+  }
+}

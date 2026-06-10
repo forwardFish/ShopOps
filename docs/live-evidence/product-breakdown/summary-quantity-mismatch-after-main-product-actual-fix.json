@@ -1,0 +1,35 @@
+{
+  "explanation": "实际卖出数量来自订单表公式_实际卖出数量；修正后应等于主商品数量合计，并排除配件、补差价等非主商品数量。",
+  "order_mismatch_day_count": 0,
+  "order_mismatch_day_count_by_platform": {},
+  "order_mismatch_day_examples": [],
+  "status": "success",
+  "summary_mismatch_count": 0,
+  "summary_mismatch_count_by_platform": {},
+  "summary_mismatch_examples": [],
+  "target_key": "2026-04-24-抖音",
+  "target_order_rollup": {
+    "主商品数量合计": 311.0,
+    "主商品数量合计-实际卖出数量": 0.0,
+    "商品数量合计": 311.0,
+    "商品数量合计-实际卖出数量": 0.0,
+    "实际卖出数量": 311.0,
+    "平台": "抖音",
+    "洗面奶数量": 311.0,
+    "洗面奶数量-实际卖出数量": 0.0,
+    "统计日期": "2026-04-24"
+  },
+  "target_order_samples": [],
+  "target_summary": {
+    "record_id": "recvlP4RVLRH8I",
+    "主商品数量合计": 311.0,
+    "主商品数量合计-实际卖出数量": 0.0,
+    "商品数量合计": 311.0,
+    "商品数量合计-实际卖出数量": 0.0,
+    "实际卖出数量": 311.0,
+    "平台": "抖音",
+    "洗面奶数量": 311.0,
+    "洗面奶数量-实际卖出数量": 0.0,
+    "统计日期": "2026-04-24"
+  }
+}

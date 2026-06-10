@@ -7,6 +7,9 @@ from openpyxl import Workbook
 from scripts.sync_daily_influencer_commissions import (
     F_COMMISSION,
     F_COMMISSION_BASIS,
+    F_COMMISSION_RATE_NUM,
+    F_ESTIMATED_COMMISSION,
+    F_ACTUAL_COMMISSION,
     F_INFLUENCER_ID,
     F_INFLUENCER_NICK,
     F_PRODUCT_NAME,
@@ -65,6 +68,8 @@ def test_builds_douyin_rows_from_order_export_influencer_columns(tmp_path):
     assert rows[0][F_INFLUENCER_NICK] == "Creator A"
     assert rows[0][F_COMMISSION] == 3.5
     assert rows[0][F_COMMISSION_BASIS] == "达人实际承担优惠金额"
+    assert rows[0][F_ESTIMATED_COMMISSION] == 3.5
+    assert rows[0][F_ACTUAL_COMMISSION] is None
 
 
 def test_builds_wechat_channels_rows_from_order_export_influencer_columns(tmp_path):
@@ -96,6 +101,29 @@ def test_builds_wechat_channels_rows_from_order_export_influencer_columns(tmp_pa
     assert rows[0][F_INFLUENCER_NICK] == "Creator B"
     assert rows[0][F_COMMISSION] == 8.8
     assert rows[0][F_COMMISSION_BASIS] == "佣金"
+    assert rows[0][F_COMMISSION_RATE_NUM] == 5
+    assert rows[0][F_ESTIMATED_COMMISSION] == 8.8
+    assert rows[0][F_ACTUAL_COMMISSION] is None
+
+
+def test_builds_douyin_rows_from_commission_excel_with_actual_and_estimated(tmp_path):
+    path = tmp_path / "douyin_commission.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(["订单id", "商品id", "商品名称", "作者账号", "抖音/火山号", "支付金额", "佣金率", "预估佣金支出", "结算金额", "实际佣金支出", "订单状态", "付款时间", "店铺id", "店铺名称", "商品数量"])
+    sheet.append(["D2", "P2", "商品C", "Creator C", "K2", 200, "12.5%", 20, 180, 18, "已结算", "2026-06-08 12:00:00", "S1", "抖店", 2])
+    workbook.save(path)
+
+    rows, info = build_rows_for_file("抖音", path, "2026-06-08 18:00:00")
+
+    assert info["source_row_count"] == 1
+    assert rows[0][F_UNIQUE_KEY] == "抖音D2"
+    assert rows[0][F_INFLUENCER_ID] == "K2"
+    assert rows[0][F_COMMISSION] == 18
+    assert rows[0][F_COMMISSION_BASIS] == "实际佣金支出"
+    assert rows[0][F_COMMISSION_RATE_NUM] == 12.5
+    assert rows[0][F_ESTIMATED_COMMISSION] == 20
+    assert rows[0][F_ACTUAL_COMMISSION] == 18
 
 
 def test_collapses_duplicate_order_rows_without_changing_unique_key(tmp_path):
@@ -115,3 +143,4 @@ def test_collapses_duplicate_order_rows_without_changing_unique_key(tmp_path):
     assert collapsed[0][F_PRODUCT_NAME] == "商品A; 商品B"
     assert collapsed[0][F_QUANTITY] == 3
     assert collapsed[0][F_COMMISSION] == 5
+    assert collapsed[0][F_ESTIMATED_COMMISSION] == 5

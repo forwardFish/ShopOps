@@ -9,6 +9,7 @@ DEFAULT_PRODUCT_CATALOG_TABLE_ID = "tblkHqQuzSCNh213"
 PRODUCT_NAME_FIELD = "商品名称"
 PRODUCT_KEYWORDS_FIELD = "搜索关键词"
 ORDER_PRODUCT_NAME_FIELD = "商品名称"
+ORDER_QUANTITY_FIELD = "数量"
 ORDER_ACTUAL_QUANTITY_FORMULA_FIELD = "公式_实际卖出数量"
 ORDER_VALID_SALES_FORMULA_FIELD = "公式_有效销售额"
 
@@ -36,12 +37,27 @@ def product_rules_from_records(records: list[dict[str, Any]]) -> list[ProductRul
         if not name or name in seen:
             continue
         keyword_text = scalar_text(fields.get(PRODUCT_KEYWORDS_FIELD)) or name
-        keywords = split_keywords(keyword_text)
+        keywords = merge_keywords(split_keywords(keyword_text), product_alias_keywords(name))
         if not keywords:
             keywords = (name,)
         rules.append(ProductRule(name=name, keywords=keywords))
         seen.add(name)
     return rules
+
+
+def merge_keywords(*groups: tuple[str, ...]) -> tuple[str, ...]:
+    keywords: list[str] = []
+    for group in groups:
+        for keyword in group:
+            if keyword and keyword not in keywords:
+                keywords.append(keyword)
+    return tuple(keywords)
+
+
+def product_alias_keywords(name: str) -> tuple[str, ...]:
+    if name == "补差价":
+        return ("补收差价", "差价专用", "补差")
+    return ()
 
 
 def split_keywords(value: str) -> tuple[str, ...]:
@@ -59,7 +75,7 @@ def order_product_formula_fields(rules: list[ProductRule]) -> dict[str, dict[str
     for rule in rules:
         match = product_match_expr(rule)
         fields[rule.quantity_field] = {
-            "expression": f"IF({match},IFBLANK([{ORDER_ACTUAL_QUANTITY_FORMULA_FIELD}],0),0)",
+            "expression": f"IF({match}&&IFBLANK([{ORDER_VALID_SALES_FORMULA_FIELD}],0)>0,IFBLANK([{ORDER_QUANTITY_FIELD}],0),0)",
             "formatter": "0",
         }
         fields[rule.valid_sales_field] = {
@@ -82,8 +98,8 @@ def product_breakdown_values(
     values: dict[str, float] = {}
     for rule in rules:
         is_match = matched is not None and matched.name == rule.name
-        values[rule.quantity_field] = quantity if is_match else 0
         values[rule.valid_sales_field] = sales if is_match else 0
+        values[rule.quantity_field] = quantity if is_match and values[rule.valid_sales_field] > 0 else 0
     return values
 
 

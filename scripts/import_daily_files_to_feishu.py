@@ -85,6 +85,29 @@ F_ROI = "ROI"
 F_PLATFORM_ROI = "平台显示ROI"
 F_TRUE_ROI = "平台真实ROI"
 F_PRODUCT_ID = "商品ID"
+F_DEAL_SPEND = "成交花费(元)"
+F_TOTAL_SPEND = "总花费(元)"
+F_TRADE_AMOUNT = "交易额(元)"
+F_NET_TRADE_AMOUNT = "净交易额(元)"
+F_NET_ACTUAL_ROI = "净实际投产比"
+F_NET_DEAL_COUNT = "净成交笔数"
+F_COST_PER_NET_DEAL = "每笔净成交花费(元)"
+F_NET_TRADE_AMOUNT_RATE = "净交易额占比"
+F_NET_DEAL_COUNT_RATE = "净成交笔数占比"
+F_AMOUNT_PER_NET_DEAL = "每笔净成交金额(元)"
+F_SETTLED_TRADE_AMOUNT = "结算交易额(元)"
+F_SETTLED_ROI = "结算投产比"
+F_SETTLED_DEAL_COUNT = "结算成交笔数"
+F_REFUND_EXEMPTION_RATE = "退款豁免率"
+F_REFUND_ORDER_EXEMPTION_RATE = "退单豁免率"
+F_COST_PER_SETTLED_DEAL = "每笔结算成交花费(元)"
+F_TRADE_AMOUNT_SETTLEMENT_RATE = "交易额结算率"
+F_ORDER_SETTLEMENT_RATE = "订单结算率"
+F_AMOUNT_PER_SETTLED_DEAL = "每笔结算成交金额(元)"
+F_DEAL_COUNT = "成交笔数"
+F_COST_PER_DEAL = "每笔成交花费(元)"
+F_AMOUNT_PER_DEAL = "每笔成交金额(元)"
+INTERNAL_PRODUCT_BREAKDOWN_QUANTITY = "__product_breakdown_quantity"
 
 I_SOURCE = "数据来源"
 I_CREATED_AT = "下单时间"
@@ -95,6 +118,9 @@ I_INFLUENCER_NICK = "带货达人昵称"
 I_COMMISSION_RATE = "带货佣金率"
 I_COMMISSION = "带货费用"
 I_COMMISSION_BASIS = "带货费用口径"
+I_COMMISSION_RATE_NUM = "佣金率"
+I_ESTIMATED_COMMISSION = "预估佣金支出"
+I_ACTUAL_COMMISSION = "实际佣金支出"
 I_SOURCE_FILE = "来源文件"
 
 ORDER_FIELDS = [
@@ -137,6 +163,28 @@ AD_FIELDS = [
     F_PROMOTION_SPEND,
     F_ACTUAL_SPEND,
     F_DEAL_AMOUNT,
+    F_DEAL_SPEND,
+    F_TOTAL_SPEND,
+    F_TRADE_AMOUNT,
+    F_NET_TRADE_AMOUNT,
+    F_NET_ACTUAL_ROI,
+    F_NET_DEAL_COUNT,
+    F_COST_PER_NET_DEAL,
+    F_NET_TRADE_AMOUNT_RATE,
+    F_NET_DEAL_COUNT_RATE,
+    F_AMOUNT_PER_NET_DEAL,
+    F_SETTLED_TRADE_AMOUNT,
+    F_SETTLED_ROI,
+    F_SETTLED_DEAL_COUNT,
+    F_REFUND_EXEMPTION_RATE,
+    F_REFUND_ORDER_EXEMPTION_RATE,
+    F_COST_PER_SETTLED_DEAL,
+    F_TRADE_AMOUNT_SETTLEMENT_RATE,
+    F_ORDER_SETTLEMENT_RATE,
+    F_AMOUNT_PER_SETTLED_DEAL,
+    F_DEAL_COUNT,
+    F_COST_PER_DEAL,
+    F_AMOUNT_PER_DEAL,
     F_IMPRESSIONS,
     F_EXPOSURES,
     F_CLICKS,
@@ -147,6 +195,15 @@ AD_FIELDS = [
     F_TRUE_ROI,
     F_RAW,
 ]
+
+AD_FIELD_TYPES = {
+    field: TEXT_FIELD
+    for field in (F_UNIQUE_KEY, F_PLATFORM, F_DATA_SOURCE, F_SHOP_ID, F_SHOP_NAME, F_FETCHED_AT, F_DATE, F_PRODUCT_ID, F_PRODUCT_NAME, F_RAW)
+} | {
+    field: NUMBER_FIELD
+    for field in AD_FIELDS
+    if field not in {F_UNIQUE_KEY, F_PLATFORM, F_DATA_SOURCE, F_SHOP_ID, F_SHOP_NAME, F_FETCHED_AT, F_DATE, F_PRODUCT_ID, F_PRODUCT_NAME, F_RAW}
+}
 
 INFLUENCER_FIELDS = [
     F_UNIQUE_KEY,
@@ -165,6 +222,9 @@ INFLUENCER_FIELDS = [
     I_COMMISSION_RATE,
     I_COMMISSION,
     I_COMMISSION_BASIS,
+    I_COMMISSION_RATE_NUM,
+    I_ESTIMATED_COMMISSION,
+    I_ACTUAL_COMMISSION,
     F_SHOP_ID,
     F_SHOP_NAME,
     F_FETCHED_AT,
@@ -405,6 +465,25 @@ class FeishuDailyClient:
             "saved": len(to_create) + len(to_update),
             "dropped_nonexistent_fields": dict(dropped_fields),
         }
+
+    def ensure_missing_fields_for_rows(self, table_id: str, rows: list[dict[str, Any]], field_types: dict[str, int]) -> list[str]:
+        existing = self.field_names(table_id)
+        needed = sorted(
+            key
+            for row in rows
+            for key, value in row.items()
+            if value not in (None, "") and key in field_types and key not in existing
+        )
+        created: list[str] = []
+        for field_name in dict.fromkeys(needed):
+            self.request(
+                "POST",
+                f"/bitable/v1/apps/{self.app_token}/tables/{table_id}/fields",
+                {"field_name": field_name, "type": field_types[field_name]},
+            )
+            existing.add(field_name)
+            created.append(field_name)
+        return created
 
     def deduplicate_records(self, table_id: str, key_fields: tuple[str, ...]) -> dict[str, Any]:
         fields = self.field_names(table_id)
@@ -718,6 +797,22 @@ def parse_order_rows(platform: str, path: Path) -> list[dict[str, Any]]:
     return collapse_order_rows([row for row in rows if row])
 
 
+def add_product_breakdown_to_orders(rows: list[dict[str, Any]], rules: list[Any]) -> list[dict[str, Any]]:
+    if not rules:
+        return rows
+    for row in rows:
+        row.update(
+            product_breakdown_values(
+                rules,
+                product_name=row.get(F_PRODUCT_NAME),
+                actual_quantity=row.get(INTERNAL_PRODUCT_BREAKDOWN_QUANTITY, row.get(F_QUANTITY)),
+                valid_sales=effective_sales_amount(row.get(F_PAID_AMOUNT), row.get(F_REFUND_AMOUNT)),
+            )
+        )
+        row.pop(INTERNAL_PRODUCT_BREAKDOWN_QUANTITY, None)
+    return rows
+
+
 def tmall_order_row(row: dict[str, Any], path: Path) -> dict[str, Any] | None:
     order_no = clean_text(first_present(row, "订单编号", "订单号"))
     if not order_no:
@@ -861,6 +956,7 @@ def order_base(
     shop_id: str = "",
     shop_name: str = "",
 ) -> dict[str, Any]:
+    product_breakdown_quantity = quantity
     quantity = actual_sold_quantity(
         quantity=quantity,
         product=product,
@@ -881,6 +977,7 @@ def order_base(
         F_BUYER_NICK: "",
         F_PRODUCT_NAME: product,
         F_ACCESSORY_FLAG: "是" if is_accessory_product(product) else "否",
+        INTERNAL_PRODUCT_BREAKDOWN_QUANTITY: product_breakdown_quantity,
         F_UNIT_PRICE: unit_price,
         F_QUANTITY: quantity,
         F_FULFILL_STATUS: fulfill_status,
@@ -905,7 +1002,12 @@ def collapse_order_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             merged[key] = dict(row)
             continue
         current[F_PRODUCT_NAME] = join_unique(current.get(F_PRODUCT_NAME), row.get(F_PRODUCT_NAME))
-        current[F_ACCESSORY_FLAG] = "是" if "是" in {current.get(F_ACCESSORY_FLAG), row.get(F_ACCESSORY_FLAG)} else "否"
+        current[F_ACCESSORY_FLAG] = "是" if current.get(F_ACCESSORY_FLAG) == "是" and row.get(F_ACCESSORY_FLAG) == "是" else "否"
+        current[INTERNAL_PRODUCT_BREAKDOWN_QUANTITY] = round(
+            (number_value(current.get(INTERNAL_PRODUCT_BREAKDOWN_QUANTITY)) or 0)
+            + (number_value(row.get(INTERNAL_PRODUCT_BREAKDOWN_QUANTITY)) or 0),
+            2,
+        )
         for field in (F_QUANTITY, F_PAID_AMOUNT, F_REFUND_AMOUNT, F_PRODUCT_COST, F_FREIGHT_COST, F_PLATFORM_FEE, F_OTHER_FEE):
             current[field] = round((number_value(current.get(field)) or 0) + (number_value(row.get(field)) or 0), 2)
         current[F_FULFILL_STATUS] = join_unique(current.get(F_FULFILL_STATUS), row.get(F_FULFILL_STATUS), "/")
@@ -928,11 +1030,14 @@ def parse_ad_rows(platform: str, path: Path) -> list[dict[str, Any]]:
 
 
 def ad_row(platform: str, date_text: str, items: list[dict[str, Any]], path: Path) -> dict[str, Any]:
-    spend = sum_numbers(items, "花费", "整体消耗", "成交花费(元)", "总花费(元)")
-    deal_amount = sum_numbers(items, "总成交金额", "整体成交金额", "交易额(元)", "成交金额")
+    deal_spend = sum_numbers(items, F_DEAL_SPEND)
+    total_spend = sum_numbers(items, F_TOTAL_SPEND)
+    spend = sum_numbers(items, "花费", "整体消耗", F_DEAL_SPEND, F_TOTAL_SPEND)
+    deal_amount = sum_numbers(items, "总成交金额", "整体成交金额", F_TRADE_AMOUNT, "成交金额")
     impressions = sum_numbers(items, "展现量", "曝光量", "整体展示次数")
     clicks = sum_numbers(items, "点击量", "整体点击次数")
     roi_value = ratio(deal_amount, spend)
+    pdd_fields = pdd_ad_extra_fields(items) if platform == "拼多多" else {}
     return {
         F_UNIQUE_KEY: ad_unique_key(platform, date_text),
         F_PLATFORM: platform,
@@ -945,6 +1050,10 @@ def ad_row(platform: str, date_text: str, items: list[dict[str, Any]], path: Pat
         F_PROMOTION_SPEND: spend,
         F_ACTUAL_SPEND: spend,
         F_DEAL_AMOUNT: deal_amount,
+        F_DEAL_SPEND: deal_spend if deal_spend else None,
+        F_TOTAL_SPEND: total_spend if total_spend else None,
+        F_TRADE_AMOUNT: deal_amount,
+        **pdd_fields,
         F_IMPRESSIONS: impressions,
         F_EXPOSURES: impressions,
         F_CLICKS: clicks,
@@ -957,13 +1066,97 @@ def ad_row(platform: str, date_text: str, items: list[dict[str, Any]], path: Pat
     }
 
 
+PDD_AD_SUM_FIELDS = (
+    F_NET_TRADE_AMOUNT,
+    F_NET_DEAL_COUNT,
+    F_SETTLED_TRADE_AMOUNT,
+    F_SETTLED_DEAL_COUNT,
+    F_DEAL_COUNT,
+)
+
+PDD_AD_RATIO_OR_AVERAGE_FIELDS = (
+    F_NET_ACTUAL_ROI,
+    F_COST_PER_NET_DEAL,
+    F_NET_TRADE_AMOUNT_RATE,
+    F_NET_DEAL_COUNT_RATE,
+    F_AMOUNT_PER_NET_DEAL,
+    F_SETTLED_ROI,
+    F_REFUND_EXEMPTION_RATE,
+    F_REFUND_ORDER_EXEMPTION_RATE,
+    F_COST_PER_SETTLED_DEAL,
+    F_TRADE_AMOUNT_SETTLEMENT_RATE,
+    F_ORDER_SETTLEMENT_RATE,
+    F_AMOUNT_PER_SETTLED_DEAL,
+    F_COST_PER_DEAL,
+    F_AMOUNT_PER_DEAL,
+)
+
+
+def pdd_ad_extra_fields(items: list[dict[str, Any]]) -> dict[str, Any]:
+    fields: dict[str, Any] = {}
+    for field in PDD_AD_SUM_FIELDS:
+        value = sum_numbers(items, field)
+        if value:
+            fields[field] = value
+    for field in PDD_AD_RATIO_OR_AVERAGE_FIELDS:
+        value = first_number(items, field)
+        if value is not None:
+            fields[field] = value
+    return fields
+
+
+def sample_ad_rows(rows: list[dict[str, Any]], limit: int = 10) -> list[dict[str, Any]]:
+    sample_fields = [
+        F_UNIQUE_KEY,
+        F_PLATFORM,
+        F_DATE,
+        F_SPEND,
+        F_PROMOTION_SPEND,
+        F_ACTUAL_SPEND,
+        F_DEAL_SPEND,
+        F_TOTAL_SPEND,
+        F_TRADE_AMOUNT,
+        F_DEAL_AMOUNT,
+        F_DEAL_COUNT,
+        F_COST_PER_DEAL,
+        F_AMOUNT_PER_DEAL,
+        F_NET_TRADE_AMOUNT,
+        F_NET_ACTUAL_ROI,
+        F_NET_DEAL_COUNT,
+        F_SETTLED_TRADE_AMOUNT,
+        F_SETTLED_DEAL_COUNT,
+        F_IMPRESSIONS,
+        F_EXPOSURES,
+        F_CLICKS,
+        F_CLICK_RATE,
+        F_CPC,
+        F_ROI,
+        F_PLATFORM_ROI,
+        F_TRUE_ROI,
+    ]
+    return [
+        {field: row.get(field) for field in sample_fields if row.get(field) not in (None, "")}
+        for row in rows[:limit]
+    ]
+
+
 def parse_influencer_rows(platform: str, path: Path) -> list[dict[str, Any]]:
     if platform not in {"抖音", "视频号"}:
         return []
     if platform == "抖音" and classify_file(platform, path) != "influencer":
         return []
     if platform == "抖音":
-        return doudian_commission_excel_rows(parse_doudian_commission_xlsx(path), path, [])
+        rows = doudian_commission_excel_rows(parse_doudian_commission_xlsx(path), path, [])
+        for row in rows:
+            actual_commission = number_value(row.get(I_ACTUAL_COMMISSION))
+            estimated_commission = number_value(row.get(I_ESTIMATED_COMMISSION))
+            commission = actual_commission if actual_commission and actual_commission > 0 else estimated_commission
+            row.setdefault(I_INFLUENCER_ID, clean_text(row.get("抖音/火山号")))
+            row.setdefault(I_INFLUENCER_NICK, clean_text(row.get("作者账号")))
+            row.setdefault(I_COMMISSION_RATE, clean_text(row.get(I_COMMISSION_RATE_NUM)))
+            row.setdefault(I_COMMISSION, commission)
+            row.setdefault(I_COMMISSION_BASIS, "实际佣金支出" if actual_commission and actual_commission > 0 else "预估佣金支出")
+        return rows
     rows = []
     for source in load_tabular(path):
         row = douyin_influencer_row(source, path) if platform == "抖音" else wechat_influencer_row(source, path)
@@ -997,6 +1190,9 @@ def douyin_influencer_row(row: dict[str, Any], path: Path) -> dict[str, Any] | N
         commission_rate=clean_text(first_present(row, "佣金率")),
         commission=commission,
         commission_basis="实际佣金支出" if actual_commission and actual_commission > 0 else "预估佣金支出",
+        commission_rate_number=number_value(first_present(row, "佣金率")),
+        estimated_commission=estimated_commission,
+        actual_commission=actual_commission,
         source_file=path,
         raw=row,
         shop_name=clean_text(first_present(row, "店铺名称")) or "抖音",
@@ -1026,6 +1222,9 @@ def wechat_influencer_row(row: dict[str, Any], path: Path) -> dict[str, Any] | N
         commission_rate=clean_text(first_present(row, "带货佣金率")),
         commission=commission,
         commission_basis=clean_text(first_present(row, "带货费用类型")) or "带货费用",
+        commission_rate_number=number_value(first_present(row, "带货佣金率")),
+        estimated_commission=commission,
+        actual_commission=None,
         source_file=path,
         raw=redact_row(row),
         shop_name="视频号",
@@ -1052,6 +1251,9 @@ def influencer_base(
     source_file: Path,
     raw: dict[str, Any],
     shop_name: str,
+    commission_rate_number: float | None = None,
+    estimated_commission: float | None = None,
+    actual_commission: float | None = None,
 ) -> dict[str, Any]:
     return {
         F_UNIQUE_KEY: f"{platform}{order_no}",
@@ -1070,6 +1272,9 @@ def influencer_base(
         I_COMMISSION_RATE: commission_rate,
         I_COMMISSION: commission,
         I_COMMISSION_BASIS: commission_basis,
+        I_COMMISSION_RATE_NUM: commission_rate_number,
+        I_ESTIMATED_COMMISSION: estimated_commission,
+        I_ACTUAL_COMMISSION: actual_commission,
         F_SHOP_ID: "",
         F_SHOP_NAME: shop_name,
         F_FETCHED_AT: datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -1089,14 +1294,27 @@ def collapse_influencer_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]
         current[F_PRODUCT_NAME] = join_unique(current.get(F_PRODUCT_NAME), row.get(F_PRODUCT_NAME))
         current[F_QUANTITY] = round((number_value(current.get(F_QUANTITY)) or 0) + (number_value(row.get(F_QUANTITY)) or 0), 4)
         current[I_COMMISSION] = round((number_value(current.get(I_COMMISSION)) or 0) + (number_value(row.get(I_COMMISSION)) or 0), 4)
+        current[I_ESTIMATED_COMMISSION] = round((number_value(current.get(I_ESTIMATED_COMMISSION)) or 0) + (number_value(row.get(I_ESTIMATED_COMMISSION)) or 0), 4)
+        current[I_ACTUAL_COMMISSION] = round((number_value(current.get(I_ACTUAL_COMMISSION)) or 0) + (number_value(row.get(I_ACTUAL_COMMISSION)) or 0), 4)
     return list(merged.values())
 
 
-def run_import(batch_dir: Path, dry_run: bool, evidence: Path, platforms: set[str] | None = None) -> dict[str, Any]:
+def run_import(
+    batch_dir: Path,
+    dry_run: bool,
+    evidence: Path,
+    platforms: set[str] | None = None,
+    kinds: set[str] | None = None,
+    dates: set[str] | None = None,
+    ensure_missing_ad_fields: bool = False,
+) -> dict[str, Any]:
     _load_dotenv()
     settings = load_settings()
     discovered = discover_daily_files(batch_dir)
     selected_platforms = set(platforms or PLATFORMS)
+    selected_kinds = set(kinds or {"orders", "ads", "influencer"})
+    selected_dates = {normalize_date(date) for date in dates or set()}
+    selected_dates.discard("")
     order_rows_by_platform: dict[str, list[dict[str, Any]]] = {platform: [] for platform in PLATFORMS if platform in selected_platforms}
     ad_rows: list[dict[str, Any]] = []
     influencer_rows: list[dict[str, Any]] = []
@@ -1106,16 +1324,22 @@ def run_import(batch_dir: Path, dry_run: bool, evidence: Path, platforms: set[st
         if platform not in selected_platforms:
             continue
         platform_info: dict[str, Any] = {}
-        for order_file in kinds["orders"]:
+        for order_file in kinds["orders"] if "orders" in selected_kinds else []:
             rows = parse_order_rows(platform, order_file)
+            if selected_dates:
+                rows = [row for row in rows if normalize_date(row.get(F_CREATED_AT)) in selected_dates]
             order_rows_by_platform[platform].extend(rows)
             platform_info.setdefault("orders", []).append({"file": str(order_file), "rows": len(rows)})
-        for influencer_file in kinds["influencer"]:
+        for influencer_file in kinds["influencer"] if "influencer" in selected_kinds else []:
             rows = parse_influencer_rows(platform, influencer_file)
+            if selected_dates:
+                rows = [row for row in rows if normalize_date(row.get(I_CREATED_AT) or row.get(I_PAY_AT)) in selected_dates]
             influencer_rows.extend(rows)
             platform_info.setdefault("influencer", []).append({"file": str(influencer_file), "rows": len(rows)})
-        for ad_file in kinds["ads"]:
+        for ad_file in kinds["ads"] if "ads" in selected_kinds else []:
             rows = parse_ad_rows(platform, ad_file)
+            if selected_dates:
+                rows = [row for row in rows if row.get(F_DATE) in selected_dates]
             ad_rows.extend(rows)
             platform_info.setdefault("ads", []).append({"file": str(ad_file), "rows": len(rows)})
         files[platform] = platform_info
@@ -1124,8 +1348,14 @@ def run_import(batch_dir: Path, dry_run: bool, evidence: Path, platforms: set[st
         "status": "dry_run" if dry_run else "started",
         "batch_dir": str(batch_dir),
         "feishu_base_url": f"https://my.feishu.cn/base/{settings.shopops_data_center_app_token or settings.feishu_app_token}",
-        "field_policy": "existing Feishu fields only; never create, delete, or update table fields during daily import; existing orders update only 交易状态",
+        "field_policy": (
+            "create missing ad fields only when explicitly requested; orders update only 交易状态"
+            if ensure_missing_ad_fields
+            else "existing Feishu fields only; never create, delete, or update table fields during daily import; existing orders update only 交易状态"
+        ),
         "platform_filter": sorted(selected_platforms),
+        "kind_filter": sorted(selected_kinds),
+        "date_filter": sorted(selected_dates),
         "unique_rules": {
             "orders": "platform_code + '_' + order_no; fallback match by order_no",
             "ads": "ads_platform_code_yyyy-mm-dd; fallback match by platform + date",
@@ -1136,6 +1366,7 @@ def run_import(batch_dir: Path, dry_run: bool, evidence: Path, platforms: set[st
         "ad_count": len(ad_rows),
         "influencer_count": len(influencer_rows),
         "ad_dates": sorted({row[F_DATE] for row in ad_rows}),
+        "sample_ad_rows": sample_ad_rows(ad_rows),
         "accessory_counts": {
             platform: sum(1 for row in rows if row.get(F_ACCESSORY_FLAG) == "是")
             for platform, rows in order_rows_by_platform.items()
@@ -1153,18 +1384,27 @@ def run_import(batch_dir: Path, dry_run: bool, evidence: Path, platforms: set[st
         return summary
 
     client = FeishuDailyClient()
+    product_table_id = os.getenv("SHOPOPS_PRODUCT_CATALOG_TABLE_ID", DEFAULT_PRODUCT_CATALOG_TABLE_ID).strip()
+    product_rules = client.product_rules(product_table_id)
+    product_fields = product_field_names(product_rules)
+    for platform, rows in order_rows_by_platform.items():
+        order_rows_by_platform[platform] = add_product_breakdown_to_orders(rows, product_rules)
     writes: dict[str, Any] = {"orders": {}, "ads": {}, "influencer": {}}
     for platform, rows in order_rows_by_platform.items():
+        if not rows:
+            continue
         table_id = os.getenv(ORDER_TABLE_ENV[platform], "").strip()
         if not table_id:
             raise RuntimeError(f"Missing {ORDER_TABLE_ENV[platform]}")
+        product_field_actions = client.ensure_product_breakdown_fields(table_id, product_rules)
         writes["orders"][platform] = client.upsert_rows(
             table_id=table_id,
             rows=rows,
             required_fields=[F_UNIQUE_KEY, F_ORDER_NO, F_ACCESSORY_FLAG],
             fallback_match_fields=(F_ORDER_NO,),
-            update_existing_fields={F_TRADE_STATUS},
+            update_existing_fields={F_TRADE_STATUS, *product_fields},
         )
+        writes["orders"][platform]["product_field_actions"] = product_field_actions
         readback = client.readback_by_unique_key(table_id, {row[F_UNIQUE_KEY] for row in rows})
         writes["orders"][platform]["readback_count"] = len(readback)
         writes["orders"][platform]["missing_unique_keys"] = sorted(set(row[F_UNIQUE_KEY] for row in rows) - set(readback))[:50]
@@ -1172,12 +1412,16 @@ def run_import(batch_dir: Path, dry_run: bool, evidence: Path, platforms: set[st
     if ad_rows:
         if not settings.shopops_ad_table_id:
             raise RuntimeError("Missing SHOPOPS_AD_TABLE_ID")
+        created_ad_fields = []
+        if ensure_missing_ad_fields:
+            created_ad_fields = client.ensure_missing_fields_for_rows(settings.shopops_ad_table_id, ad_rows, AD_FIELD_TYPES)
         writes["ads"] = client.upsert_rows(
             table_id=settings.shopops_ad_table_id,
             rows=ad_rows,
             required_fields=[F_UNIQUE_KEY, F_PLATFORM, F_DATE],
             fallback_match_fields=(F_PLATFORM, F_DATE),
         )
+        writes["ads"]["created_missing_fields"] = created_ad_fields
         writes["ads"]["canonicalize_unique_keys"] = client.canonicalize_ad_unique_keys(settings.shopops_ad_table_id)
         readback = client.readback_by_unique_key(settings.shopops_ad_table_id, {row[F_UNIQUE_KEY] for row in ad_rows})
         writes["ads"]["readback_count"] = len(readback)
@@ -1424,12 +1668,23 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="Parse and validate locally without writing Feishu.")
     parser.add_argument("--evidence", default="", help="Evidence JSON path.")
     parser.add_argument("--platform", action="append", choices=PLATFORMS, help="Only import one platform; repeat for multiple platforms.")
+    parser.add_argument("--kind", action="append", choices=("orders", "ads", "influencer"), help="Only import one data kind; repeat for multiple kinds.")
+    parser.add_argument("--date", action="append", help="Only import one normalized date (YYYY-MM-DD); repeat for multiple dates.")
+    parser.add_argument("--ensure-missing-ad-fields", action="store_true", help="Create missing Feishu ad table fields that are present in imported rows.")
     args = parser.parse_args()
 
     batch_dir = Path(args.batch_dir)
     date_dir = batch_dir.name
     evidence = Path(args.evidence) if args.evidence else Path("docs/live-evidence") / f"daily-import-{date_dir}.json"
-    summary = run_import(batch_dir=batch_dir, dry_run=args.dry_run, evidence=evidence, platforms=set(args.platform or []))
+    summary = run_import(
+        batch_dir=batch_dir,
+        dry_run=args.dry_run,
+        evidence=evidence,
+        platforms=set(args.platform or []),
+        kinds=set(args.kind or []),
+        dates=set(args.date or []),
+        ensure_missing_ad_fields=args.ensure_missing_ad_fields,
+    )
     print(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True, default=str))
     return 0 if summary["status"] in {"success", "dry_run"} else 4
 

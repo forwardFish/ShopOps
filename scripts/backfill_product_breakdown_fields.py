@@ -17,12 +17,16 @@ from shopops.services.product_breakdown import (
     DEFAULT_PRODUCT_CATALOG_TABLE_ID,
     ORDER_ACTUAL_QUANTITY_FORMULA_FIELD,
     ORDER_PRODUCT_NAME_FIELD,
+    ORDER_QUANTITY_FIELD,
     ORDER_VALID_SALES_FORMULA_FIELD,
     product_breakdown_values,
     product_field_names,
     product_rules_from_records,
 )
 from scripts.run_dynamic_feishu_summary import DynamicSummaryFeishuClient, chunks
+
+
+RAW_FIELD = "原始数据"
 
 
 ORDER_TABLE_ENV_NAMES = {
@@ -44,8 +48,10 @@ class ProductBreakdownBackfill:
         product_fields = product_field_names(rules)
         read_fields = [
             ORDER_PRODUCT_NAME_FIELD,
+            ORDER_QUANTITY_FIELD,
             ORDER_ACTUAL_QUANTITY_FORMULA_FIELD,
             ORDER_VALID_SALES_FORMULA_FIELD,
+            RAW_FIELD,
         ]
         result: dict[str, Any] = {
             "status": "running",
@@ -84,7 +90,7 @@ class ProductBreakdownBackfill:
             values = product_breakdown_values(
                 rules,
                 product_name=fields.get(ORDER_PRODUCT_NAME_FIELD),
-                actual_quantity=fields.get(ORDER_ACTUAL_QUANTITY_FORMULA_FIELD),
+                actual_quantity=source_quantity(fields),
                 valid_sales=fields.get(ORDER_VALID_SALES_FORMULA_FIELD),
             )
             if any(value for value in values.values()):
@@ -96,6 +102,8 @@ class ProductBreakdownBackfill:
                         {
                             "record_id": record.get("record_id"),
                             ORDER_PRODUCT_NAME_FIELD: fields.get(ORDER_PRODUCT_NAME_FIELD),
+                            ORDER_QUANTITY_FIELD: fields.get(ORDER_QUANTITY_FIELD),
+                            "原始数量": raw_source_quantity(fields.get(RAW_FIELD)),
                             ORDER_ACTUAL_QUANTITY_FORMULA_FIELD: fields.get(ORDER_ACTUAL_QUANTITY_FORMULA_FIELD),
                             ORDER_VALID_SALES_FORMULA_FIELD: fields.get(ORDER_VALID_SALES_FORMULA_FIELD),
                             **{field: value for field, value in values.items() if value},
@@ -145,12 +153,55 @@ class ProductBreakdownBackfill:
             except RuntimeError as exc:
                 last_error = exc
                 text = str(exc)
-                if not any(token in text for token in ("HTTP 429", "HTTP 500", "HTTP 502", "HTTP 503", "HTTP 504", "Gateway timeout")):
+                if not any(token in text for token in ("HTTP 429", "HTTP 500", "HTTP 502", "HTTP 503", "HTTP 504", "Gateway timeout", "Data not ready")):
                     raise
                 if attempt == 6:
                     raise
                 time.sleep(min(30, attempt * 5))
         raise RuntimeError(f"Feishu API request failed after retries: {last_error}")
+
+
+def source_quantity(fields: dict[str, Any]) -> Any:
+    current = number_value(fields.get(ORDER_QUANTITY_FIELD))
+    if current not in (None, 0):
+        return current
+    raw = raw_source_quantity(fields.get(RAW_FIELD))
+    return raw if raw not in (None, "") else fields.get(ORDER_QUANTITY_FIELD)
+
+
+def raw_source_quantity(raw_value: Any) -> Any:
+    raw_text = scalar_text(raw_value)
+    if not raw_text:
+        return None
+    try:
+        raw = json.loads(raw_text)
+    except Exception:
+        return None
+    row = raw.get("row") if isinstance(raw, dict) else raw
+    if not isinstance(row, dict):
+        return None
+    for key in ("商品数量", "商品数量(件)", "宝贝总数量", "数量"):
+        if key in row and row.get(key) not in (None, ""):
+            return row.get(key)
+    return None
+
+
+def scalar_text(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, list):
+        return "".join(str(item.get("text") if isinstance(item, dict) else item) for item in value).strip()
+    return str(value).strip()
+
+
+def number_value(value: Any) -> float | None:
+    text = scalar_text(value).replace(",", "")
+    if not text:
+        return None
+    try:
+        return round(float(text), 6)
+    except ValueError:
+        return None
 
 
 def default_order_tables() -> dict[str, str]:
@@ -161,16 +212,29 @@ def default_order_tables() -> dict[str, str]:
     }
 
 
+def parse_order_table_args(values: list[str] | None) -> dict[str, str]:
+    tables: dict[str, str] = {}
+    for value in values or []:
+        if "=" not in value:
+            raise ValueError("--order-table must use platform=tbl... format")
+        platform, table_id = (part.strip() for part in value.split("=", 1))
+        if not platform or not table_id.startswith("tbl"):
+            raise ValueError("--order-table must use platform=tbl... format")
+        tables[platform] = table_id
+    return tables
+
+
 def main() -> int:
     _load_dotenv()
     settings = load_settings()
     parser = argparse.ArgumentParser(description="Backfill numeric product breakdown fields from existing order formula values.")
     parser.add_argument("--app-token", default=settings.shopops_data_center_app_token or settings.feishu_app_token)
     parser.add_argument("--product-table-id", default=os.getenv("SHOPOPS_PRODUCT_CATALOG_TABLE_ID") or DEFAULT_PRODUCT_CATALOG_TABLE_ID)
+    parser.add_argument("--order-table", action="append", help="Explicit order table mapping, for example douyin=tblTbbFkEepZAGru. Repeat for multiple tables.")
     parser.add_argument("--env-path", default=".env")
     parser.add_argument("--evidence", default="docs/live-evidence/product-breakdown/product-breakdown-backfill.json")
     args = parser.parse_args()
-    order_tables = default_order_tables()
+    order_tables = parse_order_table_args(args.order_table) or default_order_tables()
     missing = [name for name, value in {"app-token": args.app_token, "product-table-id": args.product_table_id, "order-tables": order_tables}.items() if not value]
     if missing:
         raise RuntimeError("Missing required inputs: " + ", ".join(missing))

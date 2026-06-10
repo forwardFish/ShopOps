@@ -1,0 +1,64 @@
+{
+  "accessory_counts": {
+    "拼多多": 0
+  },
+  "ad_count": 7,
+  "ad_dates": [
+    "2026-06-02",
+    "2026-06-03",
+    "2026-06-04",
+    "2026-06-05",
+    "2026-06-06",
+    "2026-06-07",
+    "2026-06-08"
+  ],
+  "batch_dir": "docs\\data\\ShopOps\\0609",
+  "feishu_base_url": "https://my.feishu.cn/base/",
+  "field_policy": "existing Feishu fields only; never create, delete, or update table fields during daily import; existing orders update only 交易状态",
+  "files": {
+    "拼多多": {
+      "ads": [
+        {
+          "file": "docs\\data\\ShopOps\\0609\\拼多多\\商品推广_账户_分天数据_20260602至20260608.xls",
+          "rows": 7
+        }
+      ],
+      "orders": [
+        {
+          "file": "docs\\data\\ShopOps\\0609\\拼多多\\8248e107e4f1bcf6c24c107dbbbbf803orders_export2026-06-09-20-06-33.csv",
+          "rows": 4821
+        }
+      ]
+    }
+  },
+  "influencer_count": 0,
+  "order_counts": {
+    "拼多多": 4821
+  },
+  "platform_filter": [
+    "拼多多"
+  ],
+  "sample_accessory_order_keys": {
+    "拼多多": []
+  },
+  "sample_order_keys": {
+    "拼多多": [
+      "pdd_260609-422261573263541",
+      "pdd_260609-589865950763193",
+      "pdd_260609-016242470473001",
+      "pdd_260608-618014983762270",
+      "pdd_260608-116496811582760",
+      "pdd_260608-350308298281422",
+      "pdd_260608-145374656813689",
+      "pdd_260608-301192978021098",
+      "pdd_260608-318609845861570",
+      "pdd_260608-474218566073801"
+    ]
+  },
+  "status": "dry_run",
+  "unique_rules": {
+    "ads": "ads_platform_code_yyyy-mm-dd; fallback match by platform + date",
+    "influencer": "Douyin influencer data must come from an explicit Douyin commission Excel, never from Douyin order exports; fallback match by platform + order_no",
+    "orders": "platform_code + '_' + order_no; fallback match by order_no"
+  }
+}
