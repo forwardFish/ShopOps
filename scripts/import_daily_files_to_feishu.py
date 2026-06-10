@@ -148,6 +148,7 @@ ORDER_FIELDS = [
     F_OPERATION,
     F_RAW,
 ]
+ORDER_UPDATE_FIELDS = set(ORDER_FIELDS)
 
 AD_FIELDS = [
     F_UNIQUE_KEY,
@@ -413,10 +414,13 @@ class FeishuDailyClient:
 
         unique_index: dict[str, str] = {}
         fallback_index: dict[tuple[str, ...], str] = {}
-        index_fields = sorted({F_UNIQUE_KEY, *fallback_match_fields})
+        index_fields = sorted({F_UNIQUE_KEY, *fallback_match_fields, *(update_existing_fields or set())})
+        existing_by_record_id: dict[str, dict[str, Any]] = {}
         for record in self.iter_records(table_id, index_fields):
             record_id = str(record.get("record_id") or "")
             record_fields = record.get("fields") or {}
+            if record_id:
+                existing_by_record_id[record_id] = record_fields
             unique_key = scalar_text(record_fields.get(F_UNIQUE_KEY))
             if unique_key:
                 unique_index[unique_key] = record_id
@@ -450,8 +454,13 @@ class FeishuDailyClient:
             if record_id:
                 if update_existing_fields is not None:
                     clean = {key: value for key, value in clean.items() if key in update_existing_fields}
-                if clean:
-                    to_update.append({"record_id": record_id, "fields": clean})
+                changed = {
+                    key: value
+                    for key, value in clean.items()
+                    if not field_value_equal(existing_by_record_id.get(record_id, {}).get(key), value)
+                }
+                if changed:
+                    to_update.append({"record_id": record_id, "fields": changed})
             else:
                 to_create.append({"fields": clean})
 
@@ -1349,9 +1358,9 @@ def run_import(
         "batch_dir": str(batch_dir),
         "feishu_base_url": f"https://my.feishu.cn/base/{settings.shopops_data_center_app_token or settings.feishu_app_token}",
         "field_policy": (
-            "create missing ad fields only when explicitly requested; orders update only 交易状态"
+            "create missing ad fields only when explicitly requested; existing records update changed cells only; orders may update order/import fields and product breakdown fields"
             if ensure_missing_ad_fields
-            else "existing Feishu fields only; never create, delete, or update table fields during daily import; existing orders update only 交易状态"
+            else "existing Feishu fields only; never create, delete, or update table fields during daily import; existing records update changed cells only; orders may update order/import fields and product breakdown fields"
         ),
         "platform_filter": sorted(selected_platforms),
         "kind_filter": sorted(selected_kinds),
@@ -1390,21 +1399,54 @@ def run_import(
     for platform, rows in order_rows_by_platform.items():
         order_rows_by_platform[platform] = add_product_breakdown_to_orders(rows, product_rules)
     writes: dict[str, Any] = {"orders": {}, "ads": {}, "influencer": {}}
+    field_preflight: dict[str, Any] = {"orders": {}, "ads": {}, "influencer": {}}
+    influencer_table_id = ""
     for platform, rows in order_rows_by_platform.items():
         if not rows:
             continue
         table_id = os.getenv(ORDER_TABLE_ENV[platform], "").strip()
         if not table_id:
             raise RuntimeError(f"Missing {ORDER_TABLE_ENV[platform]}")
-        product_field_actions = client.ensure_product_breakdown_fields(table_id, product_rules)
+        missing_fields = missing_row_fields(
+            client.field_names(table_id),
+            rows,
+            [F_UNIQUE_KEY, F_ORDER_NO, F_ACCESSORY_FLAG, *product_fields],
+        )
+        field_preflight["orders"][platform] = {"table_id": table_id, "missing_fields": missing_fields}
+        if missing_fields:
+            raise RuntimeError(f"Target order table {table_id} is missing existing fields required by this import: {missing_fields}")
+    if ad_rows:
+        if not settings.shopops_ad_table_id:
+            raise RuntimeError("Missing SHOPOPS_AD_TABLE_ID")
+        missing_fields = missing_row_fields(client.field_names(settings.shopops_ad_table_id), ad_rows, [F_UNIQUE_KEY, F_PLATFORM, F_DATE])
+        field_preflight["ads"] = {"table_id": settings.shopops_ad_table_id, "missing_fields": missing_fields}
+        if missing_fields:
+            raise RuntimeError(f"Target ad table {settings.shopops_ad_table_id} is missing existing fields required by this import: {missing_fields}")
+    if influencer_rows:
+        influencer_table_id = os.getenv("SHOPOPS_DOUYIN_INFLUENCER_EXCEL_TABLE_ID", "").strip() or settings.table_douyin_influencer_commission
+        if not influencer_table_id or not influencer_table_id.startswith("tbl"):
+            raise RuntimeError("Missing SHOPOPS_DOUYIN_INFLUENCER_EXCEL_TABLE_ID or FEISHU_TABLE_DOUYIN_INFLUENCER_COMMISSION")
+        missing_fields = missing_row_fields(client.field_names(influencer_table_id), influencer_rows, [F_UNIQUE_KEY, F_ORDER_NO])
+        field_preflight["influencer"] = {"table_id": influencer_table_id, "missing_fields": missing_fields}
+        if missing_fields:
+            raise RuntimeError(f"Target influencer table {influencer_table_id} is missing existing fields required by this import: {missing_fields}")
+    for platform, rows in order_rows_by_platform.items():
+        if not rows:
+            continue
+        table_id = os.getenv(ORDER_TABLE_ENV[platform], "").strip()
+        if not table_id:
+            raise RuntimeError(f"Missing {ORDER_TABLE_ENV[platform]}")
         writes["orders"][platform] = client.upsert_rows(
             table_id=table_id,
             rows=rows,
-            required_fields=[F_UNIQUE_KEY, F_ORDER_NO, F_ACCESSORY_FLAG],
+            required_fields=[F_UNIQUE_KEY, F_ORDER_NO, F_ACCESSORY_FLAG, *product_fields],
             fallback_match_fields=(F_ORDER_NO,),
-            update_existing_fields={F_TRADE_STATUS, *product_fields},
+            allow_partial_fields=False,
+            update_existing_fields={*ORDER_UPDATE_FIELDS, *product_fields},
         )
-        writes["orders"][platform]["product_field_actions"] = product_field_actions
+        writes["orders"][platform]["product_field_actions"] = {
+            field: "validated_existing_no_field_changes" for field in product_fields
+        }
         readback = client.readback_by_unique_key(table_id, {row[F_UNIQUE_KEY] for row in rows})
         writes["orders"][platform]["readback_count"] = len(readback)
         writes["orders"][platform]["missing_unique_keys"] = sorted(set(row[F_UNIQUE_KEY] for row in rows) - set(readback))[:50]
@@ -1420,6 +1462,7 @@ def run_import(
             rows=ad_rows,
             required_fields=[F_UNIQUE_KEY, F_PLATFORM, F_DATE],
             fallback_match_fields=(F_PLATFORM, F_DATE),
+            allow_partial_fields=False,
         )
         writes["ads"]["created_missing_fields"] = created_ad_fields
         writes["ads"]["canonicalize_unique_keys"] = client.canonicalize_ad_unique_keys(settings.shopops_ad_table_id)
@@ -1428,9 +1471,7 @@ def run_import(
         writes["ads"]["missing_unique_keys"] = sorted(set(row[F_UNIQUE_KEY] for row in ad_rows) - set(readback))[:50]
 
     if influencer_rows:
-        table_id = os.getenv("SHOPOPS_DOUYIN_INFLUENCER_EXCEL_TABLE_ID", "").strip() or settings.table_douyin_influencer_commission
-        if not table_id or not table_id.startswith("tbl"):
-            raise RuntimeError("Missing SHOPOPS_DOUYIN_INFLUENCER_EXCEL_TABLE_ID or FEISHU_TABLE_DOUYIN_INFLUENCER_COMMISSION")
+        table_id = influencer_table_id
         douyin_excel_rows_present = any(row.get(F_PLATFORM) == "抖音" and row.get("作者账号") for row in influencer_rows)
         delete_existing_douyin = None
         if douyin_excel_rows_present:
@@ -1441,6 +1482,7 @@ def run_import(
             rows=influencer_rows,
             required_fields=[F_UNIQUE_KEY, F_ORDER_NO],
             fallback_match_fields=(F_PLATFORM, F_ORDER_NO),
+            allow_partial_fields=False,
         )
         if delete_existing_douyin:
             writes["influencer"]["delete_existing_douyin"] = delete_existing_douyin
@@ -1450,6 +1492,7 @@ def run_import(
         writes["influencer"]["readback_count"] = len(readback)
         writes["influencer"]["missing_unique_keys"] = sorted(set(row[F_UNIQUE_KEY] for row in influencer_rows) - set(readback))[:50]
 
+    summary["field_preflight"] = field_preflight
     summary["writes"] = writes
     missing = []
     for section in ("orders", "ads", "influencer"):
@@ -1473,7 +1516,7 @@ def normalize_platform(value: Any) -> str:
         return "拼多多"
     if "视频号" in text or "微信" in text or "wechat" in text:
         return "视频号"
-    if "天猫" in text or "淘宝" in text or "tmall" in text or "taobao" in text:
+    if "天猫" in text or "tmall" in text:
         return "天猫"
     return clean_text(value)
 
@@ -1557,6 +1600,26 @@ def scalar_text(value: Any) -> str:
     if isinstance(value, list):
         return "".join(str(item.get("text") if isinstance(item, dict) else item) for item in value).strip()
     return clean_text(value)
+
+
+def field_value_equal(left: Any, right: Any) -> bool:
+    if left in (None, "") and right in (None, ""):
+        return True
+    left_number = number_value(left)
+    right_number = number_value(right)
+    if left_number is not None and right_number is not None:
+        return abs(left_number - right_number) < 0.000001
+    return scalar_text(left) == scalar_text(right)
+
+
+def missing_row_fields(existing_fields: set[str], rows: list[dict[str, Any]], required_fields: list[str]) -> list[str]:
+    used_fields = {
+        key
+        for row in rows
+        for key, value in row.items()
+        if value not in (None, "")
+    }
+    return sorted(({*required_fields, *used_fields} - existing_fields))
 
 
 def first_present(row: dict[str, Any], *keys: str) -> Any:

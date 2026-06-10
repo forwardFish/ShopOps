@@ -26,6 +26,7 @@ from scripts.import_daily_files_to_feishu import (
     F_SETTLED_TRADE_AMOUNT,
     F_TOTAL_SPEND,
     F_TRADE_AMOUNT,
+    F_TRADE_STATUS,
     F_UNIQUE_KEY,
     FeishuDailyClient,
     actual_sold_quantity,
@@ -64,6 +65,18 @@ def test_discovers_date_first_daily_folder_layout(tmp_path: Path):
     assert discovered["天猫"]["orders"] == [order_file]
     assert discovered["天猫"]["ads"] == [ad_file]
     assert discovered["抖音"]["orders"] == [douyin_order]
+
+
+def test_daily_import_ignores_taobao_folder(tmp_path: Path):
+    batch = tmp_path / "0610"
+    taobao = batch / "淘宝"
+    taobao.mkdir(parents=True)
+    order_file = taobao / "ExportOrderList.xlsx"
+    order_file.write_text("placeholder", encoding="utf-8")
+
+    discovered = discover_daily_files(batch)
+
+    assert all(order_file not in paths for kinds in discovered.values() for paths in kinds.values())
 
 
 def test_parse_tmall_order_uses_order_no_as_unique_key_and_refund_updates_amount(tmp_path: Path):
@@ -358,7 +371,7 @@ def test_upsert_rows_does_not_create_or_require_nonexistent_optional_fields():
     assert result["dropped_nonexistent_fields"] == {"不存在字段": 1}
     assert calls[0][0] == "POST"
     assert "/fields" not in calls[0][1]
-    assert calls[0][2]["records"][0]["fields"] == {"unique_key": "tmall_T1", "订单号": "T1", "平台": "天猫"}
+    assert calls[0][2]["records"][0]["fields"] == {"平台": "天猫"}
 
 
 def test_ensure_missing_fields_for_rows_creates_only_typed_nonempty_fields():
@@ -419,6 +432,44 @@ def test_existing_order_update_can_be_limited_to_trade_status():
     assert result["updated"] == 1
     assert result["created"] == 0
     assert calls[0][2]["records"][0]["fields"] == {"交易状态": "卖家已发货"}
+
+
+def test_existing_order_update_sends_only_changed_fields():
+    calls: list[tuple[str, str, dict | None, dict | None]] = []
+
+    class FakeClient(FeishuDailyClient):
+        def __init__(self) -> None:
+            self.app_token = "app"
+
+        def field_names(self, table_id: str) -> set[str]:
+            return {F_UNIQUE_KEY, F_ORDER_NO, F_TRADE_STATUS, F_PAID_AMOUNT}
+
+        def iter_records(self, table_id: str, field_names=None):
+            yield {
+                "record_id": "rec1",
+                "fields": {
+                    F_UNIQUE_KEY: "tmall_T1",
+                    F_ORDER_NO: "T1",
+                    F_TRADE_STATUS: "交易成功",
+                    F_PAID_AMOUNT: 169,
+                },
+            }
+
+        def request(self, method: str, path: str, payload=None, params=None):
+            calls.append((method, path, payload, params))
+            return {}
+
+    result = FakeClient().upsert_rows(
+        table_id="tbl",
+        rows=[{F_UNIQUE_KEY: "tmall_T1", F_ORDER_NO: "T1", F_TRADE_STATUS: "交易成功", F_PAID_AMOUNT: 0}],
+        required_fields=[F_UNIQUE_KEY, F_ORDER_NO],
+        fallback_match_fields=(F_ORDER_NO,),
+        update_existing_fields={F_TRADE_STATUS, F_PAID_AMOUNT},
+    )
+
+    assert result["updated"] == 1
+    assert result["created"] == 0
+    assert calls[0][2]["records"][0]["fields"] == {F_PAID_AMOUNT: 0}
 
 
 def test_deduplicate_records_deletes_only_repeated_platform_order_keys():
