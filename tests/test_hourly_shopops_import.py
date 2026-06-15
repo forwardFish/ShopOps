@@ -20,6 +20,7 @@ class Args:
     auto_login = False
     login_wait_timeout_seconds = 900
     login_check_interval_seconds = 15
+    ad_page_settle_seconds = 90
 
 
 def test_build_ads_command_uses_existing_cdp_and_dry_run():
@@ -31,6 +32,7 @@ def test_build_ads_command_uses_existing_cdp_and_dry_run():
     assert "tesseract {image} stdout -l chi_sim" in command
     assert "--dry-run" in command
     assert "--allow-new-browser" not in command
+    assert command[command.index("--page-settle-seconds") + 1] == "90"
 
 
 def test_build_ads_command_defaults_to_platform_cdp_port():

@@ -8,6 +8,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
@@ -585,12 +586,28 @@ async def capture_screenshot_direct_cdp(
     async with DirectCdpPage(cdp_url) as page:
         await page.open(url, download_dir=screenshot_path.parent)
         await asyncio.sleep(max(1, settle_seconds))
+        manual_wait = await wait_direct_cdp_dashboard_ready(
+            page,
+            platform_code=platform_code,
+            timeout_seconds=login_wait_timeout_seconds if wait_login else max(10, settle_seconds),
+            wait_login=wait_login,
+            login_check_interval_seconds=login_check_interval_seconds,
+            require_metric=False,
+        )
         if platform_code == "douyin":
             await prepare_douyin_ads_dashboard(page)
         elif platform_code == "tmall":
             await page.click_label("更多数据")
             await asyncio.sleep(3)
-        page_text = await collect_direct_cdp_text(page, platform_code=platform_code)
+        metric_wait = await wait_direct_cdp_dashboard_ready(
+            page,
+            platform_code=platform_code,
+            timeout_seconds=max(45, settle_seconds),
+            wait_login=wait_login,
+            login_check_interval_seconds=login_check_interval_seconds,
+            require_metric=True,
+        )
+        page_text = str(metric_wait.get("page_text") or "")
         screenshot = await page.send(
             "Page.captureScreenshot",
             {"format": "png", "captureBeyondViewport": False},
@@ -599,7 +616,8 @@ async def capture_screenshot_direct_cdp(
         screenshot_path.write_bytes(base64.b64decode(screenshot["data"]))
         final_url = await page.evaluate("location.href", timeout_seconds=3)
         return {
-            "manual_wait": {"status": "not_checked"},
+            "manual_wait": manual_wait,
+            "metric_wait": {key: value for key, value in metric_wait.items() if key != "page_text"},
             "final_url": final_url,
             "page_text": page_text,
             "engine": "direct_cdp",
@@ -616,6 +634,54 @@ async def prepare_douyin_ads_dashboard(page: DirectCdpPage) -> dict[str, Any]:
             if label.startswith("全域投放消耗"):
                 break
     return {"clicked": clicks}
+
+
+async def wait_direct_cdp_dashboard_ready(
+    page: DirectCdpPage,
+    *,
+    platform_code: str,
+    timeout_seconds: int,
+    wait_login: bool,
+    login_check_interval_seconds: int,
+    require_metric: bool,
+) -> dict[str, Any]:
+    started_at = datetime.now()
+    deadline = time.monotonic() + max(1, timeout_seconds)
+    checks = 0
+    last_text = ""
+    last_url = ""
+    while time.monotonic() < deadline:
+        checks += 1
+        try:
+            last_url = str(await page.evaluate("location.href", timeout_seconds=3) or "")
+        except Exception:
+            last_url = ""
+        last_text = await collect_direct_cdp_text(page, platform_code=platform_code)
+        if detect_manual_intervention_required(last_text, last_url):
+            if not wait_login:
+                raise RuntimeError(f"Manual login/captcha required in visible browser: {last_url}")
+            print(
+                f"Detected login/captcha page in direct CDP. Please finish it in the visible browser; rechecking in {login_check_interval_seconds}s.",
+                flush=True,
+            )
+            await asyncio.sleep(max(1, login_check_interval_seconds))
+            continue
+        if not require_metric or direct_cdp_text_has_parseable_metric(last_text, platform_code):
+            return {
+                "status": "ready",
+                "checks": checks,
+                "waited_seconds": int((datetime.now() - started_at).total_seconds()),
+                "url": last_url,
+                "page_text": last_text,
+            }
+        await asyncio.sleep(2)
+    return {
+        "status": "metric_timeout" if require_metric else "ready_timeout",
+        "checks": checks,
+        "waited_seconds": int((datetime.now() - started_at).total_seconds()),
+        "url": last_url,
+        "page_text": last_text,
+    }
 
 
 async def collect_direct_cdp_text(page: DirectCdpPage, *, platform_code: str) -> str:
@@ -651,9 +717,18 @@ async def collect_direct_cdp_text(page: DirectCdpPage, *, platform_code: str) ->
         candidate = str(value or "")
         if len(candidate) > len(text):
             text = candidate
-        if direct_cdp_text_has_metric_anchor(candidate, platform_code):
+        if direct_cdp_text_has_parseable_metric(candidate, platform_code):
             return candidate
     return text
+
+
+def direct_cdp_text_has_parseable_metric(text: str, platform_code: str) -> bool:
+    if not direct_cdp_text_has_metric_anchor(text, platform_code):
+        return False
+    metrics = {name: first_metric_value(text, labels) for name, labels in METRIC_LABELS.items()}
+    if metrics["spend"] is None:
+        return False
+    return any(metrics[name] is not None for name in ("impressions", "clicks", "deal_amount", "order_count"))
 
 
 def direct_cdp_text_has_metric_anchor(text: str, platform_code: str) -> bool:
@@ -773,6 +848,9 @@ def main() -> int:
                             platform_code=args.platform,
                             cdp_url=args.cdp_url,
                             settle_seconds=args.page_settle_seconds,
+                            wait_login=args.wait_login,
+                            login_wait_timeout_seconds=args.login_wait_timeout_seconds,
+                            login_check_interval_seconds=args.login_check_interval_seconds,
                         )
                     )
                 else:

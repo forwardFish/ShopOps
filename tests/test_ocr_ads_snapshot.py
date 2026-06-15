@@ -2,7 +2,13 @@ from __future__ import annotations
 
 import pytest
 
-from data_robot.ocr_ads_snapshot import default_dashboard_url, detect_manual_intervention_required, parse_ad_snapshot_text
+from data_robot.ocr_ads_snapshot import (
+    default_dashboard_url,
+    detect_manual_intervention_required,
+    direct_cdp_text_has_metric_anchor,
+    direct_cdp_text_has_parseable_metric,
+    parse_ad_snapshot_text,
+)
 from scripts.import_daily_files_to_feishu import (
     F_ACTUAL_SPEND,
     F_CLICKS,
@@ -123,6 +129,30 @@ def test_detect_manual_login_and_captcha_text():
 
 def test_tmall_default_dashboard_url_is_today_promotion_center():
     assert default_dashboard_url("tmall", "2026-06-15") == "https://myseller.taobao.com/home.htm/tuiguangcenter_new/"
+
+
+def test_direct_cdp_metric_ready_requires_parseable_values():
+    pending_text = "\n".join(
+        [
+            "\u7ecf\u8425\u6982\u89c8",
+            "\u82b1\u8d39 -",
+            "\u5c55\u73b0\u91cf -",
+            "\u70b9\u51fb\u91cf -",
+            "\u603b\u6210\u4ea4\u91d1\u989d -",
+        ]
+    )
+    ready_text = "\n".join(
+        [
+            "\u7ecf\u8425\u6982\u89c8",
+            "\u82b1\u8d39 38.39",
+            "\u5c55\u73b0\u91cf 647",
+            "\u70b9\u51fb\u91cf 25",
+        ]
+    )
+
+    assert direct_cdp_text_has_metric_anchor(pending_text, "tmall")
+    assert not direct_cdp_text_has_parseable_metric(pending_text, "tmall")
+    assert direct_cdp_text_has_parseable_metric(ready_text, "tmall")
 
 
 def test_qianchuan_source_login_query_is_not_login_page():

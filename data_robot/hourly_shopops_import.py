@@ -39,6 +39,8 @@ def build_ads_command(args: argparse.Namespace, platform: str, stat_date: str, e
         command.extend(["--ocr-command", args.ocr_command])
     if args.no_dom_text_fallback:
         command.append("--no-dom-text-fallback")
+    if args.ad_page_settle_seconds:
+        command.extend(["--page-settle-seconds", str(args.ad_page_settle_seconds)])
     if args.playwright_cdp_ads:
         command.append("--playwright-cdp")
     if args.allow_new_browser:
@@ -229,6 +231,7 @@ def main() -> int:
     parser.add_argument("--no-dom-text-fallback", action="store_true", help="Require OCR for ad screenshots instead of allowing visible page text fallback.")
     parser.add_argument("--playwright-cdp-ads", action="store_true", help="Use Playwright over the existing CDP browser for ad screenshots so login/captcha waiting can run.")
     parser.add_argument("--ads-timeout-seconds", type=int, default=300)
+    parser.add_argument("--ad-page-settle-seconds", type=int, default=90, help="Seconds to let ad dashboard pages settle before reading metrics.")
     parser.add_argument("--dry-run-ads", action="store_true")
     parser.add_argument("--ensure-missing-ad-fields", action="store_true")
     parser.add_argument("--allow-new-browser", action="store_true")
