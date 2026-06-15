@@ -7,8 +7,10 @@ import os
 import re
 import sys
 import time
+import traceback
 from collections import Counter, defaultdict
-from datetime import datetime
+from dataclasses import replace
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -20,6 +22,14 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from shopops.config import _load_dotenv, load_settings
+from shopops.collectors.jushuitan_order_api import (
+    JushuitanOrderApiCollector,
+    extract_jushuitan_orders,
+    first_value as jushuitan_first_value,
+    is_unpaid as is_unpaid_jushuitan_order,
+    jushuitan_public_params,
+    normalize_amount as normalize_jushuitan_amount,
+)
 from shopops.services.product_breakdown import (
     DEFAULT_PRODUCT_CATALOG_TABLE_ID,
     effective_sales_amount,
@@ -40,6 +50,9 @@ FORMULA_FIELD = 20
 
 PLATFORMS = ("天猫", "抖音", "拼多多", "视频号")
 PLATFORM_CODES = {"天猫": "tmall", "抖音": "douyin", "拼多多": "pdd", "视频号": "wechat_channels"}
+DOUYIN_ORDER_DETAIL_REQUIRED_HEADER = "支付方式"
+JUSHUITAN_DOUYIN_LOOKBACK_DAYS = 90
+JUSHUITAN_DOUYIN_CHUNK_DAYS = 7
 ORDER_TABLE_ENV = {
     "天猫": "SHOPOPS_ORDER_TABLE_TMALL_ID",
     "抖音": "SHOPOPS_ORDER_TABLE_DOUYIN_ID",
@@ -414,7 +427,7 @@ class FeishuDailyClient:
 
         unique_index: dict[str, str] = {}
         fallback_index: dict[tuple[str, ...], str] = {}
-        index_fields = sorted({F_UNIQUE_KEY, *fallback_match_fields, *(update_existing_fields or set())})
+        index_fields = sorted(({F_UNIQUE_KEY, *fallback_match_fields, *(update_existing_fields or set())}) & fields)
         existing_by_record_id: dict[str, dict[str, Any]] = {}
         for record in self.iter_records(table_id, index_fields):
             record_id = str(record.get("record_id") or "")
@@ -637,17 +650,26 @@ def is_temporary_export_file(path: Path) -> bool:
 
 
 def classify_file(platform: str, path: Path) -> str | None:
-    header_kind = classify_headers(peek_headers(path))
+    headers = peek_headers(path)
+    if platform == "抖音":
+        header_kind = classify_douyin_headers(headers)
+        if header_kind:
+            return header_kind
+        name = path.name.lower()
+        if any(token in name for token in ("达人佣金", "佣金", "daren", "commission")):
+            return "influencer"
+        if any(token in name for token in ("投流", "推广", "全域推广", "商品推广", "分天数据")):
+            return "ads"
+        return None
+    header_kind = classify_headers(headers)
     if header_kind:
         return header_kind
     name = path.name.lower()
-    if platform == "抖音" and any(token in name for token in ("达人佣金", "佣金", "daren", "commission")):
-        return "influencer"
     if any(token in name for token in ("投流", "推广", "全域推广", "商品推广", "分天数据")):
         return "ads"
     if any(token in name for token in ("order", "订单", "exportorderlist", "orders_export")):
         return "orders"
-    return "orders" if platform in {"抖音", "拼多多"} and path.suffix.lower() == ".csv" else None
+    return "orders" if platform in {"拼多多"} and path.suffix.lower() == ".csv" else None
 
 
 def peek_headers(path: Path) -> set[str]:
@@ -722,6 +744,14 @@ def classify_headers(headers: set[str]) -> str | None:
     return None
 
 
+def classify_douyin_headers(headers: set[str]) -> str | None:
+    if not headers:
+        return None
+    if DOUYIN_ORDER_DETAIL_REQUIRED_HEADER in headers:
+        return "orders"
+    return classify_headers(headers) if classify_headers(headers) != "orders" else None
+
+
 def load_tabular(path: Path) -> list[dict[str, Any]]:
     suffix = path.suffix.lower()
     if suffix == ".csv":
@@ -786,7 +816,7 @@ def load_xls(path: Path) -> list[dict[str, Any]]:
 def find_header_index(rows: list[tuple[Any, ...]] | list[Any]) -> int:
     for index, row in enumerate(rows[:20]):
         headers = {clean_header(value) for value in row}
-        if any(key in headers for key in ("订单号", "订单编号", "主订单编号", "日期", "商品", "商品ID")):
+        if any(key in headers for key in ("订单号", "订单编号", "主订单编号", "支付方式", "日期", "商品", "商品ID")):
             return index
     return 0
 
@@ -883,6 +913,175 @@ def douyin_order_row(row: dict[str, Any], path: Path) -> dict[str, Any] | None:
         shop_id=clean_text(first_present(row, "所属门店ID", "店铺id", "店铺ID")),
         shop_name="抖音",
     )
+
+
+def fetch_jushuitan_douyin_order_rows(settings: Any, selected_dates: set[str] | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    if not settings.jushuitan_douyin_shop_id:
+        raise RuntimeError("Missing JUSHUITAN_SHOP_ID_DOUYIN for Douyin Jushuitan fallback")
+    missing = [
+        name
+        for name, value in (
+            ("JUSHUITAN_PARTNER_ID", settings.jushuitan_partner_id),
+            ("JUSHUITAN_PARTNER_KEY", settings.jushuitan_partner_key),
+            ("JUSHUITAN_TOKEN", settings.jushuitan_token),
+        )
+        if not value
+    ]
+    if missing:
+        raise RuntimeError(f"Missing Jushuitan credentials for Douyin fallback: {', '.join(missing)}")
+
+    session = requests.Session()
+    session.trust_env = False
+    fetched_at = datetime.now()
+    end_at = fetched_at
+    start_at = end_at - timedelta(days=JUSHUITAN_DOUYIN_LOOKBACK_DAYS)
+    api_settings = replace(
+        settings,
+        shop_id=settings.jushuitan_douyin_shop_id,
+        shop_name="抖音",
+        shop_platform="doudian",
+        order_source="jushuitan",
+        use_mock_collectors=False,
+        jushuitan_shop_ids=settings.jushuitan_douyin_shop_id,
+    )
+
+    def transport(method: str, url: str, params: dict[str, Any] | None, body: dict[str, Any] | None) -> dict[str, Any]:
+        if method != "POST_JSON":
+            raise ValueError(f"Unsupported Jushuitan request method: {method}")
+        response = session.post(url, params=params, json=body, timeout=30)
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, dict):
+            raise ValueError("Jushuitan API response is not a JSON object")
+        return payload
+
+    collector = JushuitanOrderApiCollector(api_settings, transport=transport)
+    raw_orders: list[dict[str, Any]] = []
+    page_count = 0
+    chunk_count = 0
+    chunk_start = start_at
+    while chunk_start < end_at:
+        chunk_end = min(chunk_start + timedelta(days=JUSHUITAN_DOUYIN_CHUNK_DAYS), end_at)
+        chunk_count += 1
+        page_index = 1
+        while True:
+            body = collector._request_body(chunk_start, chunk_end, page_index)
+            params = jushuitan_public_params(
+                partner_id=api_settings.jushuitan_partner_id,
+                partner_key=api_settings.jushuitan_partner_key,
+                token=api_settings.jushuitan_token,
+                method=api_settings.jushuitan_order_query_method,
+                ts=int(datetime.now().timestamp()),
+            )
+            payload = transport("POST_JSON", api_settings.jushuitan_api_url, params, body)
+            collector._raise_jushuitan_error(payload)
+            page_orders = extract_jushuitan_orders(payload)
+            raw_orders.extend(page_orders)
+            page_count += 1
+            if len(page_orders) < collector.page_size:
+                break
+            page_index += 1
+        chunk_start = chunk_end
+
+    unique_raw_orders = dedupe_jushuitan_orders(raw_orders)
+    paid_orders = [order for order in unique_raw_orders if not is_unpaid_jushuitan_order(order)]
+    rows = [row for row in (jushuitan_douyin_order_row(order, fetched_at) for order in paid_orders) if row]
+    date_filter_applied = bool(selected_dates)
+    if selected_dates:
+        rows = [row for row in rows if normalize_date(row.get(F_CREATED_AT)) in selected_dates]
+    rows = collapse_order_rows(rows)
+    return rows, {
+        "source": "jushuitan",
+        "lookback_days": JUSHUITAN_DOUYIN_LOOKBACK_DAYS,
+        "start_at": start_at.strftime("%Y-%m-%d %H:%M:%S"),
+        "end_at": end_at.strftime("%Y-%m-%d %H:%M:%S"),
+        "chunk_days": JUSHUITAN_DOUYIN_CHUNK_DAYS,
+        "chunks": chunk_count,
+        "shop_id": settings.jushuitan_douyin_shop_id,
+        "pages": page_count,
+        "raw_orders": len(raw_orders),
+        "unique_raw_orders": len(unique_raw_orders),
+        "paid_orders": len(paid_orders),
+        "rows": len(rows),
+        "date_filter_applied": date_filter_applied,
+    }
+
+
+def dedupe_jushuitan_orders(raw_orders: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    seen: set[str] = set()
+    result: list[dict[str, Any]] = []
+    for order in raw_orders:
+        key = clean_text(jushuitan_first_value(order, "shop_id", "shopid")) + "|" + clean_text(
+            jushuitan_first_value(order, "so_id", "raw_so_id", "outer_so_id", "shop_order_id", "order_id", "o_id")
+        )
+        if not key.strip("|"):
+            key = json.dumps(order, ensure_ascii=False, sort_keys=True, default=str)
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(order)
+    return result
+
+
+def jushuitan_douyin_order_row(raw: dict[str, Any], fetched_at: datetime) -> dict[str, Any] | None:
+    order_no = clean_text(jushuitan_first_value(raw, "so_id", "raw_so_id", "outer_so_id", "shop_order_id", "order_id", "o_id"))
+    if not order_no:
+        return None
+    items = [item for item in raw.get("items", []) if isinstance(item, dict)]
+    product = join_jushuitan_item_names(items) or clean_text(jushuitan_first_value(raw, "product_name", "name", "title"))
+    quantity = sum_jushuitan_item_quantity(items) or number_value(jushuitan_first_value(raw, "qty", "quantity"))
+    paid = normalize_jushuitan_amount(raw)
+    status = clean_text(jushuitan_first_value(raw, "status", "order_status", "so_status"))
+    aftersale = clean_text(jushuitan_first_value(raw, "aftersale_status", "refund_status", "question_type"))
+    refund = refund_from_status(
+        number_value(jushuitan_first_value(raw, "refund_amount", "refund_fee", "refund")),
+        paid,
+        f"{status}/{aftersale}",
+    )
+    created_at = normalize_datetime(jushuitan_first_value(raw, "order_date", "created", "created_at", "shop_order_date", "pay_date", "pay_time"))
+    row = order_base(
+        platform="抖音",
+        source="聚水潭抖音订单API",
+        order_no=order_no,
+        created_at=created_at,
+        product=product,
+        quantity=quantity,
+        unit_price=ratio(paid, quantity),
+        paid_amount=paid,
+        refund_amount=refund,
+        freight=number_value(jushuitan_first_value(raw, "freight", "freight_amount", "post_fee")) or 0,
+        platform_fee=number_value(jushuitan_first_value(raw, "platform_fee", "commission_fee", "service_fee")) or 0,
+        fulfill_status=aftersale,
+        trade_status=status,
+        operation="聚水潭抖音订单API导入",
+        source_file=Path(f"jushuitan://orders.single.query/{order_no}"),
+        raw=raw,
+        shop_id=clean_text(jushuitan_first_value(raw, "shop_id", "shopid")),
+        shop_name=clean_text(jushuitan_first_value(raw, "shop_name", "shopname")) or "抖音",
+    )
+    row[F_FETCHED_AT] = fetched_at.strftime("%Y-%m-%d %H:%M:%S")
+    return row
+
+
+def join_jushuitan_item_names(items: list[dict[str, Any]]) -> str:
+    names: list[str] = []
+    for item in items:
+        name = clean_text(jushuitan_first_value(item, "name", "item_name", "sku_name", "title"))
+        if name and name not in names:
+            names.append(name)
+    return "; ".join(names)
+
+
+def sum_jushuitan_item_quantity(items: list[dict[str, Any]]) -> float | None:
+    total = 0.0
+    found = False
+    for item in items:
+        quantity = number_value(jushuitan_first_value(item, "qty", "quantity", "sale_qty", "num"))
+        if quantity is None:
+            continue
+        total += quantity
+        found = True
+    return round(total, 6) if found else None
 
 
 def pdd_order_row(row: dict[str, Any], path: Path) -> dict[str, Any] | None:
@@ -1315,6 +1514,7 @@ def run_import(
     platforms: set[str] | None = None,
     kinds: set[str] | None = None,
     dates: set[str] | None = None,
+    filter_ad_dates: bool = False,
     ensure_missing_ad_fields: bool = False,
 ) -> dict[str, Any]:
     _load_dotenv()
@@ -1339,6 +1539,10 @@ def run_import(
                 rows = [row for row in rows if normalize_date(row.get(F_CREATED_AT)) in selected_dates]
             order_rows_by_platform[platform].extend(rows)
             platform_info.setdefault("orders", []).append({"file": str(order_file), "rows": len(rows)})
+        if platform == "抖音" and "orders" in selected_kinds and not platform_info.get("orders"):
+            rows, fallback_info = fetch_jushuitan_douyin_order_rows(settings, None)
+            order_rows_by_platform[platform].extend(rows)
+            platform_info.setdefault("orders", []).append(fallback_info)
         for influencer_file in kinds["influencer"] if "influencer" in selected_kinds else []:
             rows = parse_influencer_rows(platform, influencer_file)
             if selected_dates:
@@ -1347,7 +1551,7 @@ def run_import(
             platform_info.setdefault("influencer", []).append({"file": str(influencer_file), "rows": len(rows)})
         for ad_file in kinds["ads"] if "ads" in selected_kinds else []:
             rows = parse_ad_rows(platform, ad_file)
-            if selected_dates:
+            if selected_dates and filter_ad_dates:
                 rows = [row for row in rows if row.get(F_DATE) in selected_dates]
             ad_rows.extend(rows)
             platform_info.setdefault("ads", []).append({"file": str(ad_file), "rows": len(rows)})
@@ -1365,11 +1569,13 @@ def run_import(
         "platform_filter": sorted(selected_platforms),
         "kind_filter": sorted(selected_kinds),
         "date_filter": sorted(selected_dates),
+        "ad_date_filter_applied": bool(selected_dates and filter_ad_dates),
         "unique_rules": {
             "orders": "platform_code + '_' + order_no; fallback match by order_no",
             "ads": "ads_platform_code_yyyy-mm-dd; fallback match by platform + date",
             "influencer": "Douyin influencer data must come from an explicit Douyin commission Excel, never from Douyin order exports; fallback match by platform + order_no",
         },
+        "douyin_order_source_rule": "Douyin order Excel/CSV is accepted only when its headers include 支付方式; otherwise orders fall back to Jushuitan 90-day API. The Jushuitan fallback is intentionally not limited by --date so recent order status changes can be updated.",
         "files": files,
         "order_counts": {platform: len(rows) for platform, rows in order_rows_by_platform.items()},
         "ad_count": len(ad_rows),
@@ -1387,20 +1593,24 @@ def run_import(
         "sample_order_keys": {platform: [row[F_UNIQUE_KEY] for row in rows[:10]] for platform, rows in order_rows_by_platform.items()},
     }
     if dry_run:
-        evidence.parent.mkdir(parents=True, exist_ok=True)
-        evidence.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True, default=str), encoding="utf-8")
-        summary["evidence_path"] = str(evidence.resolve())
+        write_import_evidence(evidence, summary)
         return summary
 
+    summary["progress"] = []
+    write_import_progress(evidence, summary, "parsed_source_files")
     client = FeishuDailyClient()
+    write_import_progress(evidence, summary, "feishu_client_ready")
     product_table_id = os.getenv("SHOPOPS_PRODUCT_CATALOG_TABLE_ID", DEFAULT_PRODUCT_CATALOG_TABLE_ID).strip()
+    write_import_progress(evidence, summary, "loading_product_rules", {"table_id": product_table_id})
     product_rules = client.product_rules(product_table_id)
     product_fields = product_field_names(product_rules)
+    write_import_progress(evidence, summary, "loaded_product_rules", {"product_field_count": len(product_fields)})
     for platform, rows in order_rows_by_platform.items():
         order_rows_by_platform[platform] = add_product_breakdown_to_orders(rows, product_rules)
     writes: dict[str, Any] = {"orders": {}, "ads": {}, "influencer": {}}
     field_preflight: dict[str, Any] = {"orders": {}, "ads": {}, "influencer": {}}
     influencer_table_id = ""
+    write_import_progress(evidence, summary, "field_preflight_started")
     for platform, rows in order_rows_by_platform.items():
         if not rows:
             continue
@@ -1415,6 +1625,7 @@ def run_import(
         field_preflight["orders"][platform] = {"table_id": table_id, "missing_fields": missing_fields}
         if missing_fields:
             raise RuntimeError(f"Target order table {table_id} is missing existing fields required by this import: {missing_fields}")
+        write_import_progress(evidence, summary, "field_preflight_orders_done", {"platform": platform, "row_count": len(rows)})
     if ad_rows:
         if not settings.shopops_ad_table_id:
             raise RuntimeError("Missing SHOPOPS_AD_TABLE_ID")
@@ -1422,6 +1633,7 @@ def run_import(
         field_preflight["ads"] = {"table_id": settings.shopops_ad_table_id, "missing_fields": missing_fields}
         if missing_fields:
             raise RuntimeError(f"Target ad table {settings.shopops_ad_table_id} is missing existing fields required by this import: {missing_fields}")
+        write_import_progress(evidence, summary, "field_preflight_ads_done", {"row_count": len(ad_rows)})
     if influencer_rows:
         influencer_table_id = os.getenv("SHOPOPS_DOUYIN_INFLUENCER_EXCEL_TABLE_ID", "").strip() or settings.table_douyin_influencer_commission
         if not influencer_table_id or not influencer_table_id.startswith("tbl"):
@@ -1430,12 +1642,16 @@ def run_import(
         field_preflight["influencer"] = {"table_id": influencer_table_id, "missing_fields": missing_fields}
         if missing_fields:
             raise RuntimeError(f"Target influencer table {influencer_table_id} is missing existing fields required by this import: {missing_fields}")
+        write_import_progress(evidence, summary, "field_preflight_influencer_done", {"row_count": len(influencer_rows)})
+    summary["field_preflight"] = field_preflight
+    write_import_progress(evidence, summary, "field_preflight_complete")
     for platform, rows in order_rows_by_platform.items():
         if not rows:
             continue
         table_id = os.getenv(ORDER_TABLE_ENV[platform], "").strip()
         if not table_id:
             raise RuntimeError(f"Missing {ORDER_TABLE_ENV[platform]}")
+        write_import_progress(evidence, summary, "upsert_orders_started", {"platform": platform, "row_count": len(rows)})
         writes["orders"][platform] = client.upsert_rows(
             table_id=table_id,
             rows=rows,
@@ -1447,9 +1663,12 @@ def run_import(
         writes["orders"][platform]["product_field_actions"] = {
             field: "validated_existing_no_field_changes" for field in product_fields
         }
+        write_import_progress(evidence, summary, "upsert_orders_done", {"platform": platform, **writes["orders"][platform]})
+        write_import_progress(evidence, summary, "readback_orders_started", {"platform": platform})
         readback = client.readback_by_unique_key(table_id, {row[F_UNIQUE_KEY] for row in rows})
         writes["orders"][platform]["readback_count"] = len(readback)
         writes["orders"][platform]["missing_unique_keys"] = sorted(set(row[F_UNIQUE_KEY] for row in rows) - set(readback))[:50]
+        write_import_progress(evidence, summary, "readback_orders_done", {"platform": platform, "readback_count": len(readback)})
 
     if ad_rows:
         if not settings.shopops_ad_table_id:
@@ -1457,6 +1676,7 @@ def run_import(
         created_ad_fields = []
         if ensure_missing_ad_fields:
             created_ad_fields = client.ensure_missing_fields_for_rows(settings.shopops_ad_table_id, ad_rows, AD_FIELD_TYPES)
+        write_import_progress(evidence, summary, "upsert_ads_started", {"row_count": len(ad_rows)})
         writes["ads"] = client.upsert_rows(
             table_id=settings.shopops_ad_table_id,
             rows=ad_rows,
@@ -1465,18 +1685,19 @@ def run_import(
             allow_partial_fields=False,
         )
         writes["ads"]["created_missing_fields"] = created_ad_fields
+        write_import_progress(evidence, summary, "upsert_ads_done", writes["ads"])
+        write_import_progress(evidence, summary, "canonicalize_ads_started")
         writes["ads"]["canonicalize_unique_keys"] = client.canonicalize_ad_unique_keys(settings.shopops_ad_table_id)
+        write_import_progress(evidence, summary, "canonicalize_ads_done", writes["ads"]["canonicalize_unique_keys"])
+        write_import_progress(evidence, summary, "readback_ads_started")
         readback = client.readback_by_unique_key(settings.shopops_ad_table_id, {row[F_UNIQUE_KEY] for row in ad_rows})
         writes["ads"]["readback_count"] = len(readback)
         writes["ads"]["missing_unique_keys"] = sorted(set(row[F_UNIQUE_KEY] for row in ad_rows) - set(readback))[:50]
+        write_import_progress(evidence, summary, "readback_ads_done", {"readback_count": len(readback)})
 
     if influencer_rows:
         table_id = influencer_table_id
-        douyin_excel_rows_present = any(row.get(F_PLATFORM) == "抖音" and row.get("作者账号") for row in influencer_rows)
-        delete_existing_douyin = None
-        if douyin_excel_rows_present:
-            delete_existing_douyin = client.delete_platform_records(table_id, "抖音")
-        dedupe_before = client.deduplicate_records(table_id, (F_PLATFORM, F_ORDER_NO))
+        write_import_progress(evidence, summary, "upsert_influencer_started", {"row_count": len(influencer_rows)})
         writes["influencer"] = client.upsert_rows(
             table_id=table_id,
             rows=influencer_rows,
@@ -1484,13 +1705,16 @@ def run_import(
             fallback_match_fields=(F_PLATFORM, F_ORDER_NO),
             allow_partial_fields=False,
         )
-        if delete_existing_douyin:
-            writes["influencer"]["delete_existing_douyin"] = delete_existing_douyin
-        writes["influencer"]["dedupe_before_import"] = dedupe_before
-        writes["influencer"]["dedupe_after_import"] = client.deduplicate_records(table_id, (F_PLATFORM, F_ORDER_NO))
+        writes["influencer"]["dedupe_policy"] = {
+            "action": "skipped",
+            "reason": "daily import must not delete influencer records; only upsert the incoming rows",
+        }
+        write_import_progress(evidence, summary, "upsert_influencer_done", writes["influencer"])
+        write_import_progress(evidence, summary, "readback_influencer_started")
         readback = client.readback_by_unique_key(table_id, {row[F_UNIQUE_KEY] for row in influencer_rows})
         writes["influencer"]["readback_count"] = len(readback)
         writes["influencer"]["missing_unique_keys"] = sorted(set(row[F_UNIQUE_KEY] for row in influencer_rows) - set(readback))[:50]
+        write_import_progress(evidence, summary, "readback_influencer_done", {"readback_count": len(readback)})
 
     summary["field_preflight"] = field_preflight
     summary["writes"] = writes
@@ -1502,10 +1726,30 @@ def run_import(
                 if isinstance(item, dict):
                     missing.extend(item.get("missing_unique_keys") or [])
     summary["status"] = "success" if not missing else "readback_mismatch"
-    evidence.parent.mkdir(parents=True, exist_ok=True)
-    evidence.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True, default=str), encoding="utf-8")
-    summary["evidence_path"] = str(evidence.resolve())
+    write_import_progress(evidence, summary, "complete", {"status": summary["status"]})
     return summary
+
+
+def write_import_evidence(evidence: Path, summary: dict[str, Any]) -> None:
+    evidence.parent.mkdir(parents=True, exist_ok=True)
+    summary["evidence_path"] = str(evidence.resolve())
+    evidence.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True, default=str), encoding="utf-8")
+
+
+def write_import_progress(
+    evidence: Path,
+    summary: dict[str, Any],
+    stage: str,
+    detail: dict[str, Any] | None = None,
+) -> None:
+    item = {
+        "stage": stage,
+        "at": datetime.now().isoformat(timespec="seconds"),
+    }
+    if detail:
+        item["detail"] = detail
+    summary.setdefault("progress", []).append(item)
+    write_import_evidence(evidence, summary)
 
 
 def normalize_platform(value: Any) -> str:
@@ -1733,21 +1977,38 @@ def main() -> int:
     parser.add_argument("--platform", action="append", choices=PLATFORMS, help="Only import one platform; repeat for multiple platforms.")
     parser.add_argument("--kind", action="append", choices=("orders", "ads", "influencer"), help="Only import one data kind; repeat for multiple kinds.")
     parser.add_argument("--date", action="append", help="Only import one normalized date (YYYY-MM-DD); repeat for multiple dates.")
+    parser.add_argument("--filter-ad-dates", action="store_true", help="Also apply --date filters to ad files. By default ad imports use every date present in the source files.")
     parser.add_argument("--ensure-missing-ad-fields", action="store_true", help="Create missing Feishu ad table fields that are present in imported rows.")
     args = parser.parse_args()
 
     batch_dir = Path(args.batch_dir)
     date_dir = batch_dir.name
     evidence = Path(args.evidence) if args.evidence else Path("docs/live-evidence") / f"daily-import-{date_dir}.json"
-    summary = run_import(
-        batch_dir=batch_dir,
-        dry_run=args.dry_run,
-        evidence=evidence,
-        platforms=set(args.platform or []),
-        kinds=set(args.kind or []),
-        dates=set(args.date or []),
-        ensure_missing_ad_fields=args.ensure_missing_ad_fields,
-    )
+    try:
+        summary = run_import(
+            batch_dir=batch_dir,
+            dry_run=args.dry_run,
+            evidence=evidence,
+            platforms=set(args.platform or []),
+            kinds=set(args.kind or []),
+            dates=set(args.date or []),
+            filter_ad_dates=args.filter_ad_dates,
+            ensure_missing_ad_fields=args.ensure_missing_ad_fields,
+        )
+    except Exception as exc:
+        summary = {
+            "status": "failed",
+            "batch_dir": str(batch_dir),
+            "platform_filter": sorted(set(args.platform or [])),
+            "kind_filter": sorted(set(args.kind or [])),
+            "date_filter": sorted(set(args.date or [])),
+            "error": {
+                "type": type(exc).__name__,
+                "message": str(exc),
+                "traceback_tail": traceback.format_exc()[-6000:],
+            },
+        }
+        write_import_evidence(evidence, summary)
     print(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True, default=str))
     return 0 if summary["status"] in {"success", "dry_run"} else 4
 

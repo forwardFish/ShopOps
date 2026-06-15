@@ -5,6 +5,7 @@ from pathlib import Path
 
 from openpyxl import Workbook
 
+import scripts.import_daily_files_to_feishu as daily_import
 from shopops.services.product_breakdown import product_rules_from_records
 from scripts.import_daily_files_to_feishu import (
     F_ACCESSORY_FLAG,
@@ -58,13 +59,75 @@ def test_discovers_date_first_daily_folder_layout(tmp_path: Path):
     order_file.write_text("placeholder", encoding="utf-8")
     temp_order_file.write_text("placeholder", encoding="utf-8")
     ad_file.write_text("placeholder", encoding="utf-8")
-    douyin_order.write_text("placeholder", encoding="utf-8")
+    douyin_order.write_text("主订单编号,订单状态,支付方式\nD1,已支付,抖音支付\n", encoding="utf-8")
 
     discovered = discover_daily_files(batch)
 
     assert discovered["天猫"]["orders"] == [order_file]
     assert discovered["天猫"]["ads"] == [ad_file]
     assert discovered["抖音"]["orders"] == [douyin_order]
+
+
+def test_douyin_order_excel_requires_payment_method_header(tmp_path: Path):
+    order_like_path = tmp_path / "douyin-orders-without-payment-method.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(["主订单编号", "订单状态", "选购商品"])
+    sheet.append(["D1", "已支付", "商品A"])
+    workbook.save(order_like_path)
+
+    valid_order_path = tmp_path / "douyin-orders-with-payment-method.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(["主订单编号", "订单状态", "支付方式", "选购商品"])
+    sheet.append(["D2", "已支付", "抖音支付", "商品A"])
+    workbook.save(valid_order_path)
+
+    assert classify_file("抖音", order_like_path) is None
+    assert classify_file("抖音", valid_order_path) == "orders"
+
+
+def test_run_import_uses_90_day_jushuitan_fallback_when_douyin_order_excel_is_absent(tmp_path: Path, monkeypatch):
+    batch = tmp_path / "0611"
+    douyin_dir = batch / "抖音"
+    douyin_dir.mkdir(parents=True)
+    ad_path = douyin_dir / "全域推广数据.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(["日期", "花费", "点击量", "展现量"])
+    sheet.append(["2026-06-11", 10, 2, 100])
+    workbook.save(ad_path)
+
+    calls: list[set[str]] = []
+
+    def fake_fetch(settings, selected_dates):
+        calls.append(set(selected_dates or set()))
+        return (
+            [
+                {
+                    F_UNIQUE_KEY: "douyin_JST1",
+                    F_ORDER_NO: "JST1",
+                    F_CREATED_AT: "2026-06-11 12:00:00",
+                    F_ACCESSORY_FLAG: "否",
+                }
+            ],
+            {"source": "jushuitan", "lookback_days": 90, "rows": 1},
+        )
+
+    monkeypatch.setattr(daily_import, "fetch_jushuitan_douyin_order_rows", fake_fetch)
+
+    summary = run_import(
+        batch_dir=batch,
+        dry_run=True,
+        evidence=tmp_path / "evidence.json",
+        platforms={"抖音"},
+        kinds={"orders"},
+        dates={"2026-06-11"},
+    )
+
+    assert calls == [set()]
+    assert summary["order_counts"]["抖音"] == 1
+    assert summary["files"]["抖音"]["orders"] == [{"source": "jushuitan", "lookback_days": 90, "rows": 1}]
 
 
 def test_daily_import_ignores_taobao_folder(tmp_path: Path):
@@ -311,7 +374,7 @@ def test_parse_pdd_ad_rows_preserves_platform_specific_metrics(tmp_path: Path):
     assert row[F_AMOUNT_PER_DEAL] == 168.99
 
 
-def test_run_import_can_filter_pdd_ads_to_requested_dates(tmp_path: Path):
+def test_run_import_keeps_all_ad_file_dates_by_default(tmp_path: Path):
     batch = tmp_path / "0609"
     pdd_dir = batch / "拼多多"
     pdd_dir.mkdir(parents=True)
@@ -334,9 +397,40 @@ def test_run_import_can_filter_pdd_ads_to_requested_dates(tmp_path: Path):
         dates={"2026-06-07", "2026-06-08"},
     )
 
+    assert summary["ad_count"] == 3
+    assert summary["ad_dates"] == ["2026-06-06", "2026-06-07", "2026-06-08"]
+    assert summary["date_filter"] == ["2026-06-07", "2026-06-08"]
+    assert summary["ad_date_filter_applied"] is False
+    assert summary["files"]["拼多多"]["ads"][0]["rows"] == 3
+
+
+def test_run_import_can_filter_pdd_ads_when_explicitly_requested(tmp_path: Path):
+    batch = tmp_path / "0609"
+    pdd_dir = batch / "拼多多"
+    pdd_dir.mkdir(parents=True)
+    path = pdd_dir / "商品推广_账户_分天数据.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(["日期", "成交花费(元)", "交易额(元)", "总花费(元)", "成交笔数", "曝光量", "点击量"])
+    sheet.append(["2026-06-06", 100, 300, 100, 2, 1000, 50])
+    sheet.append(["2026-06-07", 1426.86, 5407.68, 1426.86, 32, 26765, 1028])
+    sheet.append(["2026-06-08", 568.23, 2027.88, 568.23, 12, 5861, 253])
+    workbook.save(path)
+
+    evidence = tmp_path / "evidence.json"
+    summary = run_import(
+        batch_dir=batch,
+        dry_run=True,
+        evidence=evidence,
+        platforms={"拼多多"},
+        kinds={"ads"},
+        dates={"2026-06-07", "2026-06-08"},
+        filter_ad_dates=True,
+    )
+
     assert summary["ad_count"] == 2
     assert summary["ad_dates"] == ["2026-06-07", "2026-06-08"]
-    assert summary["date_filter"] == ["2026-06-07", "2026-06-08"]
+    assert summary["ad_date_filter_applied"] is True
     assert summary["files"]["拼多多"]["ads"][0]["rows"] == 2
     assert [row[F_DATE] for row in summary["sample_ad_rows"]] == ["2026-06-07", "2026-06-08"]
     assert summary["sample_ad_rows"][0][F_DEAL_SPEND] == 1426.86
@@ -472,6 +566,48 @@ def test_existing_order_update_sends_only_changed_fields():
     assert calls[0][2]["records"][0]["fields"] == {F_PAID_AMOUNT: 0}
 
 
+def test_existing_order_update_skips_missing_optional_index_fields():
+    calls: list[tuple[str, str, dict | None, dict | None]] = []
+
+    class FakeClient(FeishuDailyClient):
+        def __init__(self) -> None:
+            self.app_token = "app"
+            self.requested_field_names: list[str] | None = None
+
+        def field_names(self, table_id: str) -> set[str]:
+            return {F_UNIQUE_KEY, F_ORDER_NO, F_TRADE_STATUS}
+
+        def iter_records(self, table_id: str, field_names=None):
+            self.requested_field_names = list(field_names or [])
+            yield {
+                "record_id": "rec1",
+                "fields": {
+                    F_UNIQUE_KEY: "tmall_T1",
+                    F_ORDER_NO: "T1",
+                    F_TRADE_STATUS: "待发货",
+                },
+            }
+
+        def request(self, method: str, path: str, payload=None, params=None):
+            calls.append((method, path, payload, params))
+            return {}
+
+    client = FakeClient()
+    result = client.upsert_rows(
+        table_id="tbl",
+        rows=[{F_UNIQUE_KEY: "tmall_T1", F_ORDER_NO: "T1", F_TRADE_STATUS: "已发货"}],
+        required_fields=[F_UNIQUE_KEY, F_ORDER_NO],
+        fallback_match_fields=(F_ORDER_NO,),
+        allow_partial_fields=False,
+        update_existing_fields={F_TRADE_STATUS, F_PAID_AMOUNT},
+    )
+
+    assert result["updated"] == 1
+    assert result["created"] == 0
+    assert client.requested_field_names == sorted([F_UNIQUE_KEY, F_ORDER_NO, F_TRADE_STATUS])
+    assert calls[0][2]["records"][0]["fields"] == {F_TRADE_STATUS: "已发货"}
+
+
 def test_deduplicate_records_deletes_only_repeated_platform_order_keys():
     calls: list[tuple[str, str, dict | None, dict | None]] = []
 
@@ -557,11 +693,11 @@ def test_classify_file_prefers_headers_over_filename(tmp_path: Path):
 
 def test_douyin_order_export_never_generates_influencer_rows(tmp_path: Path):
     path = tmp_path / "orders.csv"
-    headers = ["主订单编号", "订单状态", "选购商品", "达人昵称", "达人实际承担优惠金额"]
+    headers = ["主订单编号", "订单状态", "支付方式", "选购商品", "达人昵称", "达人实际承担优惠金额"]
     with path.open("w", encoding="utf-8-sig", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=headers)
         writer.writeheader()
-        writer.writerow({"主订单编号": "D1", "订单状态": "订单付款", "选购商品": "商品A", "达人昵称": "达人A", "达人实际承担优惠金额": "3.5"})
+        writer.writerow({"主订单编号": "D1", "订单状态": "订单付款", "支付方式": "抖音支付", "选购商品": "商品A", "达人昵称": "达人A", "达人实际承担优惠金额": "3.5"})
 
     assert classify_file("抖音", path) == "orders"
     assert parse_influencer_rows("抖音", path) == []
