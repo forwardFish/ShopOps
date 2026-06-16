@@ -41,10 +41,11 @@ def test_summary_formulas_reference_source_tables_with_filter_expressions():
     assert formulas["达人佣金"]["expression"].endswith("[公式_达人费用].SUM()")
     assert formulas["预估佣金支出"]["expression"].endswith("[公式_预估佣金支出].SUM()")
     assert formulas["实际佣金支出"]["expression"].endswith("[公式_实际佣金支出].SUM()")
-    assert "[有效销售额]/[投流消耗]" in formulas["ROI"]["expression"]
+    assert formulas["已知总投入"]["expression"] == "[投流消耗]+[达人佣金]"
+    assert formulas["ROI"]["expression"] == "IF([投流消耗]=0,IF([达人佣金]=0,0,[有效销售额]/[达人佣金]),[有效销售额]/[投流消耗])"
     assert "[有效销售额]/[已知总投入]" in formulas["平台ROI"]["expression"]
-    assert formulas["数据状态"]["expression"] == 'IF([订单数]=0,"partial",IF([投流记录数]=0,"partial","normal"))'
-    assert formulas["缺失项"]["expression"] == 'IF([订单数]=0,IF([投流记录数]=0,"订单,投流","订单"),IF([投流记录数]=0,"投流",""))'
+    assert formulas["数据状态"]["expression"] == 'IF([订单数]=0,"partial",IF([投流记录数]=0&&[达人佣金]=0,"partial","normal"))'
+    assert formulas["缺失项"]["expression"] == 'IF([订单数]=0,IF([投流记录数]=0&&[达人佣金]=0,"订单,投入","订单"),IF([投流记录数]=0&&[达人佣金]=0,"投入",""))'
 
 
 def test_summary_formulas_sum_all_platform_order_tables():
@@ -93,7 +94,9 @@ def test_total_summary_formulas_aggregate_all_dates_by_platform():
     assert formulas["达人佣金"]["expression"].endswith("[达人佣金].SUM()")
     assert formulas["预估佣金支出"]["expression"].endswith("[预估佣金支出].SUM()")
     assert formulas["实际佣金支出"]["expression"].endswith("[实际佣金支出].SUM()")
-    assert "[有效销售额]/[投流消耗]" in formulas["ROI"]["expression"]
+    assert formulas["已知总投入"]["expression"] == "[投流消耗]+[达人佣金]"
+    assert formulas["ROI"]["expression"] == "IF([投流消耗]=0,IF([达人佣金]=0,0,[有效销售额]/[达人佣金]),[有效销售额]/[投流消耗])"
+    assert formulas["平台ROI"]["expression"] == "IF([已知总投入]=0,0,[有效销售额]/[已知总投入])"
 
 
 def test_total_dimension_row_matches_only_total_dimension_fields():

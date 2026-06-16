@@ -162,11 +162,12 @@ def build_summary_row(
     freight_cost = money(order.get("freight_cost"))
     platform_fee = money(order.get("platform_fee"))
     other_fee = money(order.get("other_fee"))
-    known_input = maybe_money((ad_cost or 0.0) + influencer_commission) if ad_cost is not None else None
+    has_known_input = ad_cost is not None or influencer_commission > 0
+    known_input = maybe_money((ad_cost or 0.0) + influencer_commission) if has_known_input else None
     known_cost_profit = maybe_money(valid_sales - product_cost - freight_cost - platform_fee - other_fee - influencer_commission - (ad_cost or 0.0))
-    gross_profit_after_ad = maybe_money(valid_sales - influencer_commission - (ad_cost or 0.0)) if ad_cost is not None else None
-    operating_profit = maybe_money(valid_sales - product_cost - freight_cost - platform_fee - other_fee - influencer_commission - (ad_cost or 0.0)) if ad_cost is not None else None
-    missing = missing_items(order, ad)
+    gross_profit_after_ad = maybe_money(valid_sales - influencer_commission - (ad_cost or 0.0)) if has_known_input else None
+    operating_profit = maybe_money(valid_sales - product_cost - freight_cost - platform_fee - other_fee - influencer_commission - (ad_cost or 0.0)) if has_known_input else None
+    missing = missing_items(order, ad, influencer_commission)
     return {
         "unique_key": f"{stat_date}-{platform}",
         "统计日期": stat_date,
@@ -187,7 +188,7 @@ def build_summary_row(
         "已知费用后利润": known_cost_profit,
         "投流后毛利": gross_profit_after_ad,
         "经营利润估算": operating_profit,
-        "ROI": ratio(valid_sales, ad_cost),
+        "ROI": ratio(valid_sales, ad_cost if ad_cost not in (None, 0) else influencer_commission),
         "平台ROI": ratio(valid_sales, known_input),
         "已知费用利润率": ratio(known_cost_profit, valid_sales),
         "利润率": ratio(operating_profit, valid_sales),
@@ -214,9 +215,10 @@ def build_total_row(stat_date: str, rows: list[dict[str, Any]], summary_time: da
     freight_cost = sum_money(rows, "运费成本")
     platform_fee = sum_money(rows, "平台扣点")
     other_fee = sum_money(rows, "其他费用")
-    known_input = maybe_money((ad_cost or 0.0) + influencer_commission) if ad_cost is not None else None
+    has_known_input = ad_cost is not None or influencer_commission > 0
+    known_input = maybe_money((ad_cost or 0.0) + influencer_commission) if has_known_input else None
     known_cost_profit = maybe_money(valid_sales - product_cost - freight_cost - platform_fee - other_fee - influencer_commission - (ad_cost or 0.0))
-    operating_profit = maybe_money(valid_sales - product_cost - freight_cost - platform_fee - other_fee - influencer_commission - (ad_cost or 0.0)) if ad_cost is not None else None
+    operating_profit = maybe_money(valid_sales - product_cost - freight_cost - platform_fee - other_fee - influencer_commission - (ad_cost or 0.0)) if has_known_input else None
     missing = sorted({item for row in rows for item in str(row.get("缺失项") or "").split(",") if item})
     return {
         "unique_key": f"{stat_date}-{TOTAL_PLATFORM}",
@@ -236,9 +238,9 @@ def build_total_row(stat_date: str, rows: list[dict[str, Any]], summary_time: da
         "其他费用": other_fee,
         "已知总投入": known_input,
         "已知费用后利润": known_cost_profit,
-        "投流后毛利": maybe_money(valid_sales - influencer_commission - (ad_cost or 0.0)) if ad_cost is not None else None,
+        "投流后毛利": maybe_money(valid_sales - influencer_commission - (ad_cost or 0.0)) if has_known_input else None,
         "经营利润估算": operating_profit,
-        "ROI": ratio(valid_sales, ad_cost),
+        "ROI": ratio(valid_sales, ad_cost if ad_cost not in (None, 0) else influencer_commission),
         "平台ROI": ratio(valid_sales, known_input),
         "已知费用利润率": ratio(known_cost_profit, valid_sales),
         "利润率": ratio(operating_profit, valid_sales),
@@ -417,12 +419,12 @@ def normalize_platform(value: Any) -> str:
     return text
 
 
-def missing_items(order: dict[str, Any], ad: dict[str, Any]) -> list[str]:
+def missing_items(order: dict[str, Any], ad: dict[str, Any], influencer_commission: float = 0.0) -> list[str]:
     missing: list[str] = []
     if not order:
         missing.append("订单")
-    if not ad:
-        missing.append("投流")
+    if not ad and influencer_commission <= 0:
+        missing.append("投入")
     return missing
 
 

@@ -89,8 +89,8 @@ def test_kpi_formulas_filter_source_summary_by_period_and_platform():
 def test_kpi_ratio_formulas_use_period_totals_not_daily_ratio_sums():
     formulas = kpi_formulas("公式动态经营汇总表")
 
-    assert formulas["ROI"]["expression"] == "IF([投流记录数]=0,0,IF([投流消耗]=0,0,[有效销售额]/[投流消耗]))"
-    assert formulas["平台ROI"]["expression"] == "IF([投流记录数]=0,0,IF([已知总投入]=0,0,[有效销售额]/[已知总投入]))"
+    assert formulas["ROI"]["expression"] == "IF([投流消耗]=0,IF([达人佣金]=0,0,[有效销售额]/[达人佣金]),[有效销售额]/[投流消耗])"
+    assert formulas["平台ROI"]["expression"] == "IF([已知总投入]=0,0,[有效销售额]/[已知总投入])"
     assert "SUM" not in formulas["ROI"]["expression"]
     assert "SUM" not in formulas["平台ROI"]["expression"]
 

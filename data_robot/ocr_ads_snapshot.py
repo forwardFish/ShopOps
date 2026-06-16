@@ -13,6 +13,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
+import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -584,7 +585,10 @@ async def capture_screenshot_direct_cdp(
 ) -> dict[str, Any]:
     screenshot_path.parent.mkdir(parents=True, exist_ok=True)
     async with DirectCdpPage(cdp_url) as page:
-        await page.open(url, download_dir=screenshot_path.parent)
+        attach_summary = await attach_existing_direct_cdp_dashboard(page, cdp_url=cdp_url, platform_code=platform_code)
+        if attach_summary["status"] == "not_attached":
+            await page.open(url, download_dir=screenshot_path.parent)
+            attach_summary = {"status": "new_target", "url": url}
         await asyncio.sleep(max(1, settle_seconds))
         manual_wait = await wait_direct_cdp_dashboard_ready(
             page,
@@ -597,8 +601,7 @@ async def capture_screenshot_direct_cdp(
         if platform_code == "douyin":
             await prepare_douyin_ads_dashboard(page)
         elif platform_code == "tmall":
-            await page.click_label("更多数据")
-            await asyncio.sleep(3)
+            await prepare_tmall_ads_dashboard(page, url)
         metric_wait = await wait_direct_cdp_dashboard_ready(
             page,
             platform_code=platform_code,
@@ -621,7 +624,55 @@ async def capture_screenshot_direct_cdp(
             "final_url": final_url,
             "page_text": page_text,
             "engine": "direct_cdp",
+            "attach": attach_summary,
         }
+
+
+def list_direct_cdp_targets(cdp_url: str) -> list[dict[str, Any]]:
+    try:
+        with urllib.request.urlopen(cdp_url.rstrip("/") + "/json/list", timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except Exception:
+        return []
+    return [item for item in payload if isinstance(item, dict)]
+
+
+async def attach_existing_direct_cdp_dashboard(
+    page: DirectCdpPage,
+    *,
+    cdp_url: str,
+    platform_code: str,
+) -> dict[str, Any]:
+    if platform_code != "tmall":
+        return {"status": "not_attached", "reason": "platform_new_target"}
+    targets = [
+        target
+        for target in list_direct_cdp_targets(cdp_url)
+        if target.get("type") == "page" and "tuiguangcenter_new" in str(target.get("url") or "")
+    ]
+    targets.sort(key=lambda target: 0 if str(target.get("title") or "").strip() == "推广中心" else 1)
+    for target in targets[:4]:
+        target_id = str(target.get("id") or "")
+        if not target_id:
+            continue
+        try:
+            await page.attach(target_id, close_on_exit=False)
+            text = await collect_direct_cdp_text(page, platform_code=platform_code, timeout_seconds=5)
+            current_url = str(await page.evaluate("location.href", timeout_seconds=3) or target.get("url") or "")
+            return {
+                "status": "attached_ready" if direct_cdp_text_has_parseable_metric(text, platform_code) else "attached_unready",
+                "target_id": target_id,
+                "title": target.get("title"),
+                "url": current_url,
+                "text_length": len(text),
+            }
+        except Exception as exc:
+            try:
+                await page.detach()
+            except Exception:
+                pass
+            continue
+    return {"status": "not_attached", "reason": "no_existing_tmall_dashboard"}
 
 
 async def prepare_douyin_ads_dashboard(page: DirectCdpPage) -> dict[str, Any]:
@@ -634,6 +685,27 @@ async def prepare_douyin_ads_dashboard(page: DirectCdpPage) -> dict[str, Any]:
             if label.startswith("全域投放消耗"):
                 break
     return {"clicked": clicks}
+
+
+async def prepare_tmall_ads_dashboard(page: DirectCdpPage, url: str) -> dict[str, Any]:
+    actions: list[str] = []
+    for attempt in range(3):
+        text = await collect_direct_cdp_text(page, platform_code="tmall", timeout_seconds=8)
+        if direct_cdp_text_has_parseable_metric(text, "tmall"):
+            return {"status": "ready", "actions": actions, "attempts": attempt + 1}
+        current_url = str(await page.evaluate("location.href", timeout_seconds=3) or "")
+        if "tuiguangcenter_new" not in current_url:
+            await page.navigate(url)
+            actions.append("navigate_tuiguangcenter_new")
+            await asyncio.sleep(8)
+            continue
+        clicked = await page.click_label("更多数据")
+        if clicked:
+            actions.append(f"click_more_data:{clicked}")
+            await asyncio.sleep(3)
+        else:
+            await asyncio.sleep(5)
+    return {"status": "unready", "actions": actions, "attempts": 3}
 
 
 async def wait_direct_cdp_dashboard_ready(
@@ -684,7 +756,7 @@ async def wait_direct_cdp_dashboard_ready(
     }
 
 
-async def collect_direct_cdp_text(page: DirectCdpPage, *, platform_code: str) -> str:
+async def collect_direct_cdp_text(page: DirectCdpPage, *, platform_code: str, timeout_seconds: int = 20) -> str:
     expressions = [
         r"""
         (() => {
@@ -711,7 +783,7 @@ async def collect_direct_cdp_text(page: DirectCdpPage, *, platform_code: str) ->
     text = ""
     for expression in expressions:
         try:
-            value = await page.evaluate(expression, timeout_seconds=20)
+            value = await page.evaluate(expression, timeout_seconds=timeout_seconds)
         except Exception:
             continue
         candidate = str(value or "")

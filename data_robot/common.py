@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -10,7 +11,7 @@ import sys
 import time
 import zipfile
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -29,6 +30,36 @@ ACTION_ROOT = DATA_ROBOT_DIR / "actions"
 STATE_ROOT = DATA_ROBOT_DIR / ".state"
 COOLDOWN_STATE_PATH = STATE_ROOT / "download_cooldown.json"
 GLOBAL_EXPORT_COOLDOWN_KEY = "__global_export__"
+TMALL_ORDER_EXPORT_LIST_URL = "https://myseller.taobao.com/home.htm/trade-platform/tp/export-list"
+
+USERNAME_SELECTORS = (
+    "input[name='fm-login-id']",
+    "input[name='loginId']",
+    "input[name='TPL_username']",
+    "input[name='username']",
+    "input[name='account']",
+    "input[type='tel']",
+    "input[type='text']",
+    "input[placeholder*='账号']",
+    "input[placeholder*='会员名']",
+    "input[placeholder*='手机号']",
+)
+
+PASSWORD_SELECTORS = (
+    "input[name='fm-login-password']",
+    "input[name='TPL_password']",
+    "input[name='password']",
+    "input[type='password']",
+    "input[placeholder*='密码']",
+)
+
+LOGIN_BUTTON_SELECTORS = (
+    "button[type='submit']",
+    "input[type='submit']",
+    ".fm-button",
+    "#login-form button",
+    "[class*='login'] button",
+)
 
 TASK_FILENAME_HINTS = {
     "pinduoduo_orders": ("orders_export", "订单"),
@@ -484,6 +515,70 @@ def read_cooldown_state() -> dict[str, float]:
     return {str(key): float(value) for key, value in payload.items() if isinstance(value, int | float)}
 
 
+def load_local_env_files() -> None:
+    for name in (".env", ".env.local"):
+        path = ROOT / name
+        if not path.exists():
+            continue
+        for raw_line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key and key not in os.environ:
+                os.environ[key] = value
+
+
+def read_dpapi_login_credential(platform_code: str) -> tuple[str, str] | None:
+    secret_root = Path(os.getenv("SHOPOPS_SECRET_ROOT", os.path.expandvars(r"%APPDATA%\ShopOps\secrets")))
+    path = secret_root / f"{platform_code}-login.credential.xml"
+    if not path.exists():
+        return None
+    command = [
+        "powershell",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        (
+            "$c = Import-Clixml -LiteralPath $args[0]; "
+            "$p = $c.GetNetworkCredential().Password; "
+            "[Console]::Out.Write(($c.UserName + [char]0x1f + $p))"
+        ),
+        str(path),
+    ]
+    completed = subprocess.run(command, text=True, capture_output=True, timeout=20)
+    if completed.returncode != 0 or "\x1f" not in completed.stdout:
+        return None
+    username, password = completed.stdout.split("\x1f", 1)
+    username = username.strip()
+    password = password.strip()
+    if username and password:
+        return username, password
+    return None
+
+
+def get_login_credentials(platform_code: str) -> tuple[str, str]:
+    load_local_env_files()
+    platform = platform_code.upper()
+    prefixes = [f"SHOPOPS_{platform}_", f"{platform}_"]
+    if platform_code == "tmall":
+        prefixes.extend(["SHOPOPS_QIANNIU_", "QIANNIU_", "SHOPOPS_TAOBAO_", "TAOBAO_"])
+    if platform_code == "douyin":
+        prefixes.extend(["SHOPOPS_QIANCHUAN_", "QIANCHUAN_", "SHOPOPS_OCEANENGINE_", "OCEANENGINE_"])
+    for prefix in prefixes:
+        username = os.getenv(prefix + "USERNAME") or os.getenv(prefix + "ACCOUNT") or os.getenv(prefix + "LOGIN_ID")
+        password = os.getenv(prefix + "PASSWORD") or os.getenv(prefix + "PASS")
+        if username and password:
+            return username, password
+    credential = read_dpapi_login_credential(platform_code)
+    if credential:
+        return credential
+    return "", ""
+
+
 class DirectCdpPage:
     def __init__(self, base_url: str) -> None:
         self.base_url = base_url.rstrip("/")
@@ -491,6 +586,7 @@ class DirectCdpPage:
         self.next_id = 0
         self.session_id = ""
         self.target_id = ""
+        self.close_target_on_exit = False
 
     async def __aenter__(self) -> "DirectCdpPage":
         import websockets
@@ -506,7 +602,7 @@ class DirectCdpPage:
         return self
 
     async def __aexit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
-        if self.target_id:
+        if self.target_id and self.close_target_on_exit:
             try:
                 await self.send("Target.closeTarget", {"targetId": self.target_id})
             except Exception:
@@ -534,12 +630,27 @@ class DirectCdpPage:
         await self.send("Browser.setDownloadBehavior", {"behavior": "allow", "downloadPath": str(download_dir)})
         created = await self.send("Target.createTarget", {"url": "about:blank"})
         self.target_id = str(created["targetId"])
-        attached = await self.send("Target.attachToTarget", {"targetId": self.target_id, "flatten": True})
+        await self.attach(self.target_id, close_on_exit=True)
+        await self.navigate(url)
+
+    async def attach(self, target_id: str, *, close_on_exit: bool = False) -> None:
+        self.target_id = target_id
+        self.close_target_on_exit = close_on_exit
+        attached = await self.send("Target.attachToTarget", {"targetId": target_id, "flatten": True})
         self.session_id = str(attached["sessionId"])
         await self.send("Page.enable", session=True)
         await self.send("Runtime.enable", session=True)
         await self.send("Page.bringToFront", session=True)
-        await self.navigate(url)
+
+    async def detach(self) -> None:
+        if not self.session_id:
+            return
+        try:
+            await self.send("Target.detachFromTarget", {"sessionId": self.session_id})
+        finally:
+            self.session_id = ""
+            self.target_id = ""
+            self.close_target_on_exit = False
 
     async def navigate(self, url: str) -> None:
         await self.send("Page.navigate", {"url": url}, session=True)
@@ -658,6 +769,8 @@ async def collect_task_direct_cdp(
 
     async with DirectCdpPage(options.cdp_url) as page:
         await page.open(direct_cdp_initial_url(task), download_dir=download_dir)
+        login_result = await direct_cdp_login_if_needed(page, task, timeout_seconds=min(timeout_seconds, 240))
+        diagnostics["login"] = login_result
         record_export_attempt(task.key, datetime.now().timestamp())
         record_export_attempt(GLOBAL_EXPORT_COOLDOWN_KEY, datetime.now().timestamp())
         if options.manual:
@@ -678,6 +791,8 @@ async def collect_task_direct_cdp(
             timeout_seconds=timeout_seconds,
             idle_seconds=options.idle_seconds,
         )
+        if task.key == "tmall_orders":
+            downloaded, diagnostics["tmall_order_export_date_check"] = filter_tmall_order_exports_for_today(downloaded)
         diagnostics["page_url"] = str(await page.evaluate("location.href", timeout_seconds=3) or "")
         diagnostics["page_title"] = str(await page.evaluate("document.title", timeout_seconds=3) or "")
 
@@ -723,10 +838,17 @@ async def run_direct_cdp_smart_export(
     started_at: float,
 ) -> None:
     deadline = time.monotonic() + timeout_seconds
+    if task.key == "tmall_orders":
+        await direct_cdp_export_tmall_orders_default_range(
+            page,
+            task,
+            deadline=deadline,
+            watch_dirs=watch_dirs,
+            started_at=started_at,
+        )
+        return
     if await direct_cdp_click_existing_export_result(page, task, deadline=deadline, watch_dirs=watch_dirs, started_at=started_at):
         return
-    if task.key == "tmall_orders":
-        await page.navigate(task.url)
 
     clicked = False
     while time.monotonic() < deadline:
@@ -777,8 +899,53 @@ async def run_direct_cdp_smart_export(
 
 def direct_cdp_initial_url(task: RobotTask) -> str:
     if task.key == "tmall_orders":
-        return "https://myseller.taobao.com/home.htm/trade-platform/tp/export-list"
+        return task.url
     return task.url
+
+
+async def direct_cdp_export_tmall_orders_default_range(
+    page: DirectCdpPage,
+    task: RobotTask,
+    *,
+    deadline: float,
+    watch_dirs: list[Path],
+    started_at: float,
+) -> None:
+    await page.navigate(task.url)
+    if not await wait_direct_cdp_text(page, ["近3个月", "批量导出"], timeout_seconds=90):
+        print(f"[{task.key}] direct-cdp Tmall order page did not finish loading the default 3-month export controls.", flush=True)
+        await direct_cdp_click_existing_export_result(page, task, deadline=deadline, watch_dirs=watch_dirs, started_at=started_at)
+        return
+    clicked_export = await page.click_label("批量导出", exact=True)
+    if not clicked_export:
+        clicked_export = await page.click_label("导出订单", exact=True)
+    if not clicked_export:
+        print(f"[{task.key}] direct-cdp could not find Tmall batch export button after setting date.", flush=True)
+        await direct_cdp_click_existing_export_result(page, task, deadline=deadline, watch_dirs=watch_dirs, started_at=started_at)
+        return
+    print(f"[{task.key}] direct-cdp clicked Tmall default 3-month batch export via {clicked_export}", flush=True)
+    await asyncio.sleep(2)
+    clicked_followups: set[str] = set()
+    followup_deadline = min(deadline, time.monotonic() + 90)
+    while time.monotonic() < followup_deadline:
+        if direct_cdp_download_started(watch_dirs, started_at):
+            return
+        for label in followup_export_labels(task):
+            if label in clicked_followups:
+                continue
+            clicked_at = await page.click_label(label, exact=followup_label_exact(task, label))
+            if clicked_at:
+                print(f"[{task.key}] direct-cdp clicked Tmall export follow-up '{label}' via {clicked_at}", flush=True)
+                clicked_followups.add(label)
+                await asyncio.sleep(3)
+                break
+        else:
+            await asyncio.sleep(2)
+    await page.navigate(TMALL_ORDER_EXPORT_LIST_URL)
+    await asyncio.sleep(3)
+    clicked_report = await direct_cdp_click_tmall_report_covering_today(page, deadline=deadline, watch_dirs=watch_dirs, started_at=started_at)
+    if not clicked_report:
+        await direct_cdp_click_existing_export_result(page, task, deadline=deadline, watch_dirs=watch_dirs, started_at=started_at)
 
 
 async def direct_cdp_click_existing_export_result(
@@ -792,18 +959,78 @@ async def direct_cdp_click_existing_export_result(
     if task.key != "tmall_orders":
         return False
     if "/trade-platform/tp/export-list" not in str(await page.evaluate("location.href", timeout_seconds=3) or ""):
-        await page.navigate(direct_cdp_initial_url(task))
+        await page.navigate(TMALL_ORDER_EXPORT_LIST_URL)
     list_deadline = min(deadline, time.monotonic() + 45)
     while time.monotonic() < list_deadline:
         clicked_at = await page.click_label("下载订单报表", exact=True)
         if clicked_at:
             print(f"[{task.key}] direct-cdp clicked existing generated report '下载订单报表' via {clicked_at}", flush=True)
-            await asyncio.sleep(2)
-            return True
+            if await wait_direct_cdp_download_started(watch_dirs, started_at, timeout_seconds=10):
+                return True
         if direct_cdp_download_started(watch_dirs, started_at):
             return True
         await asyncio.sleep(1.5)
     print(f"[{task.key}] direct-cdp found no existing generated report; creating a new export task.", flush=True)
+    return False
+
+
+async def direct_cdp_click_tmall_report_covering_today(
+    page: DirectCdpPage,
+    *,
+    deadline: float,
+    watch_dirs: list[Path],
+    started_at: float,
+) -> bool:
+    target_date = date.today().isoformat()
+    list_deadline = min(deadline, time.monotonic() + 120)
+    while time.monotonic() < list_deadline:
+        clicked = await page.evaluate(
+            """
+            ((targetDate) => {
+              const visible = (element) => {
+                const rect = element.getBoundingClientRect();
+                const style = window.getComputedStyle(element);
+                return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+              };
+              const cards = Array.from(document.querySelectorAll('.order-export_order-block__pyg21'));
+              const candidates = cards
+                .map((card) => {
+                  const text = (card.innerText || card.textContent || '').replace(/\\s+/g, ' ').trim();
+                  const button = Array.from(card.querySelectorAll('button,a,[role=button]'))
+                    .find((element) => visible(element));
+                  return { element: button, text };
+                })
+                .filter((item) => item.element)
+                .filter((item) => item.text.includes(targetDate));
+              candidates.sort((left, right) => {
+                const leftMatch = left.text.match(/\\u62a5\\u8868\\u7533\\u8bf7\\u65f6\\u95f4[:\\uff1a]\\s*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})/);
+                const rightMatch = right.text.match(/\\u62a5\\u8868\\u7533\\u8bf7\\u65f6\\u95f4[:\\uff1a]\\s*(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})/);
+                const leftTime = leftMatch ? leftMatch[1] : '';
+                const rightTime = rightMatch ? rightMatch[1] : '';
+                return rightTime.localeCompare(leftTime);
+              });
+              const candidate = candidates[0];
+              if (!candidate) {
+                return { clicked: false, candidateCount: 0, bodyText: document.body.innerText.slice(0, 1200) };
+              }
+              candidate.element.scrollIntoView({ block: 'center', inline: 'center' });
+              candidate.element.click();
+              return { clicked: true, candidateCount: candidates.length, cardCount: cards.length, rowText: candidate.text.slice(0, 600) };
+            })(""" + json.dumps(target_date) + ")",
+            timeout_seconds=10,
+        )
+        print(f"[tmall_orders] direct-cdp searched report covering today: {clicked}", flush=True)
+        if isinstance(clicked, dict) and clicked.get("clicked"):
+            if await wait_direct_cdp_download_started(watch_dirs, started_at, timeout_seconds=10):
+                return True
+            clicked_at = await page.click_label("下载订单报表", exact=True)
+            if clicked_at:
+                print(f"[tmall_orders] direct-cdp fallback clicked report label via {clicked_at}", flush=True)
+                if await wait_direct_cdp_download_started(watch_dirs, started_at, timeout_seconds=10):
+                    return True
+        if direct_cdp_download_started(watch_dirs, started_at):
+            return True
+        await asyncio.sleep(3)
     return False
 
 
@@ -835,6 +1062,124 @@ async def direct_cdp_special_followup_label(page: DirectCdpPage, task: RobotTask
 
 def direct_cdp_download_started(watch_dirs: list[Path], started_at: float) -> bool:
     return any(files_created_since(folder, started_at, limit=1) or active_partial_downloads(folder, started_at) for folder in watch_dirs)
+
+
+async def wait_direct_cdp_download_started(watch_dirs: list[Path], started_at: float, *, timeout_seconds: float) -> bool:
+    deadline = time.monotonic() + max(0.5, timeout_seconds)
+    while time.monotonic() < deadline:
+        if direct_cdp_download_started(watch_dirs, started_at):
+            return True
+        await asyncio.sleep(0.5)
+    return False
+
+
+async def wait_direct_cdp_text(page: DirectCdpPage, terms: list[str], *, timeout_seconds: int) -> bool:
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        try:
+            text = str(await page.evaluate("document.body ? document.body.innerText : ''", timeout_seconds=5) or "")
+            if all(term in text for term in terms):
+                return True
+        except Exception:
+            pass
+        await asyncio.sleep(1)
+    return False
+
+
+def filter_tmall_order_exports_for_today(paths: list[Path]) -> tuple[list[Path], list[dict[str, Any]]]:
+    target = date.today()
+    accepted: list[Path] = []
+    diagnostics: list[dict[str, Any]] = []
+    for path in paths:
+        check = tmall_order_export_date_check(path, target)
+        diagnostics.append(check)
+        if check.get("accepted"):
+            accepted.append(path)
+        else:
+            print(f"[tmall_orders] rejected export with wrong date range: {check}", flush=True)
+    return accepted, diagnostics
+
+
+def tmall_order_export_date_check(path: Path, target: date) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "file": str(path),
+        "accepted": False,
+        "target_date": target.isoformat(),
+        "min_date": "",
+        "max_date": "",
+        "row_count": 0,
+        "reason": "",
+    }
+    if path.suffix.lower() not in {".xlsx", ".xlsm"}:
+        result["reason"] = "not_excel"
+        return result
+    try:
+        import openpyxl
+    except Exception as exc:
+        result["reason"] = f"openpyxl_unavailable:{exc}"
+        return result
+    try:
+        workbook = openpyxl.load_workbook(path, read_only=True, data_only=True)
+        sheet = workbook.active
+        rows = sheet.iter_rows(values_only=True)
+        headers = [str(value or "").strip() for value in next(rows, ())]
+        date_indexes = [
+            index
+            for index, header in enumerate(headers)
+            if header in {"订单创建时间", "创建时间", "订单付款时间", "付款时间"}
+        ]
+        if not date_indexes:
+            result["reason"] = "missing_date_columns"
+            workbook.close()
+            return result
+        seen: list[date] = []
+        for row in rows:
+            row_date = first_date_in_row(row, date_indexes)
+            if row_date is None:
+                continue
+            seen.append(row_date)
+        workbook.close()
+        if not seen:
+            result["reason"] = "no_dated_rows"
+            return result
+        result["row_count"] = len(seen)
+        result["min_date"] = min(seen).isoformat()
+        result["max_date"] = max(seen).isoformat()
+        result["accepted"] = min(seen) <= target <= max(seen)
+        if not result["accepted"]:
+            result["reason"] = "date_range_does_not_include_today"
+        return result
+    except Exception as exc:
+        result["reason"] = f"inspect_failed:{type(exc).__name__}:{exc}"
+        return result
+
+
+def first_date_in_row(row: tuple[Any, ...], indexes: list[int]) -> date | None:
+    for index in indexes:
+        if index >= len(row):
+            continue
+        parsed = parse_excel_date(row[index])
+        if parsed is not None:
+            return parsed
+    return None
+
+
+def parse_excel_date(value: Any) -> date | None:
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    text = str(value).strip()
+    match = re.search(r"(20\d{2})[-/](\d{1,2})[-/](\d{1,2})", text)
+    if not match:
+        return None
+    year, month, day = (int(part) for part in match.groups())
+    try:
+        return date(year, month, day)
+    except ValueError:
+        return None
 
 
 def wait_for_direct_cdp_downloads(
@@ -1284,6 +1629,157 @@ def dedupe(values: list[str]) -> list[str]:
         if value not in result:
             result.append(value)
     return result
+
+
+def url_looks_like_login(url: str) -> bool:
+    parsed = urlparse(url)
+    haystack = f"{parsed.netloc}{parsed.path}".lower()
+    return any(token in haystack for token in ("login", "passport", "auth", "captcha", "verify"))
+
+
+def text_looks_like_login(text: str) -> bool:
+    haystack = text.lower()
+    return any(
+        token.lower() in haystack
+        for token in (
+            "登录",
+            "扫码",
+            "二维码",
+            "验证码",
+            "安全验证",
+            "滑块",
+            "短信验证",
+            "login",
+            "captcha",
+            "verify",
+        )
+    )
+
+
+async def direct_cdp_login_if_needed(page: DirectCdpPage, task: RobotTask, *, timeout_seconds: int) -> dict[str, Any]:
+    started_at = datetime.now()
+    url = str(await page.evaluate("location.href", timeout_seconds=3) or "")
+    text = str(
+        await page.evaluate(
+            "document.body && (document.body.innerText || document.body.textContent || '') || ''",
+            timeout_seconds=5,
+        )
+        or ""
+    )
+    if not url_looks_like_login(url) and not text_looks_like_login(text):
+        return {"status": "not_needed", "url": url}
+    username, password = get_login_credentials(task.platform_code)
+    if not username or not password:
+        print(f"[{task.key}] Login page detected but no local credentials were found; please finish login in the visible browser.", flush=True)
+        return await wait_direct_cdp_login_ready(page, task, started_at=started_at, timeout_seconds=timeout_seconds)
+    fill_result = await direct_cdp_fill_login(page, username=username, password=password)
+    print(
+        f"[{task.key}] Login page detected; auto-filled username/password status={fill_result.get('status')}.",
+        flush=True,
+    )
+    wait_result = await wait_direct_cdp_login_ready(page, task, started_at=started_at, timeout_seconds=timeout_seconds)
+    return {"status": wait_result.get("status"), "fill": fill_result, "wait": wait_result}
+
+
+async def wait_direct_cdp_login_ready(
+    page: DirectCdpPage,
+    task: RobotTask,
+    *,
+    started_at: datetime,
+    timeout_seconds: int,
+) -> dict[str, Any]:
+    deadline = time.monotonic() + max(1, timeout_seconds)
+    checks = 0
+    last_url = ""
+    while time.monotonic() < deadline:
+        checks += 1
+        last_url = str(await page.evaluate("location.href", timeout_seconds=3) or "")
+        body_text = str(
+            await page.evaluate(
+                "document.body && (document.body.innerText || document.body.textContent || '') || ''",
+                timeout_seconds=5,
+            )
+            or ""
+        )
+        if not url_looks_like_login(last_url):
+            return {
+                "status": "ready",
+                "checks": checks,
+                "url": last_url,
+                "waited_seconds": int((datetime.now() - started_at).total_seconds()),
+            }
+        if text_looks_like_login(body_text):
+            print(f"[{task.key}] Waiting for login/security verification in visible Chrome; current URL: {last_url}", flush=True)
+        await asyncio.sleep(5)
+    return {
+        "status": "login_timeout",
+        "checks": checks,
+        "url": last_url,
+        "waited_seconds": int((datetime.now() - started_at).total_seconds()),
+    }
+
+
+async def direct_cdp_fill_login(page: DirectCdpPage, *, username: str, password: str) -> dict[str, Any]:
+    payload = {
+        "username": username,
+        "password": password,
+        "usernameSelectors": USERNAME_SELECTORS,
+        "passwordSelectors": PASSWORD_SELECTORS,
+        "buttonSelectors": LOGIN_BUTTON_SELECTORS,
+    }
+    expression = r"""
+    ((payloadText) => {
+      const payload = JSON.parse(payloadText);
+      const roots = [document];
+      for (const element of Array.from(document.querySelectorAll('*'))) {
+        if (element.shadowRoot) roots.push(element.shadowRoot);
+      }
+      const visible = (element) => {
+        const rect = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+      };
+      const first = (selectors) => {
+        for (const root of roots) {
+          for (const selector of selectors) {
+            for (const element of Array.from(root.querySelectorAll(selector))) {
+              if (visible(element)) return element;
+            }
+          }
+        }
+        return null;
+      };
+      const setValue = (element, value) => {
+        element.focus();
+        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+        setter.call(element, value);
+        element.dispatchEvent(new Event('input', { bubbles: true }));
+        element.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+      const usernameInput = first(payload.usernameSelectors);
+      const passwordInput = first(payload.passwordSelectors);
+      if (usernameInput) setValue(usernameInput, payload.username);
+      if (passwordInput) setValue(passwordInput, payload.password);
+      let button = first(payload.buttonSelectors);
+      if (!button) {
+        const candidates = roots.flatMap((root) => Array.from(root.querySelectorAll('button,a,input[type=submit],[role=button],div,span')));
+        button = candidates.find((element) => visible(element) && /登录|登 录|登陆|submit/i.test((element.innerText || element.value || element.textContent || '').trim())) || null;
+      }
+      if (usernameInput && passwordInput && button) {
+        button.scrollIntoView({ block: 'center', inline: 'center' });
+        button.click();
+      }
+      return {
+        status: usernameInput && passwordInput && button ? 'submitted' : usernameInput && passwordInput ? 'filled' : 'fields_not_found',
+        username_filled: !!usernameInput,
+        password_filled: !!passwordInput,
+        clicked_login: !!(usernameInput && passwordInput && button),
+        url: location.href,
+        title: document.title
+      };
+    })(""" + json.dumps(json.dumps(payload, ensure_ascii=False)) + ")"
+    result = await page.evaluate(expression, timeout_seconds=10)
+    return result if isinstance(result, dict) else {"status": "unknown", "raw": result}
 
 
 def archive_downloads(task: RobotTask, files: list[Path], archive_root: Path, *, date_token: str, run_token: str) -> list[ArchivedFile]:

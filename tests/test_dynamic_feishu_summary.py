@@ -95,13 +95,16 @@ def test_dynamic_summary_marks_missing_ad_data_partial_without_fake_zero_roi():
     row = next(row for row in result.summary_rows if row["平台"] == "视频号")
     assert row["有效销售额"] == 600
     assert row["投流消耗"] is None
-    assert row["ROI"] is None
+    assert row["已知总投入"] == 60
+    assert row["ROI"] == 10
+    assert row["平台ROI"] == 10
     assert row["达人佣金"] == 60
     assert row["已知费用后利润"] == 340
     assert row["已知费用利润率"] == 0.5667
-    assert row["经营利润估算"] is None
-    assert row["数据状态"] == "partial"
-    assert row["缺失项"] == "投流"
+    assert row["投流后毛利"] == 540
+    assert row["经营利润估算"] == 340
+    assert row["数据状态"] == "normal"
+    assert row["缺失项"] == ""
 
 
 def test_dynamic_summary_accepts_real_feishu_commission_field_aliases():
