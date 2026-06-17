@@ -1,4 +1,4 @@
-# ShopOps Hourly Order And Ad Import
+# ShopOps Half-Hour Order And Ad Import
 
 ## Decision
 
@@ -6,7 +6,7 @@ Orders should use downloaded Excel/CSV files, then import into Feishu. Order dat
 
 Ad spend snapshots can use screenshot OCR because each platform has only one current-day summary row. The importer uses platform plus date as the unique key, so every hourly run overwrites today's ad row. A new row is created only when the stat date changes.
 
-## Main Hourly Entry
+## Main Scheduled Entry
 
 Run one full cycle:
 
@@ -14,7 +14,7 @@ Run one full cycle:
 python -m data_robot.hourly_shopops_import --once --direct-cdp --wait-login --auto-login
 ```
 
-Run continuously from 09:00 to 24:00, about hourly with jitter:
+Run continuously from 09:00 to 24:00, about every half hour with jitter:
 
 ```powershell
 python -m data_robot.hourly_shopops_import --direct-cdp --wait-login --auto-login
@@ -27,8 +27,19 @@ cycle it still sleeps for `--interval-minutes` plus/minus `--jitter-minutes`.
 python -m data_robot.hourly_shopops_import --cycles 3 --direct-cdp --wait-login --auto-login
 ```
 
-The default cadence is roughly once per hour with random jitter:
-`--interval-minutes 60 --jitter-minutes 12 --start-hour 9 --end-hour 24`.
+The default cadence is roughly once per half hour with random jitter:
+`--interval-minutes 30 --jitter-minutes 5 --start-hour 9 --end-hour 24`.
+
+Downloaded order files are archived under:
+
+```text
+D:\lyh\agent\agent-frame\ShopOps\docs\data\ShopOps_Order
+```
+
+Each interval summary row compares the previous collection time with the current
+collection time. This is the row that answers: after the latest half-hour of ad
+spend, how did orders, sales, refunds, effective sales, costs, and commission
+change by platform and in total.
 
 ## Browser Session Rule
 
@@ -55,7 +66,7 @@ The `.cmd` launcher opens Douyin on `http://127.0.0.1:9224` and Tmall on
 `http://127.0.0.1:9225`, waits for both CDP ports, and keeps the console open so
 you can see `CDP OK` or `CDP NOT READY`.
 
-The hourly program can pause while you finish login or verification:
+The scheduled program can pause while you finish login or verification:
 
 ```powershell
 python -m data_robot.hourly_shopops_import --cycles 3 --direct-cdp --wait-login

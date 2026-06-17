@@ -102,6 +102,8 @@ class Settings:
     shopops_order_table_id: str = field(default_factory=lambda: os.getenv("SHOPOPS_ORDER_TABLE_ID") or os.getenv("FEISHU_TABLE_ORDERS_RAW", ""))
     shopops_ad_table_id: str = field(default_factory=lambda: os.getenv("SHOPOPS_AD_TABLE_ID") or os.getenv("FEISHU_TABLE_PROMOTION_SNAPSHOT", ""))
     shopops_summary_table_id: str = field(default_factory=lambda: os.getenv("SHOPOPS_SUMMARY_TABLE_ID", ""))
+    shopops_hourly_ad_interval_table_id: str = field(default_factory=lambda: os.getenv("SHOPOPS_HOURLY_AD_INTERVAL_TABLE_ID", ""))
+    shopops_hourly_ad_interval_table_name: str = field(default_factory=lambda: os.getenv("SHOPOPS_HOURLY_AD_INTERVAL_TABLE_NAME", "投流小时段归因汇总"))
 
     table_system_config: str = field(default_factory=lambda: os.getenv("FEISHU_TABLE_SYSTEM_CONFIG", "system_config"))
     table_shop_config: str = field(default_factory=lambda: os.getenv("FEISHU_TABLE_SHOP_CONFIG", "shop_config"))

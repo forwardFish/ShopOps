@@ -137,7 +137,7 @@ def run_once(args: argparse.Namespace) -> dict[str, Any]:
     now = datetime.now()
     date_token = args.date_token or now.strftime("%m%d")
     stat_date = args.import_date or date.today().isoformat()
-    batch_hour = args.batch_hour or now.strftime("%H")
+    batch_hour = args.batch_hour or now.strftime("%H%M%S")
     batch_token = hourly_batch_token(date_token, batch_hour)
     safe_batch = evidence_token(batch_token)
     evidence_root = Path(args.evidence_root)
@@ -213,7 +213,7 @@ def main() -> int:
             interval_minutes=args.interval_minutes,
             jitter_minutes=args.jitter_minutes,
         )
-        print(f"Next hourly order import starts in {delay} seconds.", flush=True)
+        print(f"Next scheduled order import starts in {delay} seconds.", flush=True)
         time.sleep(delay)
 
 
@@ -228,13 +228,13 @@ def add_schedule_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--timeout-seconds", type=int, default=900)
     parser.add_argument("--idle-seconds", type=int, default=30)
     parser.add_argument("--max-downloads", type=int, default=3)
-    parser.add_argument("--min-task-interval-seconds", type=int, default=2400)
+    parser.add_argument("--min-task-interval-seconds", type=int, default=1500)
     parser.add_argument("--retry-interval-seconds", type=int, default=600)
     parser.add_argument("--max-task-attempts", type=int, default=3)
     parser.add_argument("--start-hour", type=int, default=9)
     parser.add_argument("--end-hour", type=int, default=24)
-    parser.add_argument("--interval-minutes", type=int, default=60)
-    parser.add_argument("--jitter-minutes", type=int, default=12)
+    parser.add_argument("--interval-minutes", type=int, default=30)
+    parser.add_argument("--jitter-minutes", type=int, default=5)
     parser.add_argument("--browser-profile-suffix", default="cdp")
     parser.add_argument("--browser-profile-root", default="")
     parser.add_argument("--cdp-url", default="", help="Existing Chrome CDP URL. Order downloads normally use per-platform defaults when empty.")

@@ -7,6 +7,7 @@ from data_robot.ocr_ads_snapshot import (
     detect_manual_intervention_required,
     direct_cdp_text_has_metric_anchor,
     direct_cdp_text_has_parseable_metric,
+    find_browser_executables,
     parse_ad_snapshot_text,
 )
 from scripts.import_daily_files_to_feishu import (
@@ -160,3 +161,9 @@ def test_qianchuan_source_login_query_is_not_login_page():
     text = "巨量千川 趣白企业店 今日消耗 0.00 展示数 0 前往平台"
 
     assert not detect_manual_intervention_required(text, url)
+
+
+def test_explicit_browser_path_is_validated(monkeypatch):
+    monkeypatch.setenv("SHOPOPS_BROWSER_EXE", r"Z:\definitely-not-a-browser.exe")
+
+    assert find_browser_executables() == []

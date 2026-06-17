@@ -22,7 +22,7 @@ from data_robot.tasks import PLATFORM_TASKS, TASKS, RobotTask
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_ROBOT_DIR = ROOT / "data_robot"
-DEFAULT_ARCHIVE_ROOT = ROOT / "docs" / "data" / "ShopOps"
+DEFAULT_ARCHIVE_ROOT = ROOT / "docs" / "data" / "ShopOps_Order"
 DEFAULT_EVIDENCE_ROOT = ROOT / "docs" / "live-evidence" / "data-robot"
 DOWNLOAD_ROOT = DATA_ROBOT_DIR / "downloads"
 PROFILE_ROOT = DATA_ROBOT_DIR / "profiles"
@@ -261,6 +261,7 @@ def is_recoverable_cdp_error(result: dict[str, Any]) -> bool:
         "ConnectionClosedError",
         "ConnectionRefusedError",
         "CDP",
+        "TimeoutError",
     )
     return any(marker in error for marker in markers)
 
@@ -610,16 +611,23 @@ class DirectCdpPage:
         if self.ws is not None:
             await self.ws.close()
 
-    async def send(self, method: str, params: dict[str, Any] | None = None, *, session: bool = False) -> dict[str, Any]:
+    async def send(
+        self,
+        method: str,
+        params: dict[str, Any] | None = None,
+        *,
+        session: bool = False,
+        timeout_seconds: float = 60,
+    ) -> dict[str, Any]:
         self.next_id += 1
         message: dict[str, Any] = {"id": self.next_id, "method": method}
         if params:
             message["params"] = params
         if session:
             message["sessionId"] = self.session_id
-        await self.ws.send(json.dumps(message))
+        await asyncio.wait_for(self.ws.send(json.dumps(message)), timeout=timeout_seconds)
         while True:
-            response = json.loads(await self.ws.recv())
+            response = json.loads(await asyncio.wait_for(self.ws.recv(), timeout=timeout_seconds))
             if response.get("id") != self.next_id:
                 continue
             if "error" in response:
@@ -654,7 +662,14 @@ class DirectCdpPage:
 
     async def navigate(self, url: str) -> None:
         await self.send("Page.navigate", {"url": url}, session=True)
-        await self.wait_ready(timeout_seconds=30)
+        try:
+            await self.wait_ready(timeout_seconds=30)
+        except TimeoutError:
+            # Some Alibaba/Qianniu pages keep the document busy during login redirects.
+            # Continue with the visible page so the login detector can fill credentials.
+            return
+        except asyncio.TimeoutError:
+            return
 
     async def wait_ready(self, *, timeout_seconds: int) -> None:
         deadline = time.monotonic() + timeout_seconds
@@ -665,22 +680,62 @@ class DirectCdpPage:
                 return
             await asyncio.sleep(0.5)
 
-    async def evaluate(self, expression: str, *, timeout_seconds: int = 10) -> Any:
+    async def evaluate(self, expression: str, *, timeout_seconds: int = 10, context_id: int | None = None) -> Any:
+        params: dict[str, Any] = {
+            "expression": expression,
+            "awaitPromise": True,
+            "returnByValue": True,
+            "userGesture": True,
+        }
+        if context_id is not None:
+            params["contextId"] = context_id
         result = await asyncio.wait_for(
-            self.send(
-                "Runtime.evaluate",
-                {
-                    "expression": expression,
-                    "awaitPromise": True,
-                    "returnByValue": True,
-                    "userGesture": True,
-                },
-                session=True,
-            ),
+            self.send("Runtime.evaluate", params, session=True),
             timeout=timeout_seconds,
         )
         remote = result.get("result") or {}
         return remote.get("value")
+
+    async def frame_contexts(self, *, timeout_seconds: int = 10) -> list[dict[str, Any]]:
+        def collect(frame_tree: dict[str, Any], output: list[dict[str, Any]]) -> None:
+            frame = frame_tree.get("frame") or {}
+            frame_id = str(frame.get("id") or "")
+            if frame_id:
+                output.append(
+                    {
+                        "frame_id": frame_id,
+                        "url": str(frame.get("url") or ""),
+                        "name": str(frame.get("name") or ""),
+                    }
+                )
+            for child in frame_tree.get("childFrames") or []:
+                collect(child, output)
+
+        tree = await asyncio.wait_for(self.send("Page.getFrameTree", session=True), timeout=timeout_seconds)
+        frames: list[dict[str, Any]] = []
+        collect(tree.get("frameTree") or {}, frames)
+        contexts: list[dict[str, Any]] = []
+        for frame in frames:
+            try:
+                created = await asyncio.wait_for(
+                    self.send(
+                        "Page.createIsolatedWorld",
+                        {
+                            "frameId": frame["frame_id"],
+                            "worldName": "shopops-login",
+                            "grantUniveralAccess": True,
+                        },
+                        session=True,
+                    ),
+                    timeout=timeout_seconds,
+                )
+            except Exception as exc:
+                contexts.append({**frame, "error": str(exc)})
+                continue
+            context_id = created.get("executionContextId")
+            if isinstance(context_id, int):
+                contexts.append({**frame, "context_id": context_id})
+        return contexts
 
     async def click_label(self, label: str, *, exact: bool = False) -> str | None:
         payload = json.dumps({"label": label, "exact": exact}, ensure_ascii=False)
@@ -945,7 +1000,7 @@ async def direct_cdp_export_tmall_orders_default_range(
     await asyncio.sleep(3)
     clicked_report = await direct_cdp_click_tmall_report_covering_today(page, deadline=deadline, watch_dirs=watch_dirs, started_at=started_at)
     if not clicked_report:
-        await direct_cdp_click_existing_export_result(page, task, deadline=deadline, watch_dirs=watch_dirs, started_at=started_at)
+        print(f"[{task.key}] direct-cdp did not find a generated Tmall order report covering today before the deadline.", flush=True)
 
 
 async def direct_cdp_click_existing_export_result(
@@ -960,18 +1015,15 @@ async def direct_cdp_click_existing_export_result(
         return False
     if "/trade-platform/tp/export-list" not in str(await page.evaluate("location.href", timeout_seconds=3) or ""):
         await page.navigate(TMALL_ORDER_EXPORT_LIST_URL)
-    list_deadline = min(deadline, time.monotonic() + 45)
-    while time.monotonic() < list_deadline:
-        clicked_at = await page.click_label("下载订单报表", exact=True)
-        if clicked_at:
-            print(f"[{task.key}] direct-cdp clicked existing generated report '下载订单报表' via {clicked_at}", flush=True)
-            if await wait_direct_cdp_download_started(watch_dirs, started_at, timeout_seconds=10):
-                return True
-        if direct_cdp_download_started(watch_dirs, started_at):
-            return True
-        await asyncio.sleep(1.5)
-    print(f"[{task.key}] direct-cdp found no existing generated report; creating a new export task.", flush=True)
-    return False
+    clicked = await direct_cdp_click_tmall_report_covering_today(
+        page,
+        deadline=min(deadline, time.monotonic() + 90),
+        watch_dirs=watch_dirs,
+        started_at=started_at,
+    )
+    if not clicked:
+        print(f"[{task.key}] direct-cdp found no existing generated report covering today; creating a new export task.", flush=True)
+    return clicked
 
 
 async def direct_cdp_click_tmall_report_covering_today(
@@ -982,7 +1034,7 @@ async def direct_cdp_click_tmall_report_covering_today(
     started_at: float,
 ) -> bool:
     target_date = date.today().isoformat()
-    list_deadline = min(deadline, time.monotonic() + 120)
+    list_deadline = deadline
     while time.monotonic() < list_deadline:
         clicked = await page.evaluate(
             """
@@ -996,8 +1048,10 @@ async def direct_cdp_click_tmall_report_covering_today(
               const candidates = cards
                 .map((card) => {
                   const text = (card.innerText || card.textContent || '').replace(/\\s+/g, ' ').trim();
-                  const button = Array.from(card.querySelectorAll('button,a,[role=button]'))
-                    .find((element) => visible(element));
+                  const buttons = Array.from(card.querySelectorAll('button,a,[role=button]'))
+                    .filter((element) => visible(element));
+                  const button = buttons.find((element) => /下载订单报表|下载报表/.test(element.innerText || element.textContent || ''))
+                    || buttons[0];
                   return { element: button, text };
                 })
                 .filter((item) => item.element)
@@ -1011,7 +1065,7 @@ async def direct_cdp_click_tmall_report_covering_today(
               });
               const candidate = candidates[0];
               if (!candidate) {
-                return { clicked: false, candidateCount: 0, bodyText: document.body.innerText.slice(0, 1200) };
+                return { clicked: false, candidateCount: 0, cardCount: cards.length, bodyText: document.body.innerText.slice(0, 500) };
               }
               candidate.element.scrollIntoView({ block: 'center', inline: 'center' });
               candidate.element.click();
@@ -1023,14 +1077,21 @@ async def direct_cdp_click_tmall_report_covering_today(
         if isinstance(clicked, dict) and clicked.get("clicked"):
             if await wait_direct_cdp_download_started(watch_dirs, started_at, timeout_seconds=10):
                 return True
-            clicked_at = await page.click_label("下载订单报表", exact=True)
+            clicked_at = None
+            try:
+                clicked_at = await page.click_label("下载订单报表", exact=True)
+            except (TimeoutError, asyncio.TimeoutError) as exc:
+                print(
+                    f"[tmall_orders] direct-cdp fallback report-label click timed out; continuing download wait: {type(exc).__name__}",
+                    flush=True,
+                )
             if clicked_at:
                 print(f"[tmall_orders] direct-cdp fallback clicked report label via {clicked_at}", flush=True)
                 if await wait_direct_cdp_download_started(watch_dirs, started_at, timeout_seconds=10):
                     return True
         if direct_cdp_download_started(watch_dirs, started_at):
             return True
-        await asyncio.sleep(3)
+        await asyncio.sleep(10)
     return False
 
 
@@ -1751,8 +1812,13 @@ async def direct_cdp_fill_login(page: DirectCdpPage, *, username: str, password:
       };
       const setValue = (element, value) => {
         element.focus();
-        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-        setter.call(element, value);
+        const proto = element.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+        const descriptor = Object.getOwnPropertyDescriptor(proto, 'value') || Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+        if (descriptor && descriptor.set) {
+          descriptor.set.call(element, value);
+        } else {
+          element.value = value;
+        }
         element.dispatchEvent(new Event('input', { bubbles: true }));
         element.dispatchEvent(new Event('change', { bubbles: true }));
       };
@@ -1765,21 +1831,96 @@ async def direct_cdp_fill_login(page: DirectCdpPage, *, username: str, password:
         const candidates = roots.flatMap((root) => Array.from(root.querySelectorAll('button,a,input[type=submit],[role=button],div,span')));
         button = candidates.find((element) => visible(element) && /登录|登 录|登陆|submit/i.test((element.innerText || element.value || element.textContent || '').trim())) || null;
       }
+      let submitted = false;
       if (usernameInput && passwordInput && button) {
         button.scrollIntoView({ block: 'center', inline: 'center' });
         button.click();
+        submitted = true;
+      } else if (usernameInput && passwordInput) {
+        const form = passwordInput.form || passwordInput.closest('form') || usernameInput.closest('form');
+        if (form && typeof form.requestSubmit === 'function') {
+          form.requestSubmit();
+          submitted = true;
+        } else if (form && typeof form.submit === 'function') {
+          form.submit();
+          submitted = true;
+        } else {
+          passwordInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+          passwordInput.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+          submitted = true;
+        }
       }
       return {
-        status: usernameInput && passwordInput && button ? 'submitted' : usernameInput && passwordInput ? 'filled' : 'fields_not_found',
+        status: usernameInput && passwordInput && submitted ? 'submitted' : usernameInput && passwordInput ? 'filled' : 'fields_not_found',
         username_filled: !!usernameInput,
         password_filled: !!passwordInput,
         clicked_login: !!(usernameInput && passwordInput && button),
+        submitted: !!submitted,
+        input_count: roots.reduce((count, root) => count + root.querySelectorAll('input').length, 0),
+        iframe_count: document.querySelectorAll('iframe').length,
         url: location.href,
         title: document.title
       };
     })(""" + json.dumps(json.dumps(payload, ensure_ascii=False)) + ")"
+    attempts: list[dict[str, Any]] = []
     result = await page.evaluate(expression, timeout_seconds=10)
-    return result if isinstance(result, dict) else {"status": "unknown", "raw": result}
+    if isinstance(result, dict):
+        top_attempt = {"frame": "top", **result}
+        attempts.append(top_attempt)
+        if result.get("status") in {"submitted", "filled"}:
+            return {"status": result.get("status"), "attempts": attempts}
+    else:
+        attempts.append({"frame": "top", "status": "unknown", "raw": result})
+
+    try:
+        contexts = await page.frame_contexts(timeout_seconds=8)
+    except Exception as exc:
+        return {"status": "fields_not_found", "attempts": attempts, "frame_error": str(exc)}
+
+    for context in contexts:
+        context_id = context.get("context_id")
+        if not isinstance(context_id, int):
+            attempts.append(
+                {
+                    "frame": context.get("frame_id") or "",
+                    "frame_url": context.get("url") or "",
+                    "status": "context_unavailable",
+                    "error": context.get("error") or "",
+                }
+            )
+            continue
+        try:
+            frame_result = await page.evaluate(expression, timeout_seconds=10, context_id=context_id)
+        except Exception as exc:
+            attempts.append(
+                {
+                    "frame": context.get("frame_id") or "",
+                    "frame_url": context.get("url") or "",
+                    "status": "evaluate_failed",
+                    "error": str(exc),
+                }
+            )
+            continue
+        if not isinstance(frame_result, dict):
+            attempts.append(
+                {
+                    "frame": context.get("frame_id") or "",
+                    "frame_url": context.get("url") or "",
+                    "status": "unknown",
+                    "raw": frame_result,
+                }
+            )
+            continue
+        attempt = {
+            "frame": context.get("frame_id") or "",
+            "frame_url": context.get("url") or "",
+            "frame_name": context.get("name") or "",
+            **frame_result,
+        }
+        attempts.append(attempt)
+        if frame_result.get("status") in {"submitted", "filled"}:
+            return {"status": frame_result.get("status"), "attempts": attempts}
+    return {"status": "fields_not_found", "attempts": attempts}
 
 
 def archive_downloads(task: RobotTask, files: list[Path], archive_root: Path, *, date_token: str, run_token: str) -> list[ArchivedFile]:

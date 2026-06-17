@@ -75,33 +75,89 @@ def url_path_looks_like_login(url: str) -> bool:
     return any(token in haystack for token in ("login", "passport", "auth", "captcha", "verify"))
 
 
-def visible_browser_profile(platform_code: str, cdp_url: str) -> Path:
+def visible_browser_profile(platform_code: str, cdp_url: str, profile_root: str | Path = "") -> Path:
     port = urlparse(cdp_url).port if cdp_url else None
     suffix = f"{platform_code}-{port}" if port else platform_code
-    root = Path(os.getenv("SHOPOPS_CDP_PROFILE_ROOT", os.path.expandvars(r"%LOCALAPPDATA%\ShopOpsCdpProfiles")))
+    root = Path(
+        profile_root
+        or os.getenv("SHOPOPS_CDP_PROFILE_ROOT", "")
+        or os.path.expandvars(r"%LOCALAPPDATA%\ShopOpsCdpProfiles")
+    )
     return root / suffix
 
 
-def find_chrome_executable() -> str:
+def find_browser_executables() -> list[str]:
+    explicit = os.getenv("SHOPOPS_BROWSER_EXE", "").strip().strip('"')
+    if explicit:
+        return [explicit] if Path(explicit).exists() else []
     candidates = [
         os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
         os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
         os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
+        os.path.expandvars(r"%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"),
+        os.path.expandvars(r"%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"),
     ]
-    return next((candidate for candidate in candidates if Path(candidate).exists()), "")
+    deduped: list[str] = []
+    for candidate in candidates:
+        if candidate and Path(candidate).exists() and candidate not in deduped:
+            deduped.append(candidate)
+    return deduped
 
 
-def open_visible_chrome_page(platform_code: str, url: str, cdp_url: str = "") -> dict[str, Any]:
-    chrome = find_chrome_executable()
-    if not chrome:
-        return {"status": "chrome_not_found"}
+def find_chrome_executable() -> str:
+    return next(iter(find_browser_executables()), "")
+
+
+def open_visible_chrome_page(
+    platform_code: str,
+    url: str,
+    cdp_url: str = "",
+    *,
+    profile_root: str | Path = "",
+) -> dict[str, Any]:
+    browsers = find_browser_executables()
+    if not browsers:
+        return {"status": "browser_not_found"}
     parsed = urlparse(cdp_url)
     port = parsed.port
-    profile = visible_browser_profile(platform_code, cdp_url)
+    profile = visible_browser_profile(platform_code, cdp_url, profile_root)
     profile.mkdir(parents=True, exist_ok=True)
+    launch_attempts: list[dict[str, Any]] = []
+    for browser in browsers:
+        result = launch_visible_browser(browser, platform_code, url, cdp_url, profile, port)
+        launch_attempts.append(result)
+        if result.get("cdp_ready") or (not port and result.get("status") == "started"):
+            return result | {"attempts": launch_attempts}
+        time.sleep(1)
+    last = launch_attempts[-1] if launch_attempts else {}
+    return {
+        "status": last.get("status") or "cdp_not_ready",
+        "platform": platform_code,
+        "url": url,
+        "cdp_url": cdp_url,
+        "cdp_ready": False,
+        "profile": str(profile),
+        "manual_start_command": manual_cdp_start_command(browsers[0] if browsers else "", profile, port, url),
+        "attempts": launch_attempts,
+    }
+
+
+def launch_visible_browser(
+    browser: str,
+    platform_code: str,
+    url: str,
+    cdp_url: str,
+    profile: Path,
+    port: int | None,
+) -> dict[str, Any]:
     args = [
         "--new-window",
         "--remote-debugging-address=127.0.0.1",
+        "--remote-allow-origins=*",
+        "--disable-breakpad",
+        "--disable-crash-reporter",
+        "--noerrdialogs",
+        "--disable-features=RendererCodeIntegrity",
         f"--user-data-dir={profile}",
         "--no-first-run",
         "--no-default-browser-check",
@@ -109,9 +165,69 @@ def open_visible_chrome_page(platform_code: str, url: str, cdp_url: str = "") ->
     ]
     if port:
         args.insert(2, f"--remote-debugging-port={port}")
-        args.insert(3, "--remote-allow-origins=*")
-    subprocess.Popen([chrome, *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return {"status": "started", "platform": platform_code, "url": url, "cdp_url": cdp_url, "profile": str(profile)}
+    creationflags = 0
+    if hasattr(subprocess, "DETACHED_PROCESS"):
+        creationflags |= subprocess.DETACHED_PROCESS
+    if hasattr(subprocess, "CREATE_NEW_PROCESS_GROUP"):
+        creationflags |= subprocess.CREATE_NEW_PROCESS_GROUP
+    log_path = ROOT / "docs" / "live-evidence" / "data-robot" / f"browser-launch-{platform_code}-{port or 'noport'}-{datetime.now().strftime('%Y%m%d-%H%M%S')}.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log = log_path.open("w", encoding="utf-8", errors="replace")
+    process = subprocess.Popen(
+        [browser, *args],
+        stdin=subprocess.DEVNULL,
+        stdout=log,
+        stderr=log,
+        creationflags=creationflags,
+        close_fds=True,
+    )
+    cdp_ready = wait_for_visible_chrome_cdp(cdp_url, timeout_seconds=30) if port else False
+    exit_code = process.poll()
+    log.close()
+    status = "started" if cdp_ready or not port else "cdp_not_ready"
+    if exit_code is not None and not cdp_ready:
+        status = "browser_exited"
+    return {
+        "status": status,
+        "browser": browser,
+        "platform": platform_code,
+        "url": url,
+        "cdp_url": cdp_url,
+        "cdp_ready": cdp_ready,
+        "pid": process.pid,
+        "exit_code": exit_code,
+        "profile": str(profile),
+        "log": str(log_path),
+    }
+
+
+def wait_for_visible_chrome_cdp(cdp_url: str, *, timeout_seconds: int = 30) -> bool:
+    if not cdp_url:
+        return False
+    deadline = time.monotonic() + timeout_seconds
+    url = cdp_url.rstrip("/") + "/json/version"
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(url, timeout=3) as response:
+                if response.status == 200:
+                    return True
+        except Exception:
+            time.sleep(1)
+    return False
+
+
+def manual_cdp_start_command(browser: str, profile: Path, port: int | None, url: str) -> str:
+    if not browser or not port:
+        return ""
+    return (
+        f'"{browser}" '
+        f"--remote-debugging-port={port} "
+        "--remote-debugging-address=127.0.0.1 "
+        "--remote-allow-origins=* "
+        f'--user-data-dir="{profile}" '
+        "--no-first-run --no-default-browser-check "
+        f'"{url}"'
+    )
 
 NUMBER_PATTERN = r"[-+]?\d[\d,]*(?:\.\d+)?%?"
 MANUAL_INTERVENTION_KEYWORDS = (
@@ -611,10 +727,13 @@ async def capture_screenshot_direct_cdp(
             require_metric=True,
         )
         page_text = str(metric_wait.get("page_text") or "")
-        screenshot = await page.send(
-            "Page.captureScreenshot",
-            {"format": "png", "captureBeyondViewport": False},
-            session=True,
+        screenshot = await asyncio.wait_for(
+            page.send(
+                "Page.captureScreenshot",
+                {"format": "png", "captureBeyondViewport": False},
+                session=True,
+            ),
+            timeout=20,
         )
         screenshot_path.write_bytes(base64.b64decode(screenshot["data"]))
         final_url = await page.evaluate("location.href", timeout_seconds=3)
@@ -795,7 +914,26 @@ async def collect_direct_cdp_text(page: DirectCdpPage, *, platform_code: str, ti
 
 
 def direct_cdp_text_has_parseable_metric(text: str, platform_code: str) -> bool:
-    if not direct_cdp_text_has_metric_anchor(text, platform_code):
+    if platform_code == "tmall" and not any(
+        anchor in text
+        for anchor in (
+            "\u82b1\u8d39",
+            "\u5c55\u73b0\u91cf",
+            "\u70b9\u51fb\u91cf",
+            "\u603b\u6210\u4ea4\u91d1\u989d",
+            "\u6295\u5165\u4ea7\u51fa\u6bd4",
+            "\u7ecf\u8425\u6982\u89c8",
+        )
+    ):
+        return False
+    if platform_code != "tmall" and not direct_cdp_text_has_metric_anchor(text, platform_code):
+        return False
+    if platform_code != "tmall":
+        metrics = {name: first_metric_value(text, labels) for name, labels in METRIC_LABELS.items()}
+        if metrics["spend"] is None:
+            return False
+        return any(metrics[name] is not None for name in ("impressions", "clicks", "deal_amount", "order_count"))
+    if platform_code != "tmall" and not direct_cdp_text_has_metric_anchor(text, platform_code):
         return False
     metrics = {name: first_metric_value(text, labels) for name, labels in METRIC_LABELS.items()}
     if metrics["spend"] is None:
@@ -893,6 +1031,7 @@ def main() -> int:
     parser.add_argument("--page-settle-seconds", type=int, default=12)
     parser.add_argument("--headless", action="store_true")
     parser.add_argument("--allow-new-browser", action="store_true", help="Open a new visible Chrome profile when CDP is unavailable. Prefer an existing logged-in Chrome.")
+    parser.add_argument("--browser-profile-root", default="", help="Writable root for managed visible Chrome profiles.")
     parser.add_argument("--wait-login", action="store_true", help="Pause and recheck when the page asks for manual login, captcha, SMS, or face verification.")
     parser.add_argument("--auto-login", action="store_true", help="Fill username/password from local environment variables, then wait for any manual verification.")
     parser.add_argument("--login-wait-timeout-seconds", type=int, default=900)
@@ -968,6 +1107,7 @@ def main() -> int:
         if (
             "Manual login/captcha" in error_text
             or "ERR_TIMED_OUT" in error_text
+            or "timed out" in error_text.lower()
             or "Missing --cdp-url" in error_text
             or "Missing OCR text" in error_text
         ):
@@ -975,6 +1115,7 @@ def main() -> int:
                 args.platform,
                 args.url or default_dashboard_url(args.platform, args.date),
                 args.cdp_url,
+                profile_root=args.browser_profile_root,
             )
         summary = {
             "status": "failed",

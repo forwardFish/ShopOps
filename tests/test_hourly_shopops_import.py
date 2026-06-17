@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from data_robot.hourly_shopops_import import build_ads_command, ocr_command_available
+from types import SimpleNamespace
+
+import data_robot.hourly_shopops_import as orchestrator
+from data_robot.hourly_shopops_import import build_ads_command, ocr_command_available, run_ads_once
 
 
 class Args:
@@ -14,6 +17,8 @@ class Args:
     dry_run_ads = True
     ensure_missing_ad_fields = False
     ads_timeout_seconds = 300
+    ad_max_attempts = 2
+    ad_retry_interval_seconds = 0
     no_dom_text_fallback = False
     playwright_cdp_ads = False
     wait_login = False
@@ -21,6 +26,7 @@ class Args:
     login_wait_timeout_seconds = 900
     login_check_interval_seconds = 15
     ad_page_settle_seconds = 90
+    browser_profile_root = ""
 
 
 def test_build_ads_command_uses_existing_cdp_and_dry_run():
@@ -75,6 +81,45 @@ def test_build_ads_command_can_auto_fill_login():
 def test_ocr_command_available_checks_executable():
     assert ocr_command_available("python {image}") is True
     assert ocr_command_available("definitely-not-a-real-ocr-binary {image}") is False
+
+
+def test_run_ads_once_retries_failed_platform_and_keeps_success_evidence(tmp_path, monkeypatch):
+    calls = []
+
+    def fake_run_command(command, *, timeout):
+        calls.append(command)
+        if len(calls) == 2:
+            (tmp_path / "hourly-tmall-ads-ocr-20260618-030000.json").write_text(
+                '{"status":"success"}',
+                encoding="utf-8",
+            )
+            return {"returncode": 0, "timed_out": False}
+        return {"returncode": 124, "timed_out": True}
+
+    opened = []
+    monkeypatch.setattr(orchestrator, "run_command", fake_run_command)
+    monkeypatch.setattr(orchestrator, "open_visible_chrome_page", lambda *args, **kwargs: opened.append((args, kwargs)) or {})
+
+    args = SimpleNamespace(
+        **{
+            name: getattr(Args, name)
+            for name in dir(Args)
+            if not name.startswith("__") and not callable(getattr(Args, name))
+        }
+    )
+    args.ad_platform = ["tmall"]
+    args.evidence_root = str(tmp_path)
+    args.ad_max_attempts = 2
+    args.ad_retry_interval_seconds = 0
+    args.allow_new_browser = True
+
+    result = run_ads_once(args, "2026-06-18", "20260618-030000")
+
+    assert len(calls) == 2
+    assert len(opened) == 1
+    assert result[0]["result"]["returncode"] == 0
+    assert [attempt["attempt"] for attempt in result[0]["attempts"]] == [1, 2]
+    assert result[0]["attempts"][1]["evidence_exists"] is True
 
 
 class PathLike:
