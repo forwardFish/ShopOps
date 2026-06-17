@@ -436,6 +436,67 @@ def test_run_import_can_filter_pdd_ads_when_explicitly_requested(tmp_path: Path)
     assert summary["sample_ad_rows"][0][F_DEAL_SPEND] == 1426.86
 
 
+def test_run_import_uses_rolling_90_day_window_for_orders_and_influencers(tmp_path: Path, monkeypatch):
+    batch = tmp_path / "0617"
+    tmall = next(name for name, code in daily_import.PLATFORM_CODES.items() if code == "tmall")
+    douyin = next(name for name, code in daily_import.PLATFORM_CODES.items() if code == "douyin")
+    order_path = batch / "tmall-orders.xlsx"
+    influencer_path = batch / "douyin-influencer.xlsx"
+
+    monkeypatch.setattr(
+        daily_import,
+        "discover_daily_files",
+        lambda _batch: {
+            platform: {"orders": [], "ads": [], "influencer": []}
+            for platform in daily_import.PLATFORMS
+        }
+        | {
+            tmall: {"orders": [order_path], "ads": [], "influencer": []},
+            douyin: {"orders": [], "ads": [], "influencer": [influencer_path]},
+        },
+    )
+    monkeypatch.setattr(
+        daily_import,
+        "parse_order_rows",
+        lambda _platform, _path: [
+            {F_UNIQUE_KEY: "tmall_old", F_ORDER_NO: "old", F_CREATED_AT: "2026-03-19 12:00:00", F_ACCESSORY_FLAG: "否"},
+            {F_UNIQUE_KEY: "tmall_target", F_ORDER_NO: "target", F_CREATED_AT: "2026-06-17 12:00:00", F_ACCESSORY_FLAG: "否"},
+            {F_UNIQUE_KEY: "tmall_too_old", F_ORDER_NO: "too-old", F_CREATED_AT: "2026-03-18 12:00:00", F_ACCESSORY_FLAG: "否"},
+        ],
+    )
+    monkeypatch.setattr(
+        daily_import,
+        "parse_influencer_rows",
+        lambda _platform, _path: [
+            {F_UNIQUE_KEY: "inf_old", F_ORDER_NO: "old", daily_import.I_PAY_AT: "2026-03-19 12:00:00"},
+            {F_UNIQUE_KEY: "inf_target", F_ORDER_NO: "target", daily_import.I_PAY_AT: "2026-06-17 12:00:00"},
+            {F_UNIQUE_KEY: "inf_too_old", F_ORDER_NO: "too-old", daily_import.I_PAY_AT: "2026-03-18 12:00:00"},
+        ],
+    )
+    monkeypatch.setattr(
+        daily_import,
+        "fetch_jushuitan_douyin_order_rows",
+        lambda _settings, _selected_dates: ([], {"source": "jushuitan", "lookback_days": 90, "rows": 0}),
+    )
+
+    summary = run_import(
+        batch_dir=batch,
+        dry_run=True,
+        evidence=tmp_path / "evidence.json",
+        dates={"2026-06-17"},
+    )
+
+    assert summary["order_date_window"] == {
+        "start_date": "2026-03-19",
+        "end_date": "2026-06-17",
+        "lookback_days": 90,
+    }
+    assert summary["influencer_date_window"] == summary["order_date_window"]
+    assert summary["order_counts"][tmall] == 2
+    assert summary["influencer_count"] == 2
+    assert summary["sample_order_keys"][tmall] == ["tmall_old", "tmall_target"]
+
+
 def test_upsert_rows_does_not_create_or_require_nonexistent_optional_fields():
     calls: list[tuple[str, str, dict | None, dict | None]] = []
 
@@ -563,6 +624,7 @@ def test_existing_order_update_sends_only_changed_fields():
 
     assert result["updated"] == 1
     assert result["created"] == 0
+    assert result["changed_fields"] == {F_PAID_AMOUNT: 1}
     assert calls[0][2]["records"][0]["fields"] == {F_PAID_AMOUNT: 0}
 
 

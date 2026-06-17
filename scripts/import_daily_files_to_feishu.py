@@ -53,6 +53,8 @@ PLATFORM_CODES = {"天猫": "tmall", "抖音": "douyin", "拼多多": "pdd", "�
 DOUYIN_ORDER_DETAIL_REQUIRED_HEADER = "支付方式"
 JUSHUITAN_DOUYIN_LOOKBACK_DAYS = 90
 JUSHUITAN_DOUYIN_CHUNK_DAYS = 7
+ORDER_ROLLING_LOOKBACK_DAYS = 90
+INFLUENCER_ROLLING_LOOKBACK_DAYS = 90
 ORDER_TABLE_ENV = {
     "天猫": "SHOPOPS_ORDER_TABLE_TMALL_ID",
     "抖音": "SHOPOPS_ORDER_TABLE_DOUYIN_ID",
@@ -442,6 +444,7 @@ class FeishuDailyClient:
                 fallback_index[fallback_key] = record_id
 
         dropped_fields: Counter[str] = Counter()
+        changed_fields: Counter[str] = Counter()
         to_create: list[dict[str, Any]] = []
         to_update: list[dict[str, Any]] = []
         for row in rows:
@@ -473,6 +476,7 @@ class FeishuDailyClient:
                     if not field_value_equal(existing_by_record_id.get(record_id, {}).get(key), value)
                 }
                 if changed:
+                    changed_fields.update(changed.keys())
                     to_update.append({"record_id": record_id, "fields": changed})
             else:
                 to_create.append({"fields": clean})
@@ -485,6 +489,7 @@ class FeishuDailyClient:
             "created": len(to_create),
             "updated": len(to_update),
             "saved": len(to_create) + len(to_update),
+            "changed_fields": dict(changed_fields),
             "dropped_nonexistent_fields": dict(dropped_fields),
         }
 
@@ -1524,6 +1529,8 @@ def run_import(
     selected_kinds = set(kinds or {"orders", "ads", "influencer"})
     selected_dates = {normalize_date(date) for date in dates or set()}
     selected_dates.discard("")
+    order_date_window = rolling_date_window(selected_dates, ORDER_ROLLING_LOOKBACK_DAYS)
+    influencer_date_window = rolling_date_window(selected_dates, INFLUENCER_ROLLING_LOOKBACK_DAYS)
     order_rows_by_platform: dict[str, list[dict[str, Any]]] = {platform: [] for platform in PLATFORMS if platform in selected_platforms}
     ad_rows: list[dict[str, Any]] = []
     influencer_rows: list[dict[str, Any]] = []
@@ -1535,8 +1542,8 @@ def run_import(
         platform_info: dict[str, Any] = {}
         for order_file in kinds["orders"] if "orders" in selected_kinds else []:
             rows = parse_order_rows(platform, order_file)
-            if selected_dates:
-                rows = [row for row in rows if normalize_date(row.get(F_CREATED_AT)) in selected_dates]
+            if order_date_window:
+                rows = [row for row in rows if date_in_window(row.get(F_CREATED_AT), order_date_window)]
             order_rows_by_platform[platform].extend(rows)
             platform_info.setdefault("orders", []).append({"file": str(order_file), "rows": len(rows)})
         if platform == "抖音" and "orders" in selected_kinds and not platform_info.get("orders"):
@@ -1545,8 +1552,13 @@ def run_import(
             platform_info.setdefault("orders", []).append(fallback_info)
         for influencer_file in kinds["influencer"] if "influencer" in selected_kinds else []:
             rows = parse_influencer_rows(platform, influencer_file)
-            if selected_dates:
-                rows = [row for row in rows if normalize_date(row.get(I_CREATED_AT) or row.get(I_PAY_AT)) in selected_dates]
+            if influencer_date_window:
+                rows = [
+                    row
+                    for row in rows
+                    if date_in_window(row.get(I_CREATED_AT), influencer_date_window)
+                    or date_in_window(row.get(I_PAY_AT), influencer_date_window)
+                ]
             influencer_rows.extend(rows)
             platform_info.setdefault("influencer", []).append({"file": str(influencer_file), "rows": len(rows)})
         for ad_file in kinds["ads"] if "ads" in selected_kinds else []:
@@ -1562,20 +1574,22 @@ def run_import(
         "batch_dir": str(batch_dir),
         "feishu_base_url": f"https://my.feishu.cn/base/{settings.shopops_data_center_app_token or settings.feishu_app_token}",
         "field_policy": (
-            "create missing ad fields only when explicitly requested; existing records update changed cells only; orders may update order/import fields and product breakdown fields"
+            "create missing ad fields only when explicitly requested; existing records update changed cells only; orders and influencer commissions default to a rolling 90-day update window; orders may update order/import fields and product breakdown fields"
             if ensure_missing_ad_fields
-            else "existing Feishu fields only; never create, delete, or update table fields during daily import; existing records update changed cells only; orders may update order/import fields and product breakdown fields"
+            else "existing Feishu fields only; never create, delete, or update table fields during daily import; existing records update changed cells only; orders and influencer commissions default to a rolling 90-day update window; orders may update order/import fields and product breakdown fields"
         ),
         "platform_filter": sorted(selected_platforms),
         "kind_filter": sorted(selected_kinds),
         "date_filter": sorted(selected_dates),
+        "order_date_window": order_date_window,
+        "influencer_date_window": influencer_date_window,
         "ad_date_filter_applied": bool(selected_dates and filter_ad_dates),
         "unique_rules": {
             "orders": "platform_code + '_' + order_no; fallback match by order_no",
             "ads": "ads_platform_code_yyyy-mm-dd; fallback match by platform + date",
             "influencer": "Douyin influencer data must come from an explicit Douyin commission Excel, never from Douyin order exports; fallback match by platform + order_no",
         },
-        "douyin_order_source_rule": "Douyin order Excel/CSV is accepted only when its headers include 支付方式; otherwise orders fall back to Jushuitan 90-day API. The Jushuitan fallback is intentionally not limited by --date so recent order status changes can be updated.",
+        "douyin_order_source_rule": "Douyin order Excel/CSV is accepted only when its headers include 支付方式; otherwise orders fall back to Jushuitan 90-day API. The Jushuitan fallback and file-based order imports both use rolling 90-day update semantics so recent order status changes can be updated.",
         "files": files,
         "order_counts": {platform: len(rows) for platform, rows in order_rows_by_platform.items()},
         "ad_count": len(ad_rows),
@@ -1934,6 +1948,31 @@ def normalize_datetime(value: Any) -> str:
 def normalize_date(value: Any) -> str:
     text = normalize_datetime(value)
     return text[:10] if text else ""
+
+
+def rolling_date_window(selected_dates: set[str], lookback_days: int) -> dict[str, Any] | None:
+    parsed_dates = []
+    for value in selected_dates:
+        try:
+            parsed_dates.append(datetime.strptime(value, "%Y-%m-%d").date())
+        except ValueError:
+            continue
+    if not parsed_dates:
+        return None
+    end_date = max(parsed_dates)
+    start_date = end_date - timedelta(days=lookback_days)
+    return {
+        "start_date": start_date.isoformat(),
+        "end_date": end_date.isoformat(),
+        "lookback_days": lookback_days,
+    }
+
+
+def date_in_window(value: Any, window: dict[str, Any] | None) -> bool:
+    if not window:
+        return True
+    date_text = normalize_date(value)
+    return bool(date_text) and str(window["start_date"]) <= date_text <= str(window["end_date"])
 
 
 def redact_row(row: dict[str, Any]) -> dict[str, Any]:
