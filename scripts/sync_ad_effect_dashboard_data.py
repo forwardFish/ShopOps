@@ -180,8 +180,8 @@ def metric_row(
     ad_deal = number(row.get(f"{metric_prefix}投流成交金额"))
     roi = number(row.get(f"{metric_prefix}投流ROI") or row.get(f"{metric_prefix}平台ROI") or row.get(f"{metric_prefix}ROI"))
     orders = number(row.get(f"{metric_prefix}订单数"))
-    sales = number(row.get(f"{metric_prefix}销售额"))
-    valid_sales = number(row.get(f"{metric_prefix}有效销售额")) or sales
+    sales = number(row.get(f"{metric_prefix}实收款")) or number(row.get(f"{metric_prefix}销售额"))
+    valid_sales = number(row.get(f"{metric_prefix}订单销售额")) or number(row.get(f"{metric_prefix}有效销售额")) or sales
     refund = number(row.get(f"{metric_prefix}退款金额"))
     refund_rate = number(row.get(f"{metric_prefix}退款率"))
     return {

@@ -51,9 +51,9 @@ DEFAULT_INTERVAL_TABLE_NAME = "投流小时段归因汇总"
 ORDER_DETAIL_NUMBER_FIELDS = [
     "订单数",
     "实际卖出数量",
-    "销售额",
+    "订单销售额",
+    "实收款",
     "退款金额",
-    "有效销售额",
     "退款订单数",
     "退款率",
     "客单价",
@@ -152,22 +152,11 @@ S_FIELD_TYPES = {
     "窗口小时": NUMBER_FIELD,
     "上次采集时间": TEXT_FIELD,
     "本次采集时间": TEXT_FIELD,
-    "本次投流消耗": NUMBER_FIELD,
     "上次投流消耗": NUMBER_FIELD,
-    "区间投流消耗": NUMBER_FIELD,
-    "本次投流成交金额": NUMBER_FIELD,
     "上次投流成交金额": NUMBER_FIELD,
-    "区间投流成交金额": NUMBER_FIELD,
-    "区间订单数": NUMBER_FIELD,
-    "区间订单销售额": NUMBER_FIELD,
-    "区间实收款": NUMBER_FIELD,
-    "区间退款金额": NUMBER_FIELD,
-    "区间ROI": NUMBER_FIELD,
-    "投流平台ROI": NUMBER_FIELD,
     F_IMPRESSIONS: NUMBER_FIELD,
     F_CLICKS: NUMBER_FIELD,
     "点击率": NUMBER_FIELD,
-    **{field_name: NUMBER_FIELD for field_name in ORDER_DETAIL_NUMBER_FIELDS},
     **{f"{prefix}{field_name}": NUMBER_FIELD for prefix in ORDER_DETAIL_PREFIXES for field_name in ORDER_DETAIL_NUMBER_FIELDS},
     **{field_name: NUMBER_FIELD for field_name in AD_ROLLUP_NUMBER_FIELDS},
     "基准类型": TEXT_FIELD,
@@ -502,7 +491,24 @@ def latest_previous_snapshot(
     before: datetime,
 ) -> PreviousSnapshot | None:
     latest: PreviousSnapshot | None = None
-    fields = [F_PLATFORM, "采集日期", "本次采集时间", "本次投流消耗", "本次投流成交金额"]
+    fields = [
+        F_PLATFORM,
+        "采集日期",
+        "本次采集时间",
+        "本次投流消耗",
+        "今日投流消耗",
+        "本次投流成交金额",
+        "今日投流成交金额",
+        "今日累计投流消耗",
+        "今日累计投流成交金额",
+    ]
+    if hasattr(client, "field_names"):
+        try:
+            existing_fields = client.field_names(table_id)
+        except Exception:
+            existing_fields = set()
+        if existing_fields:
+            fields = [field for field in fields if field in existing_fields]
     for record in client.iter_records(table_id, fields):
         item = record.get("fields") or {}
         if scalar_text(item.get(F_PLATFORM)) != platform_name:
@@ -514,8 +520,8 @@ def latest_previous_snapshot(
             continue
         previous = PreviousSnapshot(
             fetched_at=fetched_at,
-            spend=to_number(item.get("本次投流消耗")) or 0.0,
-            deal_amount=to_number(item.get("本次投流成交金额")) or 0.0,
+            spend=first_number(item, "今日累计投流消耗", "本次投流消耗", "今日投流消耗") or 0.0,
+            deal_amount=first_number(item, "今日累计投流成交金额", "本次投流成交金额", "今日投流成交金额") or 0.0,
         )
         if latest is None or previous.fetched_at > latest.fetched_at:
             latest = previous
@@ -686,18 +692,8 @@ def build_platform_row(
         "窗口小时": round((snapshot.fetched_at - window_start).total_seconds() / 3600, 4),
         "上次采集时间": format_dt(previous.fetched_at) if previous else "",
         "本次采集时间": format_dt(snapshot.fetched_at),
-        "本次投流消耗": snapshot.spend,
         "上次投流消耗": previous_spend,
-        "区间投流消耗": delta_spend,
-        "本次投流成交金额": snapshot.deal_amount,
         "上次投流成交金额": previous_deal,
-        "区间投流成交金额": delta_deal,
-        "区间订单数": order_summary.count,
-        "区间订单销售额": order_summary.valid_sales_amount,
-        "区间实收款": order_summary.paid_amount,
-        "区间退款金额": order_summary.refund_amount,
-        "区间ROI": safe_div(order_summary.valid_sales_amount, delta_spend),
-        "投流平台ROI": snapshot.roi,
         "今日累计投流消耗": snapshot.spend,
         "新增投流消耗": delta_spend,
         "今日累计投流成交金额": snapshot.deal_amount,
@@ -707,7 +703,6 @@ def build_platform_row(
         F_IMPRESSIONS: snapshot.impressions,
         F_CLICKS: snapshot.clicks,
         "点击率": safe_div(snapshot.clicks, snapshot.impressions),
-        **detail_fields,
         **prefix_detail_fields("新增", detail_fields),
         **prefix_detail_fields("今日累计", today_detail_fields),
         "基准类型": baseline,
@@ -719,14 +714,6 @@ def build_platform_row(
 def build_total_row(rows: list[dict[str, Any]], stat_date: str, run_token: str) -> dict[str, Any]:
     window_end = max(scalar_text(row.get("窗口结束")) for row in rows)
     window_start = min(scalar_text(row.get("窗口开始")) for row in rows)
-    spend = sum(row_number(row, "区间投流消耗") for row in rows)
-    sales = sum(row_number(row, "区间订单销售额") for row in rows)
-    order_count = sum(row_number(row, "订单数") for row in rows)
-    quantity = sum(row_number(row, "实际卖出数量") for row in rows)
-    gross_sales = sum(row_number(row, "销售额") for row in rows)
-    refund = sum(row_number(row, "退款金额") for row in rows)
-    valid_sales = sum(row_number(row, "有效销售额") for row in rows)
-    known_fee_profit = sum(row_number(row, "已知费用后利润") for row in rows)
     total_row = {
         F_UNIQUE_KEY: f"hourly_ads_total_{date_key(window_end)}_{run_token}",
         "采集日期": stat_date,
@@ -734,20 +721,10 @@ def build_total_row(rows: list[dict[str, Any]], stat_date: str, run_token: str) 
         "窗口开始": window_start,
         "窗口结束": window_end,
         "窗口小时": round(sum(row_number(row, "窗口小时") for row in rows) / max(1, len(rows)), 4),
-        "上次采集时间": "",
+        "上次采集时间": window_start,
         "本次采集时间": window_end,
-        "本次投流消耗": sum(row_number(row, "本次投流消耗") for row in rows),
         "上次投流消耗": sum(row_number(row, "上次投流消耗") for row in rows),
-        "区间投流消耗": spend,
-        "本次投流成交金额": sum(row_number(row, "本次投流成交金额") for row in rows),
         "上次投流成交金额": sum(row_number(row, "上次投流成交金额") for row in rows),
-        "区间投流成交金额": sum(row_number(row, "区间投流成交金额") for row in rows),
-        "区间订单数": sum(row_number(row, "区间订单数") for row in rows),
-        "区间订单销售额": sales,
-        "区间实收款": sum(row_number(row, "区间实收款") for row in rows),
-        "区间退款金额": sum(row_number(row, "区间退款金额") for row in rows),
-        "区间ROI": safe_div(sales, spend),
-        "投流平台ROI": safe_div(sum(row_number(row, "区间投流成交金额") for row in rows), spend),
         "今日累计投流消耗": sum(row_number(row, "今日累计投流消耗") for row in rows),
         "新增投流消耗": sum(row_number(row, "新增投流消耗") for row in rows),
         "今日累计投流成交金额": sum(row_number(row, "今日累计投流成交金额") for row in rows),
@@ -759,23 +736,6 @@ def build_total_row(rows: list[dict[str, Any]], stat_date: str, run_token: str) 
         "数据来源": "hourly_shopops_import",
         F_RAW: json.dumps({"platform_rows": [row[F_UNIQUE_KEY] for row in rows]}, ensure_ascii=False, sort_keys=True),
     }
-    for field_name in ORDER_ADDITIVE_DETAIL_FIELDS:
-        total_row[field_name] = sum(row_number(row, field_name) for row in rows)
-    total_row.update(
-        {
-            "订单数": order_count,
-            "实际卖出数量": quantity,
-            "销售额": gross_sales,
-            "退款金额": refund,
-            "有效销售额": valid_sales,
-            "退款率": safe_div(refund, gross_sales),
-            "客单价": safe_div(gross_sales, order_count),
-            "件单价": safe_div(gross_sales, quantity),
-            "ROI": safe_div(valid_sales, spend),
-            "平台ROI": safe_div(sum(row_number(row, "区间投流成交金额") for row in rows), spend),
-            "已知费用利润率": safe_div(known_fee_profit, valid_sales),
-        }
-    )
     total_row["今日累计投流ROI"] = safe_div(total_row["今日累计投流成交金额"], total_row["今日累计投流消耗"])
     total_row["新增投流ROI"] = safe_div(total_row["新增投流成交金额"], total_row["新增投流消耗"])
     add_prefixed_total_fields(total_row, rows, "新增")
@@ -802,6 +762,8 @@ def build_order_detail_fields(
         "订单数": order_summary.count,
         "实际卖出数量": order_summary.actual_sold_quantity,
         "销售额": order_summary.sales_amount,
+        "订单销售额": order_summary.valid_sales_amount,
+        "实收款": order_summary.paid_amount,
         "退款金额": order_summary.refund_amount,
         "有效销售额": order_summary.valid_sales_amount,
         "退款订单数": order_summary.refund_order_count,
@@ -837,9 +799,9 @@ def add_prefixed_total_fields(total_row: dict[str, Any], rows: list[dict[str, An
 
     order_count = total_row[f"{prefix}订单数"]
     quantity = total_row[f"{prefix}实际卖出数量"]
-    gross_sales = total_row[f"{prefix}销售额"]
+    gross_sales = total_row[f"{prefix}实收款"]
     refund = total_row[f"{prefix}退款金额"]
-    valid_sales = total_row[f"{prefix}有效销售额"]
+    valid_sales = total_row[f"{prefix}订单销售额"]
     known_fee_profit = total_row[f"{prefix}已知费用后利润"]
     ad_spend = row_number(total_row, f"{prefix}投流消耗")
     ad_deal_amount = row_number(total_row, f"{prefix}投流成交金额")

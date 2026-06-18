@@ -6,7 +6,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from data_robot.hourly_ad_interval_summary import PreviousSnapshot, Snapshot, previous_window_start, summarize_hourly_interval
+from data_robot.hourly_ad_interval_summary import (
+    PreviousSnapshot,
+    Snapshot,
+    latest_previous_snapshot,
+    previous_window_start,
+    summarize_hourly_interval,
+)
 from scripts.import_daily_files_to_feishu import (
     F_ACTUAL_SPEND,
     F_CREATED_AT,
@@ -73,63 +79,50 @@ def test_summarize_hourly_interval_writes_platform_and_total_rows(monkeypatch):
     assert result["status"] == "success"
     assert result["row_count"] == 3
     rows = {row[F_PLATFORM]: row for row in client.saved_rows}
-    assert rows["天猫"]["区间投流消耗"] == 60
-    assert rows["天猫"]["区间投流成交金额"] == 150
-    assert rows["天猫"]["区间订单数"] == 1
-    assert rows["天猫"]["区间实收款"] == 80
-    assert rows["天猫"]["区间退款金额"] == 10
-    assert rows["天猫"]["区间订单销售额"] == 70
+    assert "区间投流消耗" not in rows["天猫"]
+    assert "区间订单数" not in rows["天猫"]
+    assert "订单数" not in rows["天猫"]
     assert rows["天猫"]["新增订单数"] == 1
-    assert rows["天猫"]["新增销售额"] == 80
-    assert rows["天猫"]["新增有效销售额"] == 70
+    assert rows["天猫"]["新增订单销售额"] == 70
+    assert rows["天猫"]["新增实收款"] == 80
+    assert "新增销售额" not in rows["天猫"]
+    assert "新增有效销售额" not in rows["天猫"]
     assert rows["天猫"]["新增投流消耗"] == 60
     assert rows["天猫"]["新增投流成交金额"] == 150
     assert rows["天猫"]["新增投流ROI"] == 2.5
     assert rows["天猫"]["今日累计订单数"] == 2
-    assert rows["天猫"]["今日累计销售额"] == 1079
+    assert "今日累计销售额" not in rows["天猫"]
     assert rows["天猫"]["今日累计退款金额"] == 10
-    assert rows["天猫"]["今日累计有效销售额"] == 1069
+    assert "今日累计有效销售额" not in rows["天猫"]
     assert rows["天猫"]["今日累计投流消耗"] == 160
     assert rows["天猫"]["今日累计投流成交金额"] == 350
     assert rows["天猫"]["今日累计投流ROI"] == round(350 / 160, 6)
-    assert rows["天猫"]["订单数"] == 1
-    assert rows["天猫"]["实际卖出数量"] == 2
-    assert rows["天猫"]["销售额"] == 80
-    assert rows["天猫"]["退款金额"] == 10
-    assert rows["天猫"]["有效销售额"] == 70
-    assert rows["天猫"]["商品成本"] == 20
-    assert rows["天猫"]["运费成本"] == 5
-    assert rows["天猫"]["平台扣点"] == 2
-    assert rows["天猫"]["其他费用"] == 1
-    assert rows["天猫"]["预估佣金支出"] == 3
-    assert rows["天猫"]["达人佣金"] == 3
-    assert rows["天猫"]["已知费用后利润"] == 39
-    assert rows["天猫"]["已知总投入"] == 91
-    assert rows["天猫"]["投流后毛利"] == -21
-    assert rows["天猫"]["喷壶数量"] == 2
-    assert rows["天猫"]["喷壶有效销售额"] == 70
-    assert rows["抖音"]["区间投流消耗"] == 30
-    assert rows["抖音"]["区间订单数"] == 1
-    assert rows["总计"]["区间投流消耗"] == 90
-    assert rows["总计"]["区间订单数"] == 2
-    assert rows["总计"]["区间订单销售额"] == 100
-    assert rows["总计"]["实际卖出数量"] == 3
-    assert rows["总计"]["销售额"] == 110
-    assert rows["总计"]["退款金额"] == 10
-    assert rows["总计"]["有效销售额"] == 100
-    assert rows["总计"]["商品成本"] == 20
-    assert rows["总计"]["喷壶数量"] == 2
-    assert rows["总计"]["ROI"] == round(100 / 90, 6)
+    assert "本次投流消耗" not in rows["天猫"]
+    assert "本次投流成交金额" not in rows["天猫"]
+    assert rows["天猫"]["今日累计订单销售额"] == 1069
+    assert rows["天猫"]["今日累计实收款"] == 1079
+    assert rows["天猫"]["新增实际卖出数量"] == 2
+    assert rows["天猫"]["新增商品成本"] == 20
+    assert rows["天猫"]["新增喷壶数量"] == 2
+    assert rows["天猫"]["新增喷壶有效销售额"] == 70
+    assert rows["抖音"]["新增投流消耗"] == 30
+    assert rows["抖音"]["新增订单数"] == 1
+    assert rows["总计"]["新增投流消耗"] == 90
     assert rows["总计"]["新增订单数"] == 2
-    assert rows["总计"]["新增销售额"] == 110
-    assert rows["总计"]["新增有效销售额"] == 100
+    assert rows["总计"]["新增订单销售额"] == 100
+    assert rows["总计"]["新增实收款"] == 110
+    assert "新增销售额" not in rows["总计"]
+    assert "新增有效销售额" not in rows["总计"]
     assert rows["总计"]["新增投流消耗"] == 90
     assert rows["总计"]["新增投流成交金额"] == 240
     assert rows["总计"]["新增ROI"] == round(100 / 90, 6)
     assert rows["总计"]["新增投流ROI"] == round(240 / 90, 6)
+    assert rows["总计"]["上次采集时间"] == "2026-06-17 01:00:00"
     assert rows["总计"]["今日累计订单数"] == 3
-    assert rows["总计"]["今日累计销售额"] == 1109
-    assert rows["总计"]["今日累计有效销售额"] == 1099
+    assert rows["总计"]["今日累计订单销售额"] == 1099
+    assert rows["总计"]["今日累计实收款"] == 1109
+    assert "今日累计销售额" not in rows["总计"]
+    assert "今日累计有效销售额" not in rows["总计"]
     assert rows["总计"]["今日累计投流消耗"] == 190
     assert rows["总计"]["今日累计投流成交金额"] == 440
     assert rows["总计"]["今日累计ROI"] == round(1099 / 190, 6)
@@ -164,8 +157,7 @@ def test_summarize_hourly_interval_falls_back_to_product_rules_when_order_produc
 
     rows = {row[F_PLATFORM]: row for row in client.saved_rows}
     assert result["status"] == "success"
-    assert rows["天猫"]["洗面奶数量"] == 2
-    assert rows["天猫"]["洗面奶有效销售额"] == 338
+    assert "洗面奶数量" not in rows["天猫"]
     assert rows["天猫"]["新增洗面奶数量"] == 2
     assert rows["天猫"]["新增洗面奶有效销售额"] == 338
 
@@ -201,12 +193,12 @@ def test_summarize_hourly_interval_adds_order_only_douyin_platform_to_total(monk
     rows = {row[F_PLATFORM]: row for row in client.saved_rows}
     assert result["status"] == "success"
     assert result["platforms"] == ["douyin", "tmall"]
-    assert rows["抖音"]["区间订单数"] == 1
-    assert rows["抖音"]["区间订单销售额"] == 30
-    assert rows["抖音"]["区间投流消耗"] == 0
-    assert rows["总计"]["区间订单数"] == 2
-    assert rows["总计"]["区间订单销售额"] == 100
-    assert rows["总计"]["区间投流消耗"] == 60
+    assert rows["抖音"]["新增订单数"] == 1
+    assert rows["抖音"]["新增订单销售额"] == 30
+    assert rows["抖音"]["新增投流消耗"] == 0
+    assert rows["总计"]["新增订单数"] == 2
+    assert rows["总计"]["新增订单销售额"] == 100
+    assert rows["总计"]["新增投流消耗"] == 60
 
 
 def test_previous_window_start_clamps_to_collection_start_hour():
@@ -233,6 +225,23 @@ def test_previous_window_start_clamps_to_collection_start_hour():
 
     assert window_start == datetime(2026, 6, 18, 8, 0, 0)
     assert baseline == "上一轮采集"
+
+
+def test_latest_previous_snapshot_falls_back_to_today_ad_totals():
+    client = FakePreviousSnapshotClient()
+
+    previous = latest_previous_snapshot(
+        client,
+        "interval_table",
+        "天猫",
+        "2026-06-18",
+        datetime(2026, 6, 18, 14, 11, 43),
+    )
+
+    assert previous is not None
+    assert previous.fetched_at == datetime(2026, 6, 18, 13, 53, 47)
+    assert previous.spend == 3133.55
+    assert previous.deal_amount == 7436
 
 
 def write_ad_evidence(path: Path, platform: str, row: dict[str, Any]) -> Path:
@@ -335,3 +344,37 @@ class FakeClient:
                     "洗面奶有效销售额": 0,
                 },
             }
+
+
+class FakePreviousSnapshotClient:
+    def iter_records(self, table_id: str, field_names: list[str] | None = None):
+        yield {
+            "record_id": "prev_old",
+            "fields": {
+                F_PLATFORM: "天猫",
+                "采集日期": "2026-06-18",
+                "本次采集时间": "2026-06-18 12:52:39",
+                "本次投流消耗": 3000,
+                "本次投流成交金额": 7000,
+            },
+        }
+        yield {
+            "record_id": "prev_latest_cumulative_only",
+            "fields": {
+                F_PLATFORM: "天猫",
+                "采集日期": "2026-06-18",
+                "本次采集时间": "2026-06-18 13:53:47",
+                "今日累计投流消耗": 3133.55,
+                "今日累计投流成交金额": 7436,
+            },
+        }
+        yield {
+            "record_id": "future_row",
+            "fields": {
+                F_PLATFORM: "天猫",
+                "采集日期": "2026-06-18",
+                "本次采集时间": "2026-06-18 14:11:43",
+                "今日累计投流消耗": 3261.72,
+                "今日累计投流成交金额": 7605,
+            },
+        }
