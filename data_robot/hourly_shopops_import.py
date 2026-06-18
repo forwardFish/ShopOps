@@ -25,8 +25,8 @@ from shopops.config import _load_dotenv, load_settings
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_AD_PLATFORMS = ("tmall",)
-REQUIRED_AD_PLATFORMS = ("tmall",)
+DEFAULT_AD_PLATFORMS = ("douyin", "tmall")
+REQUIRED_AD_PLATFORMS = DEFAULT_AD_PLATFORMS
 ORDER_PLATFORM_CODES = {"天猫": "tmall", "抖音": "douyin"}
 
 
@@ -205,7 +205,7 @@ def run_cycle(args: argparse.Namespace) -> dict[str, Any]:
         "hourly_interval_summary": interval_summary,
         "strategy": {
             "orders": "Tmall Excel download/import plus Douyin Jushuitan order fallback",
-            "ads": "Tmall OCR snapshot; Douyin order and sales data comes from Jushuitan orders, not ad OCR",
+            "ads": "Douyin and Tmall OCR snapshots must both succeed before interval summary rows are written",
             "hourly_interval_summary": "stores per-platform and total interval rows using ad cumulative deltas and order rows in the collection window",
             "risk_control": "uses visible existing Chrome/CDP by default, randomized schedule, no stealth or fingerprint bypass",
         },
@@ -416,13 +416,13 @@ def write_and_print_preflight(args: argparse.Namespace, preflight_summary: dict[
 def main() -> int:
     parser = argparse.ArgumentParser(description="Hourly ShopOps order plus OCR ad import orchestrator.")
     add_schedule_args(parser)
-    parser.add_argument("--ad-platform", action="append", choices=("douyin", "tmall"), help="Ad OCR platform; defaults to Tmall. Douyin order/sales data comes from Jushuitan.")
+    parser.add_argument("--ad-platform", action="append", choices=("douyin", "tmall"), help="Ad OCR platform; defaults to Douyin and Tmall.")
     parser.add_argument(
         "--required-ad-platform",
         action="append",
         choices=("douyin", "tmall"),
         default=None,
-        help="Ad OCR platforms that must succeed before interval summary rows are written. Defaults to Tmall.",
+        help="Ad OCR platforms that must succeed before interval summary rows are written. Defaults to Douyin and Tmall.",
     )
     parser.add_argument("--ad-cdp-url", default="", help="CDP URL for ad screenshot capture. Defaults to --cdp-url.")
     parser.add_argument("--douyin-ad-cdp-url", default="", help="Douyin-specific ad screenshot CDP URL.")

@@ -779,6 +779,68 @@ def test_existing_order_update_skips_missing_optional_index_fields():
     assert calls[0][2]["records"][0]["fields"] == {F_TRADE_STATUS: "已发货"}
 
 
+def test_prune_order_records_for_dates_deletes_only_stale_same_day_orders():
+    calls: list[tuple[str, str, dict | None, dict | None]] = []
+
+    class FakeClient(FeishuDailyClient):
+        def __init__(self) -> None:
+            self.app_token = "app"
+
+        def iter_records(self, table_id: str, field_names=None):
+            yield {
+                "record_id": "keep_source",
+                "fields": {
+                    F_UNIQUE_KEY: "douyin_keep",
+                    F_ORDER_NO: "keep",
+                    F_CREATED_AT: "2026-06-18 10:00:00",
+                    F_PAID_AMOUNT: 169,
+                    F_REFUND_AMOUNT: 0,
+                },
+            }
+            yield {
+                "record_id": "delete_stale",
+                "fields": {
+                    F_UNIQUE_KEY: "douyin_stale",
+                    F_ORDER_NO: "stale",
+                    F_CREATED_AT: "2026-06-18 11:00:00",
+                    F_PAID_AMOUNT: 169,
+                    F_REFUND_AMOUNT: 0,
+                },
+            }
+            yield {
+                "record_id": "keep_other_date",
+                "fields": {
+                    F_UNIQUE_KEY: "douyin_old",
+                    F_ORDER_NO: "old",
+                    F_CREATED_AT: "2026-06-17 11:00:00",
+                    F_PAID_AMOUNT: 169,
+                    F_REFUND_AMOUNT: 0,
+                },
+            }
+
+        def request(self, method: str, path: str, payload=None, params=None):
+            calls.append((method, path, payload, params))
+            return {}
+
+    result = FakeClient().prune_order_records_for_dates(
+        "tbl",
+        source_rows=[{F_UNIQUE_KEY: "douyin_keep"}],
+        dates={"2026-06-18"},
+    )
+
+    assert result["deleted_records"] == 1
+    assert result["scanned_date_records"] == 2
+    assert result["sample_deleted_records"][0][F_UNIQUE_KEY] == "douyin_stale"
+    assert calls == [
+        (
+            "POST",
+            "/bitable/v1/apps/app/tables/tbl/records/batch_delete",
+            {"records": ["delete_stale"]},
+            None,
+        )
+    ]
+
+
 def test_deduplicate_records_deletes_only_repeated_platform_order_keys():
     calls: list[tuple[str, str, dict | None, dict | None]] = []
 

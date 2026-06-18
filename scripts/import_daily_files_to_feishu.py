@@ -8,6 +8,7 @@ import re
 import sys
 import time
 import traceback
+import warnings
 from collections import Counter, defaultdict
 from dataclasses import replace
 from datetime import datetime, timedelta
@@ -20,6 +21,7 @@ from openpyxl import load_workbook
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+warnings.filterwarnings("ignore", message="Workbook contains no default style.*", category=UserWarning)
 
 from shopops.config import _load_dotenv, load_settings
 from shopops.collectors.jushuitan_order_api import (
@@ -620,6 +622,66 @@ class FeishuDailyClient:
             if unique_key in unique_keys:
                 found[unique_key] = fields
         return found
+
+    def prune_order_records_for_dates(
+        self,
+        table_id: str,
+        *,
+        source_rows: list[dict[str, Any]],
+        dates: set[str],
+    ) -> dict[str, Any]:
+        source_keys = {scalar_text(row.get(F_UNIQUE_KEY)) for row in source_rows}
+        source_keys.discard("")
+        normalized_dates = {normalize_date(date) for date in dates}
+        normalized_dates.discard("")
+        if not normalized_dates:
+            return {
+                "status": "skipped",
+                "reason": "no_dates",
+                "deleted_records": 0,
+                "source_keys": len(source_keys),
+            }
+
+        stale_record_ids: list[str] = []
+        stale_samples: list[dict[str, Any]] = []
+        scanned_date_records = 0
+        fields = [F_UNIQUE_KEY, F_ORDER_NO, F_CREATED_AT, F_PAID_AMOUNT, F_REFUND_AMOUNT]
+        for record in self.iter_records(table_id, fields):
+            record_id = str(record.get("record_id") or "")
+            record_fields = record.get("fields") or {}
+            if normalize_date(record_fields.get(F_CREATED_AT)) not in normalized_dates:
+                continue
+            scanned_date_records += 1
+            unique_key = scalar_text(record_fields.get(F_UNIQUE_KEY))
+            if not record_id or not unique_key or unique_key in source_keys:
+                continue
+            stale_record_ids.append(record_id)
+            if len(stale_samples) < 20:
+                stale_samples.append(
+                    {
+                        "record_id": record_id,
+                        F_UNIQUE_KEY: unique_key,
+                        F_ORDER_NO: scalar_text(record_fields.get(F_ORDER_NO)),
+                        F_CREATED_AT: scalar_text(record_fields.get(F_CREATED_AT)),
+                        F_PAID_AMOUNT: record_fields.get(F_PAID_AMOUNT),
+                        F_REFUND_AMOUNT: record_fields.get(F_REFUND_AMOUNT),
+                    }
+                )
+
+        for chunk in chunks([{"record_id": record_id} for record_id in stale_record_ids], 500):
+            self.request(
+                "POST",
+                f"/bitable/v1/apps/{self.app_token}/tables/{table_id}/records/batch_delete",
+                {"records": [item["record_id"] for item in chunk]},
+            )
+        return {
+            "status": "complete",
+            "dates": sorted(normalized_dates),
+            "source_keys": len(source_keys),
+            "scanned_date_records": scanned_date_records,
+            "deleted_records": len(stale_record_ids),
+            "sample_deleted_records": stale_samples,
+        }
 
 
 def is_retryable_feishu_response(status_code: int, body: dict[str, Any]) -> bool:
@@ -1605,9 +1667,9 @@ def run_import(
         "batch_dir": str(batch_dir),
         "feishu_base_url": f"https://my.feishu.cn/base/{settings.shopops_data_center_app_token or settings.feishu_app_token}",
         "field_policy": (
-            f"create missing ad fields only when explicitly requested; existing records update changed cells only; orders use a rolling {max(0, order_lookback_days)}-day update window for this run; influencer commissions default to a rolling 90-day update window; orders may update order/import fields and product breakdown fields"
+            f"create missing ad fields only when explicitly requested; existing records update changed cells only; exact-date order imports prune stale order records for selected dates; orders use a rolling {max(0, order_lookback_days)}-day update window for this run; influencer commissions default to a rolling 90-day update window; orders may update order/import fields and product breakdown fields"
             if ensure_missing_ad_fields
-            else f"existing Feishu fields only; never create, delete, or update table fields during daily import; existing records update changed cells only; orders use a rolling {max(0, order_lookback_days)}-day update window for this run; influencer commissions default to a rolling 90-day update window; orders may update order/import fields and product breakdown fields"
+            else f"existing Feishu fields only; never create or update table fields during daily import; existing records update changed cells only; exact-date order imports prune stale order records for selected dates; orders use a rolling {max(0, order_lookback_days)}-day update window for this run; influencer commissions default to a rolling 90-day update window; orders may update order/import fields and product breakdown fields"
         ),
         "platform_filter": sorted(selected_platforms),
         "kind_filter": sorted(selected_kinds),
@@ -1709,6 +1771,19 @@ def run_import(
             field: "validated_existing_no_field_changes" for field in product_fields
         }
         write_import_progress(evidence, summary, "upsert_orders_done", {"platform": platform, **writes["orders"][platform]})
+        if selected_dates and order_lookback_days == 0:
+            write_import_progress(evidence, summary, "prune_stale_orders_started", {"platform": platform, "dates": sorted(selected_dates)})
+            writes["orders"][platform]["prune_stale_records"] = client.prune_order_records_for_dates(
+                table_id,
+                source_rows=rows,
+                dates=selected_dates,
+            )
+            write_import_progress(
+                evidence,
+                summary,
+                "prune_stale_orders_done",
+                {"platform": platform, **writes["orders"][platform]["prune_stale_records"]},
+            )
         write_import_progress(evidence, summary, "readback_orders_started", {"platform": platform})
         readback = client.readback_by_unique_key(table_id, {row[F_UNIQUE_KEY] for row in rows})
         writes["orders"][platform]["readback_count"] = len(readback)

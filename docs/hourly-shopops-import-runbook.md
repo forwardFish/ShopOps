@@ -4,7 +4,10 @@
 
 Orders should use downloaded Excel/CSV files for Tmall and Jushuitan for Douyin, then import into Feishu. Order data is multi-row structured data, so table/API import gives better parsing, dedupe, replay, and evidence than screenshot OCR.
 
-Tmall ad spend snapshots can use screenshot OCR because the platform has one current-day summary row. Douyin order/sales data comes from Jushuitan in this workflow; do not treat a Tmall-only ad snapshot as a complete total.
+Tmall and Douyin ad spend snapshots use the visible Chrome/CDP screenshot/DOM
+capture path. Douyin order/sales data still comes from Jushuitan orders, but a
+complete hourly interval now requires both Douyin and Tmall ad snapshots before
+the summary table is written.
 
 The business-facing incremental result is the Feishu table `tblb7aBTN2dZ9ZSF`
 (`投流小时段归因汇总`). It stores rows for each collection window and exposes
@@ -40,13 +43,14 @@ are the program defaults, so the timing flags below are only shown to make the
 schedule explicit:
 
 ```powershell
-python -m data_robot.hourly_shopops_import --direct-cdp --wait-login --auto-login --interval-minutes 60 --jitter-minutes 12 --start-hour 8 --end-hour 23 --min-task-interval-seconds 900
+.\scripts\start_hourly_shopops_scheduler.ps1
 ```
 
-The hourly command defaults to both order platforms:
+The hourly command defaults to both order and ad platforms:
 
 ```text
 --order-platform 天猫 --order-platform 抖音
+--ad-platform douyin --ad-platform tmall
 ```
 
 Douyin requires Jushuitan credentials on the machine:

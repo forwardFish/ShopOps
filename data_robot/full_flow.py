@@ -14,6 +14,16 @@ from data_robot.verify_batch import verify_batch
 
 
 ROOT = Path(__file__).resolve().parents[1]
+OPENPYXL_DEFAULT_STYLE_WARNING_FILTER = "ignore:Workbook contains no default style:UserWarning"
+
+
+def child_python_warnings(existing: str | None) -> str:
+    if not existing:
+        return OPENPYXL_DEFAULT_STYLE_WARNING_FILTER
+    parts = [part.strip() for part in existing.split(",") if part.strip()]
+    if OPENPYXL_DEFAULT_STYLE_WARNING_FILTER not in parts:
+        parts.append(OPENPYXL_DEFAULT_STYLE_WARNING_FILTER)
+    return ",".join(parts)
 
 
 def run_command(command: list[str], *, timeout: int) -> dict[str, Any]:
@@ -21,6 +31,7 @@ def run_command(command: list[str], *, timeout: int) -> dict[str, Any]:
     env = os.environ.copy()
     env.setdefault("PYTHONIOENCODING", "utf-8")
     env.setdefault("PYTHONUTF8", "1")
+    env["PYTHONWARNINGS"] = child_python_warnings(env.get("PYTHONWARNINGS"))
     try:
         completed = subprocess.run(
             command,

@@ -164,16 +164,16 @@ def test_run_ads_once_retries_failed_platform_and_keeps_success_evidence(tmp_pat
     assert result[0]["attempts"][1]["evidence_exists"] is True
 
 
-def test_ad_platform_collection_defaults_to_tmall_only_because_douyin_orders_come_from_jushuitan():
+def test_ad_platform_collection_defaults_to_required_douyin_and_tmall_ads():
     args = SimpleNamespace(ad_platform=None, required_ad_platform=None)
 
-    assert ad_platforms_to_collect(args) == ["tmall"]
+    assert ad_platforms_to_collect(args) == ["douyin", "tmall"]
 
 
-def test_ad_platform_collection_can_be_overridden_for_diagnostics():
+def test_ad_platform_collection_keeps_required_platforms_when_partially_overridden():
     args = SimpleNamespace(ad_platform=["tmall"], required_ad_platform=None)
 
-    assert ad_platforms_to_collect(args) == ["tmall"]
+    assert ad_platforms_to_collect(args) == ["douyin", "tmall"]
 
 
 def test_main_success_cycles_counts_only_successful_runs(tmp_path, monkeypatch):
@@ -286,6 +286,10 @@ def test_wait_preflight_retries_until_environment_is_ready(tmp_path, monkeypatch
             "--wait-preflight",
             "--preflight-retry-seconds",
             "60",
+            "--start-hour",
+            "0",
+            "--end-hour",
+            "24",
             "--evidence-root",
             str(tmp_path),
         ],
@@ -322,9 +326,11 @@ def test_run_cycle_skips_ads_and_interval_summary_when_orders_fail(monkeypatch):
     assert interval_calls == []
 
 
-def test_run_cycle_writes_interval_summary_when_required_tmall_ads_succeed(tmp_path, monkeypatch):
+def test_run_cycle_writes_interval_summary_when_required_ads_succeed(tmp_path, monkeypatch):
     interval_calls = []
+    douyin_evidence = tmp_path / "hourly-douyin-ads-ocr-20260618-140000.json"
     tmall_evidence = tmp_path / "hourly-tmall-ads-ocr-20260618-140000.json"
+    douyin_evidence.write_text('{"status":"success"}', encoding="utf-8")
     tmall_evidence.write_text('{"status":"success"}', encoding="utf-8")
 
     args = SimpleNamespace(
@@ -347,7 +353,10 @@ def test_run_cycle_writes_interval_summary_when_required_tmall_ads_succeed(tmp_p
     monkeypatch.setattr(
         orchestrator,
         "run_ads_once",
-        lambda *_args: [{"platform": "tmall", "result": {"returncode": 0}, "evidence": str(tmall_evidence)}],
+        lambda *_args: [
+            {"platform": "douyin", "result": {"returncode": 0}, "evidence": str(douyin_evidence)},
+            {"platform": "tmall", "result": {"returncode": 0}, "evidence": str(tmall_evidence)},
+        ],
     )
     monkeypatch.setattr(
         orchestrator,
