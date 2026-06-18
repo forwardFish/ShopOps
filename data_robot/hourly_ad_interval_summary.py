@@ -24,6 +24,7 @@ from scripts.import_daily_files_to_feishu import (
     F_FREIGHT_COST,
     F_OTHER_FEE,
     F_PLATFORM_FEE,
+    F_PRODUCT_NAME,
     F_PRODUCT_COST,
     F_RAW,
     F_REFUND_AMOUNT,
@@ -39,6 +40,7 @@ from scripts.import_daily_files_to_feishu import (
     FeishuDailyClient,
     scalar_text,
 )
+from shopops.services.product_breakdown import DEFAULT_PRODUCT_CATALOG_TABLE_ID, product_breakdown_values
 
 
 PLATFORM_CODES = ("tmall", "douyin")
@@ -126,6 +128,7 @@ AD_ROLLUP_NUMBER_FIELDS = [
 ORDER_WINDOW_FIELDS = [
     F_ORDER_NO,
     *ORDER_TIME_FIELDS,
+    F_PRODUCT_NAME,
     F_PAID_AMOUNT,
     F_REFUND_AMOUNT,
     F_QUANTITY,
@@ -336,6 +339,8 @@ def summarize_hourly_interval(
     env_path: str | Path = ".env",
     client: FeishuDailyClient | None = None,
     default_window_minutes: int = 60,
+    collection_start_hour: int = 0,
+    order_platform_codes: Iterable[str] | None = None,
     dry_run: bool = False,
 ) -> dict[str, Any]:
     snapshots = snapshots_from_ads_results(ads_results)
@@ -345,12 +350,18 @@ def summarize_hourly_interval(
     client = client or FeishuDailyClient()
     ensured = ensure_interval_table(client, table_id=table_id, table_name=table_name, env_path=env_path)
     target_table_id = str(ensured["table_id"])
+    snapshots = with_order_only_snapshots(snapshots, order_platform_codes, stat_date)
 
     rows: list[dict[str, Any]] = []
     per_platform: dict[str, dict[str, Any]] = {}
     for snapshot in snapshots:
         previous = latest_previous_snapshot(client, target_table_id, snapshot.platform_name, snapshot.stat_date, snapshot.fetched_at)
-        window_start, baseline = previous_window_start(snapshot, previous, default_window_minutes)
+        window_start, baseline = previous_window_start(
+            snapshot,
+            previous,
+            default_window_minutes,
+            collection_start_hour=collection_start_hour,
+        )
         order_summary = summarize_orders_for_window(client, snapshot.platform_name, window_start, snapshot.fetched_at)
         today_start = datetime.combine(snapshot.fetched_at.date(), datetime.min.time()) - timedelta(microseconds=1)
         today_order_summary = summarize_orders_for_window(client, snapshot.platform_name, today_start, snapshot.fetched_at)
@@ -399,6 +410,38 @@ def summarize_hourly_interval(
         "readback_count": readback_count,
         "platforms": sorted(per_platform),
     }
+
+
+def with_order_only_snapshots(
+    snapshots: list[Snapshot],
+    order_platform_codes: Iterable[str] | None,
+    stat_date: str,
+) -> list[Snapshot]:
+    if not order_platform_codes:
+        return snapshots
+    requested = {platform_code for platform_code in order_platform_codes if platform_code in PLATFORM_NAMES}
+    existing = {snapshot.platform_code for snapshot in snapshots}
+    fetched_at = max(snapshot.fetched_at for snapshot in snapshots)
+    merged = list(snapshots)
+    for platform_code in PLATFORM_CODES:
+        if platform_code in existing or platform_code not in requested:
+            continue
+        merged.append(
+            Snapshot(
+                platform_code=platform_code,
+                platform_name=PLATFORM_NAMES[platform_code],
+                fetched_at=fetched_at,
+                stat_date=stat_date or fetched_at.date().isoformat(),
+                spend=0.0,
+                deal_amount=0.0,
+                raw={
+                    "source": "order_only_platform_summary",
+                    "reason": "platform has order data source but no ad OCR snapshot in this cycle",
+                },
+            )
+        )
+    merged.sort(key=lambda item: PLATFORM_CODES.index(item.platform_code) if item.platform_code in PLATFORM_CODES else 99)
+    return merged
 
 
 def snapshots_from_ads_results(ads_results: list[dict[str, Any]]) -> list[Snapshot]:
@@ -483,11 +526,15 @@ def previous_window_start(
     snapshot: Snapshot,
     previous: PreviousSnapshot | None,
     default_window_minutes: int,
+    *,
+    collection_start_hour: int = 0,
 ) -> tuple[datetime, str]:
+    collection_start_hour = max(0, min(23, collection_start_hour))
+    collection_start = snapshot.fetched_at.replace(hour=collection_start_hour, minute=0, second=0, microsecond=0)
     if previous:
-        return previous.fetched_at, "上一轮采集"
+        return max(previous.fetched_at, collection_start), "上一轮采集"
     start = snapshot.fetched_at - timedelta(minutes=default_window_minutes)
-    day_start = datetime.combine(snapshot.fetched_at.date(), datetime.min.time())
+    day_start = collection_start
     if start < day_start:
         start = day_start
     return start, "无上一轮，默认回看"
@@ -516,6 +563,7 @@ def summarize_orders_for_window(
     seen_orders: set[str] = set()
     refund_orders: set[str] = set()
     product_metrics = {field_name: 0.0 for field_name in PRODUCT_METRIC_FIELDS}
+    product_rules = load_product_rules(client)
     existing_fields = client.field_names(table_id) if hasattr(client, "field_names") else set(ORDER_WINDOW_FIELDS)
     readable_fields = [field_name for field_name in ORDER_WINDOW_FIELDS if field_name in existing_fields]
     if not any(field_name in existing_fields for field_name in ORDER_TIME_FIELDS):
@@ -547,8 +595,20 @@ def summarize_orders_for_window(
         actual_commission += first_number(fields, "实际佣金支出") or 0.0
         if row_refund > 0:
             refund_orders.add(order_no)
+        fallback_product_metrics = (
+            product_breakdown_values(
+                product_rules,
+                product_name=fields.get(F_PRODUCT_NAME),
+                actual_quantity=row_actual_sold_quantity,
+                valid_sales=row_valid_sales,
+            )
+            if product_rules
+            else {}
+        )
         for field_name in PRODUCT_METRIC_FIELDS:
-            product_metrics[field_name] += to_number(fields.get(field_name)) or 0.0
+            existing_value = to_number(fields.get(field_name))
+            fallback_value = fallback_product_metrics.get(field_name)
+            product_metrics[field_name] += max(existing_value or 0.0, fallback_value or 0.0)
     return OrderWindowSummary(
         count=len(seen_orders),
         actual_sold_quantity=round(actual_sold_quantity, 6),
@@ -565,6 +625,18 @@ def summarize_orders_for_window(
         refund_order_count=len(refund_orders),
         product_metrics={key: round(value, 6) for key, value in product_metrics.items()},
     )
+
+
+def load_product_rules(client: FeishuDailyClient) -> list[Any]:
+    if not hasattr(client, "product_rules"):
+        return []
+    product_table_id = os.getenv("SHOPOPS_PRODUCT_CATALOG_TABLE_ID", DEFAULT_PRODUCT_CATALOG_TABLE_ID).strip()
+    if not product_table_id:
+        return []
+    try:
+        return client.product_rules(product_table_id)
+    except Exception:
+        return []
 
 
 def order_table_id(platform_name: str) -> str:

@@ -938,8 +938,7 @@ def fetch_jushuitan_douyin_order_rows(settings: Any, selected_dates: set[str] | 
     session = requests.Session()
     session.trust_env = False
     fetched_at = datetime.now()
-    end_at = fetched_at
-    start_at = end_at - timedelta(days=JUSHUITAN_DOUYIN_LOOKBACK_DAYS)
+    start_at, end_at, query_info = jushuitan_query_window(selected_dates, fetched_at)
     api_settings = replace(
         settings,
         shop_id=settings.jushuitan_douyin_shop_id,
@@ -997,7 +996,9 @@ def fetch_jushuitan_douyin_order_rows(settings: Any, selected_dates: set[str] | 
     rows = collapse_order_rows(rows)
     return rows, {
         "source": "jushuitan",
-        "lookback_days": JUSHUITAN_DOUYIN_LOOKBACK_DAYS,
+        "lookback_days": query_info["lookback_days"],
+        "query_window_source": query_info["source"],
+        "requested_dates": query_info["requested_dates"],
         "start_at": start_at.strftime("%Y-%m-%d %H:%M:%S"),
         "end_at": end_at.strftime("%Y-%m-%d %H:%M:%S"),
         "chunk_days": JUSHUITAN_DOUYIN_CHUNK_DAYS,
@@ -1009,6 +1010,34 @@ def fetch_jushuitan_douyin_order_rows(settings: Any, selected_dates: set[str] | 
         "paid_orders": len(paid_orders),
         "rows": len(rows),
         "date_filter_applied": date_filter_applied,
+    }
+
+
+def jushuitan_query_window(selected_dates: set[str] | None, fetched_at: datetime) -> tuple[datetime, datetime, dict[str, Any]]:
+    parsed_dates = []
+    for value in selected_dates or set():
+        try:
+            parsed_dates.append(datetime.strptime(value, "%Y-%m-%d").date())
+        except ValueError:
+            continue
+    if parsed_dates:
+        start_date = min(parsed_dates)
+        end_date = max(parsed_dates)
+        start_at = datetime.combine(start_date, datetime.min.time())
+        end_at = datetime.combine(end_date + timedelta(days=1), datetime.min.time())
+        if end_at > fetched_at:
+            end_at = fetched_at
+        if end_at <= start_at:
+            end_at = min(fetched_at, start_at + timedelta(days=1))
+        return start_at, end_at, {
+            "source": "selected_dates",
+            "lookback_days": 0,
+            "requested_dates": sorted(date.isoformat() for date in parsed_dates),
+        }
+    return fetched_at - timedelta(days=JUSHUITAN_DOUYIN_LOOKBACK_DAYS), fetched_at, {
+        "source": "rolling_lookback",
+        "lookback_days": JUSHUITAN_DOUYIN_LOOKBACK_DAYS,
+        "requested_dates": [],
     }
 
 
@@ -1521,6 +1550,7 @@ def run_import(
     dates: set[str] | None = None,
     filter_ad_dates: bool = False,
     ensure_missing_ad_fields: bool = False,
+    order_lookback_days: int = ORDER_ROLLING_LOOKBACK_DAYS,
 ) -> dict[str, Any]:
     _load_dotenv()
     settings = load_settings()
@@ -1529,7 +1559,7 @@ def run_import(
     selected_kinds = set(kinds or {"orders", "ads", "influencer"})
     selected_dates = {normalize_date(date) for date in dates or set()}
     selected_dates.discard("")
-    order_date_window = rolling_date_window(selected_dates, ORDER_ROLLING_LOOKBACK_DAYS)
+    order_date_window = rolling_date_window(selected_dates, max(0, order_lookback_days))
     influencer_date_window = rolling_date_window(selected_dates, INFLUENCER_ROLLING_LOOKBACK_DAYS)
     order_rows_by_platform: dict[str, list[dict[str, Any]]] = {platform: [] for platform in PLATFORMS if platform in selected_platforms}
     ad_rows: list[dict[str, Any]] = []
@@ -1547,7 +1577,8 @@ def run_import(
             order_rows_by_platform[platform].extend(rows)
             platform_info.setdefault("orders", []).append({"file": str(order_file), "rows": len(rows)})
         if platform == "抖音" and "orders" in selected_kinds and not platform_info.get("orders"):
-            rows, fallback_info = fetch_jushuitan_douyin_order_rows(settings, None)
+            fallback_dates = selected_dates if selected_dates and order_lookback_days == 0 else None
+            rows, fallback_info = fetch_jushuitan_douyin_order_rows(settings, fallback_dates)
             order_rows_by_platform[platform].extend(rows)
             platform_info.setdefault("orders", []).append(fallback_info)
         for influencer_file in kinds["influencer"] if "influencer" in selected_kinds else []:
@@ -1574,9 +1605,9 @@ def run_import(
         "batch_dir": str(batch_dir),
         "feishu_base_url": f"https://my.feishu.cn/base/{settings.shopops_data_center_app_token or settings.feishu_app_token}",
         "field_policy": (
-            "create missing ad fields only when explicitly requested; existing records update changed cells only; orders and influencer commissions default to a rolling 90-day update window; orders may update order/import fields and product breakdown fields"
+            f"create missing ad fields only when explicitly requested; existing records update changed cells only; orders use a rolling {max(0, order_lookback_days)}-day update window for this run; influencer commissions default to a rolling 90-day update window; orders may update order/import fields and product breakdown fields"
             if ensure_missing_ad_fields
-            else "existing Feishu fields only; never create, delete, or update table fields during daily import; existing records update changed cells only; orders and influencer commissions default to a rolling 90-day update window; orders may update order/import fields and product breakdown fields"
+            else f"existing Feishu fields only; never create, delete, or update table fields during daily import; existing records update changed cells only; orders use a rolling {max(0, order_lookback_days)}-day update window for this run; influencer commissions default to a rolling 90-day update window; orders may update order/import fields and product breakdown fields"
         ),
         "platform_filter": sorted(selected_platforms),
         "kind_filter": sorted(selected_kinds),
@@ -1589,7 +1620,7 @@ def run_import(
             "ads": "ads_platform_code_yyyy-mm-dd; fallback match by platform + date",
             "influencer": "Douyin influencer data must come from an explicit Douyin commission Excel, never from Douyin order exports; fallback match by platform + order_no",
         },
-        "douyin_order_source_rule": "Douyin order Excel/CSV is accepted only when its headers include 支付方式; otherwise orders fall back to Jushuitan 90-day API. The Jushuitan fallback and file-based order imports both use rolling 90-day update semantics so recent order status changes can be updated.",
+        "douyin_order_source_rule": f"Douyin order Excel/CSV is accepted only when its headers include 支付方式; otherwise orders fall back to Jushuitan API. File-based order imports use the configured {max(0, order_lookback_days)}-day order window; the Jushuitan fallback applies the selected date filter when the order window is 0 days.",
         "files": files,
         "order_counts": {platform: len(rows) for platform, rows in order_rows_by_platform.items()},
         "ad_count": len(ad_rows),
@@ -2018,6 +2049,12 @@ def main() -> int:
     parser.add_argument("--date", action="append", help="Only import one normalized date (YYYY-MM-DD); repeat for multiple dates.")
     parser.add_argument("--filter-ad-dates", action="store_true", help="Also apply --date filters to ad files. By default ad imports use every date present in the source files.")
     parser.add_argument("--ensure-missing-ad-fields", action="store_true", help="Create missing Feishu ad table fields that are present in imported rows.")
+    parser.add_argument(
+        "--order-lookback-days",
+        type=int,
+        default=ORDER_ROLLING_LOOKBACK_DAYS,
+        help="Order date lookback around --date. Default keeps the daily historical 90-day update window; hourly jobs pass 0 for date-only incremental imports.",
+    )
     args = parser.parse_args()
 
     batch_dir = Path(args.batch_dir)
@@ -2033,6 +2070,7 @@ def main() -> int:
             dates=set(args.date or []),
             filter_ad_dates=args.filter_ad_dates,
             ensure_missing_ad_fields=args.ensure_missing_ad_fields,
+            order_lookback_days=args.order_lookback_days,
         )
     except Exception as exc:
         summary = {

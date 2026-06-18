@@ -14,8 +14,12 @@ __pycache__/
 node_modules/
 .pytest_cache/
 .pytest-tmp/
+.tmp/
 cache/
 docs/auto-execute/logs/
+docs/live-evidence/data-robot/
+docs/live-evidence/feishu-dashboard/ad-effect-dashboard-data-sync.json
+docs/live-evidence/feishu-dashboard/dashboard-kpi-dynamic-date-formulas.json
 *.log
 ~$*
 data_robot/.venv/

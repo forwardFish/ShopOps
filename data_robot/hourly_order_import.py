@@ -112,6 +112,8 @@ def build_download_command(args: argparse.Namespace, date_token: str, batch_hour
 
 
 def build_import_command(args: argparse.Namespace, batch_dir: Path, stat_date: str, evidence: Path) -> list[str]:
+    order_platforms = getattr(args, "order_platform", None) or [TMALL, DOUYIN]
+    order_lookback_days = getattr(args, "order_lookback_days", 0)
     command = [
         sys.executable,
         str(ROOT / "scripts" / "import_daily_files_to_feishu.py"),
@@ -121,13 +123,13 @@ def build_import_command(args: argparse.Namespace, batch_dir: Path, stat_date: s
         str(evidence),
         "--kind",
         "orders",
-        "--platform",
-        TMALL,
-        "--platform",
-        DOUYIN,
         "--date",
         stat_date,
+        "--order-lookback-days",
+        str(order_lookback_days),
     ]
+    for platform in order_platforms:
+        command.extend(["--platform", platform])
     if args.dry_run_import:
         command.append("--dry-run")
     return command
@@ -231,10 +233,23 @@ def add_schedule_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--min-task-interval-seconds", type=int, default=1500)
     parser.add_argument("--retry-interval-seconds", type=int, default=600)
     parser.add_argument("--max-task-attempts", type=int, default=3)
-    parser.add_argument("--start-hour", type=int, default=9)
-    parser.add_argument("--end-hour", type=int, default=24)
-    parser.add_argument("--interval-minutes", type=int, default=30)
-    parser.add_argument("--jitter-minutes", type=int, default=5)
+    parser.add_argument(
+        "--order-platform",
+        action="append",
+        choices=(TMALL, DOUYIN),
+        default=None,
+        help="Order platform to import; repeatable. Defaults to both Tmall and Douyin.",
+    )
+    parser.add_argument("--start-hour", type=int, default=8)
+    parser.add_argument("--end-hour", type=int, default=23)
+    parser.add_argument("--interval-minutes", type=int, default=60)
+    parser.add_argument("--jitter-minutes", type=int, default=12)
+    parser.add_argument(
+        "--order-lookback-days",
+        type=int,
+        default=0,
+        help="Hourly order import lookback around --date. Default 0 imports only the requested date; daily historical imports keep their own wider window.",
+    )
     parser.add_argument("--browser-profile-suffix", default="cdp")
     parser.add_argument("--browser-profile-root", default="")
     parser.add_argument("--cdp-url", default="", help="Existing Chrome CDP URL. Order downloads normally use per-platform defaults when empty.")

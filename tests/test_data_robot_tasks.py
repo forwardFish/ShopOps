@@ -24,7 +24,7 @@ from data_robot.full_flow import (
     build_playwright_check_command,
     download_failed_on_browser_connection,
 )
-from data_robot.start_chrome import build_browser_command
+from data_robot.start_chrome import BROWSER_PATHS, build_browser_command
 
 
 def test_all_requested_download_pages_are_configured():
@@ -102,12 +102,12 @@ def test_daily_download_ports_cover_platforms():
         assert task_key in PLATFORM_TASKS[platform]
 
 
-def test_browser_command_uses_remote_debugging_profile_suffix():
+def test_browser_command_uses_remote_debugging_profile_suffix(tmp_path):
     command = build_browser_command(
         "pinduoduo_orders",
         port=9333,
         profile_suffix="doctor",
-        profile_root="D:\\tmp\\profiles",
+        profile_root=tmp_path,
         start_url="about:blank",
     )
 
@@ -115,8 +115,16 @@ def test_browser_command_uses_remote_debugging_profile_suffix():
     assert "--remote-debugging-address=127.0.0.1" in command
     assert "--remote-allow-origins=*" in command
     assert any("pinduoduo-doctor" in item for item in command)
-    assert any("D:\\tmp\\profiles" in item for item in command)
+    assert any(str(tmp_path) in item for item in command)
     assert command[-1] == "about:blank"
+
+
+def test_default_browser_paths_are_chrome_only():
+    browser_paths = [str(path).lower() for path in BROWSER_PATHS]
+
+    assert browser_paths
+    assert all("chrome.exe" in path for path in browser_paths)
+    assert not any("msedge.exe" in path for path in browser_paths)
 
 
 def test_daily_download_verifies_only_selected_platform_tasks():

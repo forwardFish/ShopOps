@@ -14,7 +14,10 @@ def _load_dotenv(path: str = ".env") -> None:
         if not stripped or stripped.startswith("#") or "=" not in stripped:
             continue
         key, value = stripped.split("=", 1)
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if os.environ.get(key, "") == "":
+            os.environ[key] = value
 
 
 def _bool_env(name: str, default: bool) -> bool:

@@ -94,8 +94,6 @@ def find_browser_executables() -> list[str]:
         os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
         os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
         os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
-        os.path.expandvars(r"%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"),
-        os.path.expandvars(r"%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"),
     ]
     deduped: list[str] = []
     for candidate in candidates:
@@ -705,6 +703,10 @@ async def capture_screenshot_direct_cdp(
         if attach_summary["status"] == "not_attached":
             await page.open(url, download_dir=screenshot_path.parent)
             attach_summary = {"status": "new_target", "url": url}
+        elif attach_summary["status"] != "attached_ready":
+            await page.detach()
+            await page.open(url, download_dir=screenshot_path.parent)
+            attach_summary = {"status": "new_target_after_unready_attach", "previous": attach_summary, "url": url}
         await asyncio.sleep(max(1, settle_seconds))
         manual_wait = await wait_direct_cdp_dashboard_ready(
             page,

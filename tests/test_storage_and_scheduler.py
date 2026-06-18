@@ -1,8 +1,9 @@
+import os
 from datetime import datetime
 
 from shopops.collectors.taobao_order_api import TaobaoOrderApiCollector
 from shopops.collectors.taobao_promotion_crawler import TaobaoPromotionCrawler
-from shopops.config import Settings
+from shopops.config import Settings, _load_dotenv
 from shopops.scheduler import Scheduler
 from shopops.services.browser_service import BrowserService
 from shopops.storage.local_feishu import LocalFeishuBitableStorage
@@ -115,6 +116,20 @@ def test_default_config_uses_crawler_and_does_not_require_taobao_api_credentials
     assert settings.order_source == "crawler"
     assert settings.taobao_app_key == ""
     settings.validate_business()
+
+
+def test_load_dotenv_can_refresh_blank_values_for_waiting_process(tmp_path, monkeypatch):
+    env_path = tmp_path / ".env"
+    env_path.write_text("JUSHUITAN_TOKEN=\n", encoding="utf-8")
+    monkeypatch.delenv("JUSHUITAN_TOKEN", raising=False)
+
+    _load_dotenv(str(env_path))
+    assert os.environ["JUSHUITAN_TOKEN"] == ""
+
+    env_path.write_text("JUSHUITAN_TOKEN=ready-token\n", encoding="utf-8")
+    _load_dotenv(str(env_path))
+
+    assert os.environ["JUSHUITAN_TOKEN"] == "ready-token"
 
 
 def test_promotion_center_failure_does_not_write_zero(tmp_path):

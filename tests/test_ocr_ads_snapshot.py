@@ -167,3 +167,14 @@ def test_explicit_browser_path_is_validated(monkeypatch):
     monkeypatch.setenv("SHOPOPS_BROWSER_EXE", r"Z:\definitely-not-a-browser.exe")
 
     assert find_browser_executables() == []
+
+
+def test_default_browser_discovery_uses_chrome_only(monkeypatch):
+    monkeypatch.delenv("SHOPOPS_BROWSER_EXE", raising=False)
+    monkeypatch.setattr("data_robot.ocr_ads_snapshot.Path.exists", lambda self: True)
+
+    browsers = find_browser_executables()
+
+    assert browsers
+    assert all("chrome.exe" in browser.lower() for browser in browsers)
+    assert not any("msedge.exe" in browser.lower() for browser in browsers)

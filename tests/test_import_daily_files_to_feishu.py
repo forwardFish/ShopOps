@@ -6,6 +6,7 @@ from pathlib import Path
 from openpyxl import Workbook
 
 import scripts.import_daily_files_to_feishu as daily_import
+from shopops.config import Settings
 from shopops.services.product_breakdown import product_rules_from_records
 from scripts.import_daily_files_to_feishu import (
     F_ACCESSORY_FLAG,
@@ -495,6 +496,114 @@ def test_run_import_uses_rolling_90_day_window_for_orders_and_influencers(tmp_pa
     assert summary["order_counts"][tmall] == 2
     assert summary["influencer_count"] == 2
     assert summary["sample_order_keys"][tmall] == ["tmall_old", "tmall_target"]
+
+
+def test_run_import_can_limit_orders_to_selected_date_without_changing_influencer_window(tmp_path: Path, monkeypatch):
+    batch = tmp_path / "0617"
+    tmall = next(name for name, code in daily_import.PLATFORM_CODES.items() if code == "tmall")
+    order_path = batch / "tmall-orders.xlsx"
+
+    monkeypatch.setattr(
+        daily_import,
+        "discover_daily_files",
+        lambda _batch: {
+            platform: {"orders": [], "ads": [], "influencer": []}
+            for platform in daily_import.PLATFORMS
+        }
+        | {
+            tmall: {"orders": [order_path], "ads": [], "influencer": []},
+        },
+    )
+    monkeypatch.setattr(
+        daily_import,
+        "parse_order_rows",
+        lambda _platform, _path: [
+            {F_UNIQUE_KEY: "tmall_yesterday", F_ORDER_NO: "yesterday", F_CREATED_AT: "2026-06-16 23:59:59", F_ACCESSORY_FLAG: "否"},
+            {F_UNIQUE_KEY: "tmall_target", F_ORDER_NO: "target", F_CREATED_AT: "2026-06-17 12:00:00", F_ACCESSORY_FLAG: "否"},
+        ],
+    )
+
+    summary = run_import(
+        batch_dir=batch,
+        dry_run=True,
+        evidence=tmp_path / "evidence.json",
+        platforms={tmall},
+        kinds={"orders"},
+        dates={"2026-06-17"},
+        order_lookback_days=0,
+    )
+
+    assert summary["order_date_window"] == {
+        "start_date": "2026-06-17",
+        "end_date": "2026-06-17",
+        "lookback_days": 0,
+    }
+    assert summary["influencer_date_window"] == {
+        "start_date": "2026-03-19",
+        "end_date": "2026-06-17",
+        "lookback_days": 90,
+    }
+    assert summary["order_counts"][tmall] == 1
+    assert summary["sample_order_keys"][tmall] == ["tmall_target"]
+
+
+def test_jushuitan_selected_dates_query_only_requested_order_day(monkeypatch):
+    posted_bodies = []
+
+    class FakeResponse:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self):
+            return {
+                "code": 0,
+                "data": {
+                    "orders": [
+                        {
+                            "so_id": "old",
+                            "shop_id": "douyin-shop",
+                            "shop_name": "抖音",
+                            "status": "Sent",
+                            "order_date": "2026-06-16 23:59:59",
+                            "pay_amount": 99,
+                        },
+                        {
+                            "so_id": "target",
+                            "shop_id": "douyin-shop",
+                            "shop_name": "抖音",
+                            "status": "Sent",
+                            "order_date": "2026-06-17 12:00:00",
+                            "pay_amount": 188,
+                        },
+                    ]
+                },
+            }
+
+    class FakeSession:
+        trust_env = False
+
+        def post(self, url, params=None, json=None, timeout=None):
+            posted_bodies.append(json)
+            return FakeResponse()
+
+    monkeypatch.setattr(daily_import.requests, "Session", FakeSession)
+    settings = Settings(
+        jushuitan_partner_id="pid",
+        jushuitan_partner_key="pkey",
+        jushuitan_token="token",
+        jushuitan_douyin_shop_id="douyin-shop",
+        jushuitan_page_size=100,
+    )
+
+    rows, info = daily_import.fetch_jushuitan_douyin_order_rows(settings, {"2026-06-17"})
+
+    assert [row[F_ORDER_NO] for row in rows] == ["target"]
+    assert posted_bodies[0]["modified_begin"] == "2026-06-17 00:00:00"
+    assert posted_bodies[0]["modified_end"].startswith("2026-06-18")
+    assert info["query_window_source"] == "selected_dates"
+    assert info["lookback_days"] == 0
+    assert info["requested_dates"] == ["2026-06-17"]
+    assert info["date_filter_applied"] is True
 
 
 def test_upsert_rows_does_not_create_or_require_nonexistent_optional_fields():

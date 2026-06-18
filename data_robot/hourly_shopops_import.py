@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 import shutil
 import sys
 import time
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -18,12 +19,43 @@ from data_robot.hourly_ad_interval_summary import (
     interval_table_name,
     summarize_hourly_interval,
 )
-from data_robot.hourly_order_import import add_schedule_args, next_delay_seconds, next_window_start, run_once as run_orders_once
+from data_robot.hourly_order_import import add_schedule_args, day_boundary, next_delay_seconds, next_window_start, run_once as run_orders_once
 from data_robot.ocr_ads_snapshot import default_dashboard_url, open_visible_chrome_page
 from shopops.config import _load_dotenv, load_settings
 
 
 ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_AD_PLATFORMS = ("tmall",)
+REQUIRED_AD_PLATFORMS = ("tmall",)
+ORDER_PLATFORM_CODES = {"天猫": "tmall", "抖音": "douyin"}
+
+
+def ordered_ad_platforms(platforms: set[str]) -> list[str]:
+    order = {platform: index for index, platform in enumerate(REQUIRED_AD_PLATFORMS)}
+    return sorted(platforms, key=lambda platform: (order.get(platform, len(order)), platform))
+
+
+def required_ad_platforms(args: argparse.Namespace) -> set[str]:
+    return set(getattr(args, "required_ad_platform", None) or REQUIRED_AD_PLATFORMS)
+
+
+def ad_platforms_to_collect(args: argparse.Namespace) -> list[str]:
+    requested = set(getattr(args, "ad_platform", None) or DEFAULT_AD_PLATFORMS)
+    return ordered_ad_platforms(requested | required_ad_platforms(args))
+
+
+def missing_required_ad_platforms(args: argparse.Namespace, ads_results: list[dict[str, Any]]) -> list[str]:
+    successful = {
+        str(item.get("platform") or "")
+        for item in ads_results
+        if (item.get("result") or {}).get("returncode") == 0 and Path(str(item.get("evidence") or "")).exists()
+    }
+    return ordered_ad_platforms(required_ad_platforms(args) - successful)
+
+
+def order_platform_codes_to_summarize(args: argparse.Namespace) -> list[str]:
+    platforms = getattr(args, "order_platform", None) or ["天猫", "抖音"]
+    return [ORDER_PLATFORM_CODES[platform] for platform in platforms if platform in ORDER_PLATFORM_CODES]
 
 
 def build_ads_command(args: argparse.Namespace, platform: str, stat_date: str, evidence: Path) -> list[str]:
@@ -88,7 +120,7 @@ def platform_ad_cdp_url(args: argparse.Namespace, platform: str) -> str:
 
 
 def run_ads_once(args: argparse.Namespace, stat_date: str, run_token: str) -> list[dict[str, Any]]:
-    platforms = args.ad_platform or ["douyin", "tmall"]
+    platforms = ad_platforms_to_collect(args)
     results: list[dict[str, Any]] = []
     evidence_root = Path(args.evidence_root)
     for platform in platforms:
@@ -129,10 +161,11 @@ def run_cycle(args: argparse.Namespace) -> dict[str, Any]:
     stat_date = args.import_date or date.today().isoformat()
     run_token = now.strftime("%Y%m%d-%H%M%S")
     order_summary = None if args.skip_orders else run_orders_once(args)
-    ads_results = [] if args.skip_ads else run_ads_once(args, stat_date, run_token)
+    order_failed = bool(order_summary and order_summary.get("status") != "success")
+    ads_results = [] if args.skip_ads or order_failed else run_ads_once(args, stat_date, run_token)
     interval_summary = None
     status = "success"
-    if order_summary and order_summary.get("status") != "success":
+    if order_failed:
         status = "order_failed"
     ad_failures = [
         item
@@ -141,7 +174,10 @@ def run_cycle(args: argparse.Namespace) -> dict[str, Any]:
     ]
     if ad_failures:
         status = "ads_failed" if status == "success" else "partial_failed"
-    if not args.skip_hourly_interval_summary and not args.skip_ads and not ad_failures:
+    missing_ad_platforms = [] if args.skip_ads or order_failed else missing_required_ad_platforms(args, ads_results)
+    if missing_ad_platforms:
+        status = "ads_failed" if status == "success" else "partial_failed"
+    if not args.skip_hourly_interval_summary and not args.skip_ads and not ad_failures and not order_failed and not missing_ad_platforms:
         try:
             interval_summary = summarize_hourly_interval(
                 ads_results,
@@ -151,6 +187,8 @@ def run_cycle(args: argparse.Namespace) -> dict[str, Any]:
                 table_name=args.hourly_interval_table_name or interval_table_name(),
                 dry_run=args.dry_run_ads or args.dry_run_hourly_interval_summary,
                 default_window_minutes=args.interval_minutes,
+                collection_start_hour=args.start_hour,
+                order_platform_codes=order_platform_codes_to_summarize(args),
             )
             if interval_summary.get("status") not in {"success", "skipped"}:
                 status = "interval_summary_failed" if status == "success" else "partial_failed"
@@ -163,10 +201,11 @@ def run_cycle(args: argparse.Namespace) -> dict[str, Any]:
         "run_token": run_token,
         "orders": order_summary,
         "ads": ads_results,
+        "missing_required_ad_platforms": missing_ad_platforms,
         "hourly_interval_summary": interval_summary,
         "strategy": {
             "orders": "Tmall Excel download/import plus Douyin Jushuitan order fallback",
-            "ads": "one OCR snapshot row per requested platform",
+            "ads": "Tmall OCR snapshot; Douyin order and sales data comes from Jushuitan orders, not ad OCR",
             "hourly_interval_summary": "stores per-platform and total interval rows using ad cumulative deltas and order rows in the collection window",
             "risk_control": "uses visible existing Chrome/CDP by default, randomized schedule, no stealth or fingerprint bypass",
         },
@@ -178,7 +217,7 @@ def run_cycle(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def preflight(args: argparse.Namespace) -> dict[str, Any]:
-    ad_platforms = args.ad_platform or ["douyin", "tmall"]
+    ad_platforms = ad_platforms_to_collect(args)
     cdp_checks = {
         platform: check_cdp(platform_ad_cdp_url(args, platform))
         for platform in ad_platforms
@@ -218,6 +257,7 @@ def check_environment(args: argparse.Namespace) -> dict[str, Any]:
     _load_dotenv()
     settings = load_settings()
     required: dict[str, bool] = {}
+    order_platforms = set(getattr(args, "order_platform", None) or ["天猫", "抖音"])
     if not args.skip_ads:
         required.update(
             {
@@ -234,15 +274,16 @@ def check_environment(args: argparse.Namespace) -> dict[str, Any]:
                 or (settings.shopops_data_center_app_token and settings.feishu_app_id and settings.feishu_app_secret)
             )
     if not args.skip_orders:
-        required.update(
-            {
-                "SHOPOPS_ORDER_TABLE_ID": bool(settings.shopops_order_table_id),
-                "JUSHUITAN_PARTNER_ID": bool(settings.jushuitan_partner_id),
-                "JUSHUITAN_PARTNER_KEY": bool(settings.jushuitan_partner_key),
-                "JUSHUITAN_TOKEN": bool(settings.jushuitan_token),
-                "JUSHUITAN_SHOP_ID_DOUYIN": bool(settings.jushuitan_douyin_shop_id),
-            }
-        )
+        required["SHOPOPS_ORDER_TABLE_ID"] = bool(settings.shopops_order_table_id)
+        if "抖音" in order_platforms:
+            required.update(
+                {
+                    "JUSHUITAN_PARTNER_ID": bool(settings.jushuitan_partner_id),
+                    "JUSHUITAN_PARTNER_KEY": bool(settings.jushuitan_partner_key),
+                    "JUSHUITAN_TOKEN": bool(settings.jushuitan_token),
+                    "JUSHUITAN_SHOP_ID_DOUYIN": bool(settings.jushuitan_douyin_shop_id),
+                }
+            )
     missing = sorted(name for name, ok in required.items() if not ok)
     return {
         "ok": not missing,
@@ -262,7 +303,7 @@ def open_visible_ad_pages(args: argparse.Namespace, *, reason: str) -> list[dict
     if args.skip_ads:
         return opened
     stat_date = args.import_date or date.today().isoformat()
-    for platform in args.ad_platform or ["douyin", "tmall"]:
+    for platform in ad_platforms_to_collect(args):
         opened.append(
             open_visible_chrome_page(
                 platform,
@@ -275,10 +316,114 @@ def open_visible_ad_pages(args: argparse.Namespace, *, reason: str) -> list[dict
     return opened
 
 
+def parse_local_datetime(value: Any) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    for candidate in (text, text.replace("T", " ")):
+        try:
+            return datetime.fromisoformat(candidate)
+        except ValueError:
+            pass
+    for fmt in ("%Y%m%d-%H%M%S", "%Y-%m-%d %H:%M:%S"):
+        try:
+            return datetime.strptime(text, fmt)
+        except ValueError:
+            pass
+    return None
+
+
+def latest_successful_run_time(evidence_root: str | Path) -> datetime | None:
+    root = Path(evidence_root)
+    if not root.exists():
+        return None
+    latest: datetime | None = None
+    paths = sorted(root.glob("hourly-shopops-import-*.json"), key=lambda item: item.stat().st_mtime, reverse=True)
+    for path in paths[:50]:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if payload.get("status") != "success":
+            continue
+        interval = payload.get("hourly_interval_summary") or {}
+        for row in interval.get("rows") or []:
+            row_time = parse_local_datetime(row.get("窗口结束") or row.get("本次采集时间"))
+            if row_time and (latest is None or row_time > latest):
+                latest = row_time
+        run_time = parse_local_datetime(payload.get("run_token"))
+        if run_time and (latest is None or run_time > latest):
+            latest = run_time
+        if latest:
+            return latest
+    return latest
+
+
+def first_run_delay_seconds(args: argparse.Namespace, now: datetime, rng: random.Random | None = None) -> int:
+    if args.once or args.cycles or args.success_cycles:
+        return 0
+    if next_window_start(now, start_hour=args.start_hour, end_hour=args.end_hour) > now:
+        return next_delay_seconds(
+            now,
+            start_hour=args.start_hour,
+            end_hour=args.end_hour,
+            interval_minutes=args.interval_minutes,
+            jitter_minutes=args.jitter_minutes,
+            rng=rng,
+        )
+    latest = latest_successful_run_time(args.evidence_root)
+    if not latest:
+        return 0
+    rng = rng or random.Random()
+    jitter_seconds = rng.randint(-args.jitter_minutes * 60, args.jitter_minutes * 60) if args.jitter_minutes > 0 else 0
+    next_run = latest + timedelta(minutes=args.interval_minutes, seconds=jitter_seconds)
+    if next_run >= day_boundary(now, args.end_hour):
+        return next_delay_seconds(
+            now,
+            start_hour=args.start_hour,
+            end_hour=args.end_hour,
+            interval_minutes=args.interval_minutes,
+            jitter_minutes=args.jitter_minutes,
+            rng=rng,
+        )
+    return max(0, int((next_run - now).total_seconds()))
+
+
+def preflight_readiness(args: argparse.Namespace, preflight_summary: dict[str, Any]) -> tuple[bool, bool]:
+    text_source_ready = (
+        args.skip_ads
+        or preflight_summary["ocr_command_available"]
+        or preflight_summary["dom_text_fallback_enabled"]
+    )
+    ads_ready = args.skip_ads or (text_source_ready and all(item["ok"] for item in preflight_summary["cdp"].values()))
+    ready = ads_ready and preflight_summary["environment"]["ok"]
+    return ready, ads_ready
+
+
+def write_and_print_preflight(args: argparse.Namespace, preflight_summary: dict[str, Any], visible_browser: list[dict[str, Any]] | None = None) -> tuple[Path, dict[str, Any]]:
+    payload = preflight_summary | {"visible_browser": visible_browser or []}
+    preflight_evidence = write_preflight_evidence(args, payload)
+    printed: dict[str, Any] = {
+        "preflight": preflight_summary,
+        "evidence": str(preflight_evidence),
+    }
+    if visible_browser is not None:
+        printed["visible_browser"] = visible_browser
+    print(json.dumps(printed, ensure_ascii=False, indent=2, sort_keys=True), flush=True)
+    return preflight_evidence, printed
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Hourly ShopOps order plus OCR ad import orchestrator.")
     add_schedule_args(parser)
-    parser.add_argument("--ad-platform", action="append", choices=("douyin", "tmall"), help="Ad OCR platform; defaults to both.")
+    parser.add_argument("--ad-platform", action="append", choices=("douyin", "tmall"), help="Ad OCR platform; defaults to Tmall. Douyin order/sales data comes from Jushuitan.")
+    parser.add_argument(
+        "--required-ad-platform",
+        action="append",
+        choices=("douyin", "tmall"),
+        default=None,
+        help="Ad OCR platforms that must succeed before interval summary rows are written. Defaults to Tmall.",
+    )
     parser.add_argument("--ad-cdp-url", default="", help="CDP URL for ad screenshot capture. Defaults to --cdp-url.")
     parser.add_argument("--douyin-ad-cdp-url", default="", help="Douyin-specific ad screenshot CDP URL.")
     parser.add_argument("--tmall-ad-cdp-url", default="", help="Tmall-specific ad screenshot CDP URL.")
@@ -309,47 +454,52 @@ def main() -> int:
         default=0,
         help="Run this many real scheduled cycles, then exit. Use 3 for a roughly one-hour half-hourly acceptance test.",
     )
+    parser.add_argument(
+        "--success-cycles",
+        type=int,
+        default=0,
+        help="Run until this many successful cycles have completed. Failed cycles do not count toward this target.",
+    )
     parser.add_argument("--preflight-only", action="store_true", help="Check OCR/CDP prerequisites and exit.")
     parser.add_argument("--ignore-preflight", action="store_true", help="Run even when OCR/CDP preflight is not ready.")
+    parser.add_argument("--wait-preflight", action="store_true", help="Keep retrying preflight until CDP/OCR/environment are ready instead of exiting.")
+    parser.add_argument("--preflight-retry-seconds", type=int, default=600, help="Seconds between --wait-preflight retries.")
     args = parser.parse_args()
-    preflight_summary = preflight(args)
-    visible_browser = []
-    if args.preflight_only:
-        text_source_ready = (
-            args.skip_ads
-            or preflight_summary["ocr_command_available"]
-            or preflight_summary["dom_text_fallback_enabled"]
-        )
-        ready = (
-            (args.skip_ads or (text_source_ready and all(item["ok"] for item in preflight_summary["cdp"].values())))
-            and preflight_summary["environment"]["ok"]
-        )
-        if not ready and not args.skip_ads:
+    while True:
+        preflight_summary = preflight(args)
+        visible_browser = []
+        ready, ads_ready = preflight_readiness(args, preflight_summary)
+        if not ads_ready and not args.skip_ads:
             visible_browser = open_visible_ad_pages(args, reason="preflight_only_not_ready")
-        preflight_evidence = write_preflight_evidence(args, preflight_summary | {"visible_browser": visible_browser})
+        write_and_print_preflight(args, preflight_summary, visible_browser if visible_browser or args.preflight_only else None)
+        if args.preflight_only:
+            return 0 if ready else 4
+        if args.ignore_preflight or ready:
+            break
+        if not args.wait_preflight:
+            return 4
+        delay = max(60, int(args.preflight_retry_seconds or 0))
         print(
             json.dumps(
-                {"preflight": preflight_summary, "visible_browser": visible_browser, "evidence": str(preflight_evidence)},
+                {
+                    "status": "waiting_for_preflight",
+                    "retry_seconds": delay,
+                    "missing": preflight_summary.get("environment", {}).get("missing", []),
+                },
                 ensure_ascii=False,
                 indent=2,
                 sort_keys=True,
             ),
             flush=True,
         )
-        return 0 if ready else 4
-    preflight_evidence = write_preflight_evidence(args, preflight_summary)
-    print(json.dumps({"preflight": preflight_summary, "evidence": str(preflight_evidence)}, ensure_ascii=False, indent=2, sort_keys=True), flush=True)
-    if not args.ignore_preflight and not args.skip_ads:
-        text_source_ready = preflight_summary["ocr_command_available"] or preflight_summary["dom_text_fallback_enabled"]
-        ads_ready = text_source_ready and all(item["ok"] for item in preflight_summary["cdp"].values())
-        if not ads_ready:
-            opened = open_visible_ad_pages(args, reason="ads_preflight_not_ready")
-            print(json.dumps({"visible_browser": opened}, ensure_ascii=False, indent=2, sort_keys=True), flush=True)
-            return 4
-    if not args.ignore_preflight and not preflight_summary["environment"]["ok"]:
-        return 4
+        time.sleep(delay)
 
     completed_cycles = 0
+    successful_cycles = 0
+    first_delay = first_run_delay_seconds(args, datetime.now())
+    if first_delay:
+        print(f"Recent successful ShopOps import found; first run starts in {first_delay} seconds.", flush=True)
+        time.sleep(first_delay)
     while True:
         now = datetime.now()
         if next_window_start(now, start_hour=args.start_hour, end_hour=args.end_hour) > now:
@@ -363,10 +513,20 @@ def main() -> int:
             print(f"Outside collection window; sleeping {delay} seconds.", flush=True)
             time.sleep(delay)
         result = run_cycle(args)
+        if result["status"] == "success":
+            successful_cycles += 1
         if result["status"] in {"ads_failed", "partial_failed"}:
             opened = open_visible_ad_pages(args, reason=result["status"])
             print(json.dumps({"visible_browser": opened}, ensure_ascii=False, indent=2, sort_keys=True), flush=True)
         completed_cycles += 1
+        if args.success_cycles:
+            print(
+                f"ShopOps successful cycles: {successful_cycles}/{args.success_cycles} "
+                f"(attempted {completed_cycles}).",
+                flush=True,
+            )
+            if successful_cycles >= args.success_cycles:
+                return 0
         if args.once or (args.cycles and completed_cycles >= args.cycles):
             return 0 if result["status"] == "success" else 4
         delay = next_delay_seconds(
