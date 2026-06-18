@@ -23,6 +23,12 @@ DEFAULT_EVIDENCE_DIR = ROOT / "docs" / "live-evidence" / "data-robot"
 LOCAL_EVIDENCE_PATTERN = "hourly-shopops-import-*.json"
 TOTAL_PLATFORMS = {"总计", "全平台总计"}
 DASHBOARD_VIEW_NAMES = ["默认总览", "按小时变化", "按天汇总", "按平台最新"]
+DASHBOARD_VIEW_FILTERS = {
+    "默认总览": "默认总览",
+    "按小时变化": "按小时",
+    "按天汇总": "按天",
+    "按平台最新": "按平台",
+}
 
 TEXT_FIELDS = [
     "unique_key",
@@ -355,7 +361,39 @@ def ensure_dashboard_views(client: FeishuDailyClient, table_id: str) -> list[dic
             {"view_name": view_name, "view_type": "grid"},
         )
     data = client.request("GET", f"/bitable/v1/apps/{client.app_token}/tables/{table_id}/views", params={"page_size": 100})
+    views = data.get("items") or []
+    grain_field = client.field_index(table_id).get("展示粒度")
+    if not grain_field or not grain_field.get("field_id"):
+        raise RuntimeError(f"Target table {table_id} is missing 展示粒度 field for dashboard view filters")
+    for view in views:
+        view_name = text(view.get("view_name"))
+        grain = DASHBOARD_VIEW_FILTERS.get(view_name)
+        view_id = text(view.get("view_id"))
+        if not grain or not view_id:
+            continue
+        client.request(
+            "PATCH",
+            f"/bitable/v1/apps/{client.app_token}/tables/{table_id}/views/{view_id}",
+            {"property": dashboard_view_filter_property(grain_field, grain)},
+        )
+    data = client.request("GET", f"/bitable/v1/apps/{client.app_token}/tables/{table_id}/views", params={"page_size": 100})
     return data.get("items") or []
+
+
+def dashboard_view_filter_property(grain_field: dict[str, Any], grain: str) -> dict[str, Any]:
+    return {
+        "filter_info": {
+            "conditions": [
+                {
+                    "field_id": grain_field["field_id"],
+                    "field_type": int(grain_field.get("type") or TEXT_FIELD),
+                    "operator": "is",
+                    "value": json.dumps([grain], ensure_ascii=False),
+                }
+            ],
+            "conjunction": "and",
+        }
+    }
 
 
 def sync_dashboard_data(

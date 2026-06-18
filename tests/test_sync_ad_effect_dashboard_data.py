@@ -5,7 +5,13 @@ from datetime import date
 
 import pytest
 
-from scripts.sync_ad_effect_dashboard_data import build_dashboard_rows, load_local_hourly_rows, merge_source_rows
+from scripts.sync_ad_effect_dashboard_data import (
+    dashboard_view_filter_property,
+    ensure_dashboard_views,
+    build_dashboard_rows,
+    load_local_hourly_rows,
+    merge_source_rows,
+)
 
 
 def source_row(
@@ -152,3 +158,53 @@ def test_local_hourly_evidence_can_supply_latest_overview_when_feishu_list_lags(
     assert overview["投流成交金额"] == 7605
     assert overview["订单数"] == 90
     assert overview["有效销售额"] == 13520
+
+
+def test_dashboard_view_filter_property_filters_by_display_grain():
+    prop = dashboard_view_filter_property({"field_id": "fldGrain", "type": 1}, "默认总览")
+
+    condition = prop["filter_info"]["conditions"][0]
+    assert condition["field_id"] == "fldGrain"
+    assert condition["field_type"] == 1
+    assert condition["operator"] == "is"
+    assert json.loads(condition["value"]) == ["默认总览"]
+
+
+def test_ensure_dashboard_views_patches_grain_filters():
+    class FakeClient:
+        app_token = "app"
+
+        def __init__(self):
+            self.views = [
+                {"view_id": "vew_default", "view_name": "默认总览", "view_type": "grid"},
+                {"view_id": "vew_hour", "view_name": "按小时变化", "view_type": "grid"},
+                {"view_id": "vew_day", "view_name": "按天汇总", "view_type": "grid"},
+                {"view_id": "vew_platform", "view_name": "按平台最新", "view_type": "grid"},
+            ]
+            self.patches = []
+
+        def field_index(self, table_id):
+            assert table_id == "tbl"
+            return {"展示粒度": {"field_id": "fldGrain", "type": 1}}
+
+        def request(self, method, path, payload=None, params=None):
+            if method == "GET" and path.endswith("/views"):
+                return {"items": list(self.views)}
+            if method == "PATCH":
+                self.patches.append((path, payload))
+                return {"view": {}}
+            raise AssertionError((method, path, payload, params))
+
+    fake = FakeClient()
+    ensure_dashboard_views(fake, "tbl")
+
+    values_by_view = {
+        path.rsplit("/", 1)[-1]: json.loads(payload["property"]["filter_info"]["conditions"][0]["value"])[0]
+        for path, payload in fake.patches
+    }
+    assert values_by_view == {
+        "vew_default": "默认总览",
+        "vew_hour": "按小时",
+        "vew_day": "按天",
+        "vew_platform": "按平台",
+    }
