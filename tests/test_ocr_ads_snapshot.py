@@ -8,7 +8,10 @@ from data_robot.ocr_ads_snapshot import (
     direct_cdp_text_has_metric_anchor,
     direct_cdp_text_has_parseable_metric,
     find_browser_executables,
+    is_douyin_workspace_landing,
+    open_visible_chrome_page,
     parse_ad_snapshot_text,
+    stale_direct_cdp_ad_target_ids,
 )
 from scripts.import_daily_files_to_feishu import (
     F_ACTUAL_SPEND,
@@ -85,6 +88,47 @@ def test_parse_douyin_business_home_prefers_overview_spend():
 
     assert row[F_ACTUAL_SPEND] == 1536.41
     assert row[F_DEAL_AMOUNT] == 4394.0
+
+
+def test_parse_douyin_split_decimal_lines():
+    text = """
+    数据概览
+    账户整体消耗(元)
+    3,351
+    .54
+    净成交ROI
+    2
+    .53
+    净成交金额(元)
+    8,480
+    .00
+    净成交订单数
+    50
+    """
+
+    row = parse_ad_snapshot_text("douyin", text, "2026-06-20")
+
+    assert row[F_ACTUAL_SPEND] == 3351.54
+    assert row[F_DEAL_AMOUNT] == 8480.0
+
+
+def test_douyin_workspace_landing_is_not_parseable_metrics():
+    text = """
+    我管理的组织
+    前往平台
+    巨量千川
+    消耗
+    0
+    整体成交订单数
+    0
+    整体成交金额(元)
+    0
+    """
+
+    assert is_douyin_workspace_landing(text)
+    assert not direct_cdp_text_has_parseable_metric(text, "douyin")
+    with pytest.raises(RuntimeError, match="workspace landing"):
+        parse_ad_snapshot_text("douyin", text, "2026-06-20")
 
 
 def test_parse_douyin_global_delivery_snapshot_from_user_screenshot():
@@ -178,3 +222,42 @@ def test_default_browser_discovery_uses_chrome_only(monkeypatch):
     assert browsers
     assert all("chrome.exe" in browser.lower() for browser in browsers)
     assert not any("msedge.exe" in browser.lower() for browser in browsers)
+
+
+def test_open_visible_chrome_page_reuses_ready_cdp_without_launch(monkeypatch, tmp_path):
+    launched = []
+    monkeypatch.setattr("data_robot.ocr_ads_snapshot.find_browser_executables", lambda: [r"C:\Chrome\chrome.exe"])
+    monkeypatch.setattr("data_robot.ocr_ads_snapshot.wait_for_visible_chrome_cdp", lambda *args, **kwargs: True)
+    monkeypatch.setattr("data_robot.ocr_ads_snapshot.launch_visible_browser", lambda *args, **kwargs: launched.append(args) or {})
+
+    result = open_visible_chrome_page(
+        "tmall",
+        "https://myseller.taobao.com/home.htm/tuiguangcenter_new/",
+        "http://127.0.0.1:9225",
+        profile_root=tmp_path,
+    )
+
+    assert result["status"] == "cdp_ready_existing"
+    assert result["cdp_ready"] is True
+    assert launched == []
+
+
+def test_stale_direct_cdp_ad_target_ids_keeps_current_tmall_pages():
+    targets = [
+        {"id": "keep", "type": "page", "url": "https://myseller.taobao.com/home.htm/tuiguangcenter_new/"},
+        {"id": "order", "type": "page", "url": "https://myseller.taobao.com/home.htm/trade-platform/tp/export-list"},
+        {"id": "old-login", "type": "page", "url": "https://one.alimama.com/index.html#!/login/index"},
+        {"id": "frame", "type": "iframe", "url": "https://one.alimama.com/index.html"},
+    ]
+
+    assert stale_direct_cdp_ad_target_ids(targets, "tmall", keep_target_id="keep") == ["old-login"]
+
+
+def test_stale_direct_cdp_ad_target_ids_closes_duplicate_douyin_pages():
+    targets = [
+        {"id": "keep", "type": "page", "url": "https://qianchuan.jinritemai.com/home"},
+        {"id": "old", "type": "page", "url": "https://business.oceanengine.com/site/index?source=ecp_login"},
+        {"id": "other", "type": "page", "url": "https://example.com/"},
+    ]
+
+    assert stale_direct_cdp_ad_target_ids(targets, "douyin", keep_target_id="keep") == ["old"]

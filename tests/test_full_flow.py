@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 import textwrap
 
-from data_robot.full_flow import OPENPYXL_DEFAULT_STYLE_WARNING_FILTER, child_python_warnings, run_command
+from data_robot.full_flow import OPENPYXL_DEFAULT_STYLE_WARNING_FILTER, child_python_warnings, decode_process_output, run_command
 
 
 def test_child_python_warnings_adds_openpyxl_filter_without_overwriting_existing():
@@ -32,3 +32,7 @@ def test_run_command_suppresses_openpyxl_default_style_warning(tmp_path):
     assert result["returncode"] == 0
     assert result["stdout_tail"].strip() == "ok"
     assert result["stderr_tail"] == ""
+
+
+def test_decode_process_output_replaces_invalid_utf8_bytes():
+    assert decode_process_output(b"ok\xb3done") == "ok\ufffddone"

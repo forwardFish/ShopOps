@@ -4,6 +4,7 @@ import time
 import json
 import random
 from datetime import datetime
+from pathlib import Path
 from types import SimpleNamespace
 
 import data_robot.hourly_shopops_import as orchestrator
@@ -12,6 +13,7 @@ from data_robot.hourly_shopops_import import (
     check_environment,
     ad_platforms_to_collect,
     first_run_delay_seconds,
+    fixed_schedule_delay_seconds,
     latest_successful_run_time,
     ocr_command_available,
     run_ads_once,
@@ -193,7 +195,8 @@ def test_main_success_cycles_counts_only_successful_runs(tmp_path, monkeypatch):
         },
     )
     monkeypatch.setattr(orchestrator, "write_preflight_evidence", lambda args, payload: tmp_path / "preflight.json")
-    monkeypatch.setattr(orchestrator, "next_delay_seconds", lambda *args, **kwargs: 0)
+    monkeypatch.setattr(orchestrator, "fixed_schedule_delay_seconds", lambda *args, **kwargs: 0)
+    monkeypatch.setattr(orchestrator, "cooldown_remaining", lambda *args, **kwargs: 0)
     monkeypatch.setattr(time, "sleep", lambda seconds: sleeps.append(seconds))
     monkeypatch.setattr(orchestrator, "open_visible_ad_pages", lambda *args, **kwargs: opened.append(kwargs) or [])
 
@@ -223,6 +226,130 @@ def test_main_success_cycles_counts_only_successful_runs(tmp_path, monkeypatch):
     assert runs == ["ads_failed", "success", "success"]
     assert len(opened) == 1
     assert sleeps == [0, 0]
+
+
+def test_failed_cycle_keeps_hourly_delay_by_default(monkeypatch):
+    statuses = iter(["order_failed", "success"])
+    sleeps = []
+    evidence_root = Path(".tmp") / "tests" / "failed-cycle-short-retry"
+
+    monkeypatch.setattr(
+        orchestrator,
+        "preflight",
+        lambda args: {
+            "ocr_command_available": True,
+            "dom_text_fallback_enabled": True,
+            "cdp": {"douyin": {"ok": True}, "tmall": {"ok": True}},
+            "environment": {"ok": True},
+        },
+    )
+    monkeypatch.setattr(orchestrator, "write_preflight_evidence", lambda args, payload: evidence_root / "preflight.json")
+    monkeypatch.setattr(orchestrator, "fixed_schedule_delay_seconds", lambda *args, **kwargs: 3600)
+    monkeypatch.setattr(time, "sleep", lambda seconds: sleeps.append(seconds))
+    monkeypatch.setattr(orchestrator, "run_cycle", lambda args: {"status": next(statuses)})
+    monkeypatch.setattr(
+        orchestrator.sys,
+        "argv",
+        [
+            "hourly_shopops_import",
+            "--success-cycles",
+            "1",
+            "--start-hour",
+            "0",
+            "--end-hour",
+            "24",
+            "--evidence-root",
+            str(evidence_root),
+        ],
+    )
+
+    assert orchestrator.main() == 0
+    assert sleeps == [3600]
+
+
+def test_failed_cycle_can_opt_into_short_retry_delay(monkeypatch):
+    statuses = iter(["order_failed", "success"])
+    sleeps = []
+    evidence_root = Path(".tmp") / "tests" / "failed-cycle-short-retry"
+
+    monkeypatch.setattr(
+        orchestrator,
+        "preflight",
+        lambda args: {
+            "ocr_command_available": True,
+            "dom_text_fallback_enabled": True,
+            "cdp": {"douyin": {"ok": True}, "tmall": {"ok": True}},
+            "environment": {"ok": True},
+        },
+    )
+    monkeypatch.setattr(orchestrator, "write_preflight_evidence", lambda args, payload: evidence_root / "preflight.json")
+    monkeypatch.setattr(orchestrator, "fixed_schedule_delay_seconds", lambda *args, **kwargs: 3600)
+    monkeypatch.setattr(time, "sleep", lambda seconds: sleeps.append(seconds))
+    monkeypatch.setattr(orchestrator, "run_cycle", lambda args: {"status": next(statuses)})
+    monkeypatch.setattr(
+        orchestrator.sys,
+        "argv",
+        [
+            "hourly_shopops_import",
+            "--success-cycles",
+            "1",
+            "--failure-retry-minutes",
+            "20",
+            "--start-hour",
+            "0",
+            "--end-hour",
+            "24",
+            "--evidence-root",
+            str(evidence_root),
+        ],
+    )
+
+    assert orchestrator.main() == 0
+    assert sleeps == [1200]
+
+
+def test_failed_cycle_retry_respects_export_cooldown(monkeypatch):
+    statuses = iter(["order_failed", "success"])
+    sleeps = []
+    evidence_root = Path(".tmp") / "tests" / "failed-cycle-cooldown"
+
+    monkeypatch.setattr(
+        orchestrator,
+        "preflight",
+        lambda args: {
+            "ocr_command_available": True,
+            "dom_text_fallback_enabled": True,
+            "cdp": {"douyin": {"ok": True}, "tmall": {"ok": True}},
+            "environment": {"ok": True},
+        },
+    )
+    monkeypatch.setattr(orchestrator, "write_preflight_evidence", lambda args, payload: evidence_root / "preflight.json")
+    monkeypatch.setattr(orchestrator, "fixed_schedule_delay_seconds", lambda *args, **kwargs: 60)
+    monkeypatch.setattr(orchestrator, "cooldown_remaining", lambda key, seconds: 1800 if key == "tmall_orders" else 900)
+    monkeypatch.setattr(time, "sleep", lambda seconds: sleeps.append(seconds))
+    monkeypatch.setattr(orchestrator, "run_cycle", lambda args: {"status": next(statuses)})
+    monkeypatch.setattr(
+        orchestrator.sys,
+        "argv",
+        [
+            "hourly_shopops_import",
+            "--success-cycles",
+            "1",
+            "--failure-retry-minutes",
+            "20",
+            "--start-hour",
+            "0",
+            "--end-hour",
+            "24",
+            "--evidence-root",
+            str(evidence_root),
+            "--min-task-interval-seconds",
+            "3600",
+        ],
+    )
+
+    assert orchestrator.main() == 0
+    assert sleeps == [1800]
 
 
 def test_preflight_only_does_not_open_browser_when_only_environment_is_missing(tmp_path, monkeypatch):
@@ -421,7 +548,97 @@ def test_first_run_delay_respects_recent_success_after_restart(tmp_path):
 
     delay = first_run_delay_seconds(args, datetime(2026, 6, 18, 13, 38, 0), rng=random.Random(1))
 
-    assert delay == 29 * 60 + 37
+    assert delay == 22 * 60
+
+
+def test_fixed_schedule_delay_uses_next_hour_slot_after_long_cycle():
+    delay = fixed_schedule_delay_seconds(
+        datetime(2026, 6, 20, 13, 20, 8),
+        start_hour=8,
+        end_hour=23,
+        interval_minutes=60,
+        jitter_minutes=0,
+    )
+
+    assert delay == 39 * 60 + 52
+
+
+def test_first_run_delay_resumes_next_fixed_slot_after_latest_success(tmp_path):
+    evidence = tmp_path / "hourly-shopops-import-20260620-125613.json"
+    evidence.write_text(
+        json.dumps(
+            {
+                "status": "success",
+                "run_token": "20260620-125613",
+                "hourly_interval_summary": {"rows": [{"绐楀彛缁撴潫": "2026-06-20 13:17:05"}]},
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    args = SimpleNamespace(
+        once=False,
+        cycles=0,
+        success_cycles=0,
+        start_hour=8,
+        end_hour=23,
+        interval_minutes=60,
+        jitter_minutes=0,
+        evidence_root=str(tmp_path),
+        min_task_interval_seconds=0,
+        force=False,
+    )
+
+    delay = first_run_delay_seconds(args, datetime(2026, 6, 20, 13, 20, 8), rng=random.Random(1))
+
+    assert delay == 39 * 60 + 52
+
+
+def test_first_run_delay_respects_export_cooldown_after_restart(tmp_path, monkeypatch):
+    calls = []
+
+    def fake_cooldown_remaining(key, interval):
+        calls.append((key, interval))
+        return 240 if key == "tmall_orders" else 180
+
+    monkeypatch.setattr(orchestrator, "cooldown_remaining", fake_cooldown_remaining)
+    args = SimpleNamespace(
+        once=False,
+        cycles=0,
+        success_cycles=0,
+        start_hour=8,
+        end_hour=23,
+        interval_minutes=60,
+        jitter_minutes=0,
+        evidence_root=str(tmp_path),
+        min_task_interval_seconds=3600,
+        force=False,
+    )
+
+    delay = first_run_delay_seconds(args, datetime(2026, 6, 18, 13, 38, 0), rng=random.Random(1))
+
+    assert delay == 240
+    assert ("tmall_orders", 3600) in calls
+
+
+def test_first_run_delay_force_bypasses_export_cooldown(tmp_path, monkeypatch):
+    monkeypatch.setattr(orchestrator, "cooldown_remaining", lambda *_args: 240)
+    args = SimpleNamespace(
+        once=False,
+        cycles=0,
+        success_cycles=0,
+        start_hour=8,
+        end_hour=23,
+        interval_minutes=60,
+        jitter_minutes=0,
+        evidence_root=str(tmp_path),
+        min_task_interval_seconds=3600,
+        force=True,
+    )
+
+    delay = first_run_delay_seconds(args, datetime(2026, 6, 18, 13, 38, 0), rng=random.Random(1))
+
+    assert delay == 0
 
 
 class PathLike:

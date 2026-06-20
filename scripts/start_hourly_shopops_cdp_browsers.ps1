@@ -51,6 +51,18 @@ function Start-CdpBrowser {
     Start-Process -FilePath $BrowserPath -ArgumentList $argsList
 }
 
+function Test-CdpReady {
+    param([int]$Port)
+    $url = "http://127.0.0.1:$Port/json/version"
+    try {
+        $version = Invoke-RestMethod -Uri $url -TimeoutSec 2
+        Write-Host "CDP already ready on ${Port}: $($version.Browser)"
+        return $true
+    } catch {
+        return $false
+    }
+}
+
 function Wait-CdpReady {
     param([int]$Port)
     $url = "http://127.0.0.1:$Port/json/version"
@@ -76,10 +88,14 @@ $douyinUrl = "https://qianchuan.jinritemai.com/home?aavid=1860240208332803"
 $tmallUrl = "https://myseller.taobao.com/home.htm/tuiguangcenter_new/"
 
 Write-Host "Opening Douyin CDP browser on port $DouyinPort..."
-Start-CdpBrowser -BrowserPath $browserPath -ProfilePath $douyinProfile -Port $DouyinPort -Url $douyinUrl
+if (-not (Test-CdpReady -Port $DouyinPort)) {
+    Start-CdpBrowser -BrowserPath $browserPath -ProfilePath $douyinProfile -Port $DouyinPort -Url $douyinUrl
+}
 
 Write-Host "Opening Tmall CDP browser on port $TmallPort..."
-Start-CdpBrowser -BrowserPath $browserPath -ProfilePath $tmallProfile -Port $TmallPort -Url $tmallUrl
+if (-not (Test-CdpReady -Port $TmallPort)) {
+    Start-CdpBrowser -BrowserPath $browserPath -ProfilePath $tmallProfile -Port $TmallPort -Url $tmallUrl
+}
 
 Wait-CdpReady -Port $DouyinPort
 Wait-CdpReady -Port $TmallPort

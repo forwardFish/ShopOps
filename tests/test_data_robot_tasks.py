@@ -3,8 +3,12 @@ from __future__ import annotations
 from data_robot.tasks import PLATFORM_TASKS, TASKS
 from data_robot.common import (
     compute_cooldown_remaining,
+    direct_cdp_duplicate_target_ids,
+    direct_cdp_page_family,
+    direct_cdp_reusable_target_id,
     followup_export_labels,
     is_recoverable_cdp_error,
+    is_recoverable_export_error,
     page_match_score,
     retry_wait_seconds,
     smart_export_labels,
@@ -92,6 +96,46 @@ def test_cdp_page_matching_prefers_same_task_host_and_path():
         "about:blank",
         task.url,
     )
+
+
+def test_direct_cdp_reuses_best_matching_business_tab():
+    targets = [
+        {"type": "page", "targetId": "blank", "url": "about:blank"},
+        {"type": "page", "targetId": "other", "url": "https://buyin.jinritemai.com/dashboard/data/financial/list"},
+        {"type": "page", "targetId": "orders", "url": "https://myseller.taobao.com/home.htm/trade-platform/tp/sold"},
+    ]
+
+    assert direct_cdp_reusable_target_id(targets, TASKS["tmall_orders"].url) == "orders"
+
+
+def test_direct_cdp_reuse_does_not_steal_tmall_ads_page_for_orders():
+    targets = [
+        {"type": "page", "targetId": "ads", "url": "https://myseller.taobao.com/home.htm/tuiguangcenter_new/"},
+        {"type": "page", "targetId": "orders", "url": "https://myseller.taobao.com/home.htm/trade-platform/tp/export-list"},
+    ]
+
+    assert direct_cdp_reusable_target_id(targets, TASKS["tmall_orders"].url) == "orders"
+
+
+def test_direct_cdp_reuses_existing_business_tab_before_opening_new_one():
+    targets = [
+        {"type": "page", "targetId": "blank", "url": "about:blank"},
+        {"type": "page", "targetId": "current", "url": "https://one.alimama.com/index.html#!/report/account"},
+        {"type": "other", "targetId": "worker", "url": "https://one.alimama.com/worker.js"},
+    ]
+
+    assert direct_cdp_reusable_target_id(targets, TASKS["tmall_ads"].url) == "current"
+
+
+def test_direct_cdp_duplicate_target_ids_closes_same_task_family_only():
+    targets = [
+        {"type": "page", "targetId": "keep", "url": "https://myseller.taobao.com/home.htm/trade-platform/tp/export-list"},
+        {"type": "page", "targetId": "old", "url": "https://myseller.taobao.com/home.htm/trade-platform/tp/sold"},
+        {"type": "page", "targetId": "ads", "url": "https://myseller.taobao.com/home.htm/tuiguangcenter_new/"},
+    ]
+
+    assert direct_cdp_page_family(TASKS["tmall_orders"].url) == "tmall_orders"
+    assert direct_cdp_duplicate_target_ids(targets, TASKS["tmall_orders"].url, keep_target_id="keep") == ["old"]
 
 
 def test_daily_download_ports_cover_platforms():
@@ -220,6 +264,11 @@ def test_retry_policy_retries_no_download_and_recoverable_cdp_errors():
     assert is_recoverable_cdp_error(cdp_error)
     assert retry_wait_seconds(cdp_error, CollectOptions(retry_interval_seconds=480)) == 60
     assert should_retry_task_result({"status": "error", "error": "ConnectionClosedError: no close frame received or sent"})
+    export_error = {"status": "error", "error": "HTTPError: HTTP Error 502: Bad Gateway"}
+
+    assert should_retry_task_result(export_error)
+    assert is_recoverable_export_error(export_error)
+    assert retry_wait_seconds(export_error, CollectOptions(retry_interval_seconds=20)) == 20
 
 
 def test_retry_policy_does_not_retry_non_cdp_errors():

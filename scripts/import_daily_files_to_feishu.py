@@ -6,10 +6,12 @@ import json
 import os
 import re
 import sys
+import threading
 import time
 import traceback
 import warnings
 from collections import Counter, defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import replace
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -1704,20 +1706,26 @@ def run_import(
         return summary
 
     summary["progress"] = []
-    write_import_progress(evidence, summary, "parsed_source_files")
+    progress_lock = threading.Lock()
+
+    def progress(stage: str, detail: dict[str, Any] | None = None) -> None:
+        with progress_lock:
+            write_import_progress(evidence, summary, stage, detail)
+
+    progress("parsed_source_files")
     client = FeishuDailyClient()
-    write_import_progress(evidence, summary, "feishu_client_ready")
+    progress("feishu_client_ready")
     product_table_id = os.getenv("SHOPOPS_PRODUCT_CATALOG_TABLE_ID", DEFAULT_PRODUCT_CATALOG_TABLE_ID).strip()
-    write_import_progress(evidence, summary, "loading_product_rules", {"table_id": product_table_id})
+    progress("loading_product_rules", {"table_id": product_table_id})
     product_rules = client.product_rules(product_table_id)
     product_fields = product_field_names(product_rules)
-    write_import_progress(evidence, summary, "loaded_product_rules", {"product_field_count": len(product_fields)})
+    progress("loaded_product_rules", {"product_field_count": len(product_fields)})
     for platform, rows in order_rows_by_platform.items():
         order_rows_by_platform[platform] = add_product_breakdown_to_orders(rows, product_rules)
     writes: dict[str, Any] = {"orders": {}, "ads": {}, "influencer": {}}
     field_preflight: dict[str, Any] = {"orders": {}, "ads": {}, "influencer": {}}
     influencer_table_id = ""
-    write_import_progress(evidence, summary, "field_preflight_started")
+    progress("field_preflight_started")
     for platform, rows in order_rows_by_platform.items():
         if not rows:
             continue
@@ -1732,7 +1740,7 @@ def run_import(
         field_preflight["orders"][platform] = {"table_id": table_id, "missing_fields": missing_fields}
         if missing_fields:
             raise RuntimeError(f"Target order table {table_id} is missing existing fields required by this import: {missing_fields}")
-        write_import_progress(evidence, summary, "field_preflight_orders_done", {"platform": platform, "row_count": len(rows)})
+        progress("field_preflight_orders_done", {"platform": platform, "row_count": len(rows)})
     if ad_rows:
         if not settings.shopops_ad_table_id:
             raise RuntimeError("Missing SHOPOPS_AD_TABLE_ID")
@@ -1740,7 +1748,7 @@ def run_import(
         field_preflight["ads"] = {"table_id": settings.shopops_ad_table_id, "missing_fields": missing_fields}
         if missing_fields:
             raise RuntimeError(f"Target ad table {settings.shopops_ad_table_id} is missing existing fields required by this import: {missing_fields}")
-        write_import_progress(evidence, summary, "field_preflight_ads_done", {"row_count": len(ad_rows)})
+        progress("field_preflight_ads_done", {"row_count": len(ad_rows)})
     if influencer_rows:
         influencer_table_id = os.getenv("SHOPOPS_DOUYIN_INFLUENCER_EXCEL_TABLE_ID", "").strip() or settings.table_douyin_influencer_commission
         if not influencer_table_id or not influencer_table_id.startswith("tbl"):
@@ -1749,17 +1757,17 @@ def run_import(
         field_preflight["influencer"] = {"table_id": influencer_table_id, "missing_fields": missing_fields}
         if missing_fields:
             raise RuntimeError(f"Target influencer table {influencer_table_id} is missing existing fields required by this import: {missing_fields}")
-        write_import_progress(evidence, summary, "field_preflight_influencer_done", {"row_count": len(influencer_rows)})
+        progress("field_preflight_influencer_done", {"row_count": len(influencer_rows)})
     summary["field_preflight"] = field_preflight
-    write_import_progress(evidence, summary, "field_preflight_complete")
-    for platform, rows in order_rows_by_platform.items():
-        if not rows:
-            continue
+    progress("field_preflight_complete")
+
+    def sync_order_platform(platform: str, rows: list[dict[str, Any]]) -> tuple[str, dict[str, Any]]:
         table_id = os.getenv(ORDER_TABLE_ENV[platform], "").strip()
         if not table_id:
             raise RuntimeError(f"Missing {ORDER_TABLE_ENV[platform]}")
-        write_import_progress(evidence, summary, "upsert_orders_started", {"platform": platform, "row_count": len(rows)})
-        writes["orders"][platform] = client.upsert_rows(
+        worker_client = FeishuDailyClient()
+        progress("upsert_orders_started", {"platform": platform, "row_count": len(rows)})
+        result = worker_client.upsert_rows(
             table_id=table_id,
             rows=rows,
             required_fields=[F_UNIQUE_KEY, F_ORDER_NO, F_ACCESSORY_FLAG, *product_fields],
@@ -1767,28 +1775,42 @@ def run_import(
             allow_partial_fields=False,
             update_existing_fields={*ORDER_UPDATE_FIELDS, *product_fields},
         )
-        writes["orders"][platform]["product_field_actions"] = {
+        result["product_field_actions"] = {
             field: "validated_existing_no_field_changes" for field in product_fields
         }
-        write_import_progress(evidence, summary, "upsert_orders_done", {"platform": platform, **writes["orders"][platform]})
+        progress("upsert_orders_done", {"platform": platform, **result})
         if selected_dates and order_lookback_days == 0:
-            write_import_progress(evidence, summary, "prune_stale_orders_started", {"platform": platform, "dates": sorted(selected_dates)})
-            writes["orders"][platform]["prune_stale_records"] = client.prune_order_records_for_dates(
+            progress("prune_stale_orders_started", {"platform": platform, "dates": sorted(selected_dates)})
+            result["prune_stale_records"] = worker_client.prune_order_records_for_dates(
                 table_id,
                 source_rows=rows,
                 dates=selected_dates,
             )
-            write_import_progress(
-                evidence,
-                summary,
+            progress(
                 "prune_stale_orders_done",
-                {"platform": platform, **writes["orders"][platform]["prune_stale_records"]},
+                {"platform": platform, **result["prune_stale_records"]},
             )
-        write_import_progress(evidence, summary, "readback_orders_started", {"platform": platform})
-        readback = client.readback_by_unique_key(table_id, {row[F_UNIQUE_KEY] for row in rows})
-        writes["orders"][platform]["readback_count"] = len(readback)
-        writes["orders"][platform]["missing_unique_keys"] = sorted(set(row[F_UNIQUE_KEY] for row in rows) - set(readback))[:50]
-        write_import_progress(evidence, summary, "readback_orders_done", {"platform": platform, "readback_count": len(readback)})
+        progress("readback_orders_started", {"platform": platform})
+        readback = worker_client.readback_by_unique_key(table_id, {row[F_UNIQUE_KEY] for row in rows})
+        result["readback_count"] = len(readback)
+        result["missing_unique_keys"] = sorted(set(row[F_UNIQUE_KEY] for row in rows) - set(readback))[:50]
+        progress("readback_orders_done", {"platform": platform, "readback_count": len(readback)})
+        return platform, result
+
+    order_tasks = [(platform, rows) for platform, rows in order_rows_by_platform.items() if rows]
+    order_results: dict[str, dict[str, Any]] = {}
+    if len(order_tasks) > 1:
+        with ThreadPoolExecutor(max_workers=min(len(order_tasks), 4), thread_name_prefix="feishu-orders") as executor:
+            future_map = {executor.submit(sync_order_platform, platform, rows): platform for platform, rows in order_tasks}
+            for future in as_completed(future_map):
+                platform, result = future.result()
+                order_results[platform] = result
+    else:
+        for platform, rows in order_tasks:
+            platform, result = sync_order_platform(platform, rows)
+            order_results[platform] = result
+    for platform, _rows in order_tasks:
+        writes["orders"][platform] = order_results[platform]
 
     if ad_rows:
         if not settings.shopops_ad_table_id:
@@ -1796,7 +1818,7 @@ def run_import(
         created_ad_fields = []
         if ensure_missing_ad_fields:
             created_ad_fields = client.ensure_missing_fields_for_rows(settings.shopops_ad_table_id, ad_rows, AD_FIELD_TYPES)
-        write_import_progress(evidence, summary, "upsert_ads_started", {"row_count": len(ad_rows)})
+        progress("upsert_ads_started", {"row_count": len(ad_rows)})
         writes["ads"] = client.upsert_rows(
             table_id=settings.shopops_ad_table_id,
             rows=ad_rows,
@@ -1805,19 +1827,19 @@ def run_import(
             allow_partial_fields=False,
         )
         writes["ads"]["created_missing_fields"] = created_ad_fields
-        write_import_progress(evidence, summary, "upsert_ads_done", writes["ads"])
-        write_import_progress(evidence, summary, "canonicalize_ads_started")
+        progress("upsert_ads_done", writes["ads"])
+        progress("canonicalize_ads_started")
         writes["ads"]["canonicalize_unique_keys"] = client.canonicalize_ad_unique_keys(settings.shopops_ad_table_id)
-        write_import_progress(evidence, summary, "canonicalize_ads_done", writes["ads"]["canonicalize_unique_keys"])
-        write_import_progress(evidence, summary, "readback_ads_started")
+        progress("canonicalize_ads_done", writes["ads"]["canonicalize_unique_keys"])
+        progress("readback_ads_started")
         readback = client.readback_by_unique_key(settings.shopops_ad_table_id, {row[F_UNIQUE_KEY] for row in ad_rows})
         writes["ads"]["readback_count"] = len(readback)
         writes["ads"]["missing_unique_keys"] = sorted(set(row[F_UNIQUE_KEY] for row in ad_rows) - set(readback))[:50]
-        write_import_progress(evidence, summary, "readback_ads_done", {"readback_count": len(readback)})
+        progress("readback_ads_done", {"readback_count": len(readback)})
 
     if influencer_rows:
         table_id = influencer_table_id
-        write_import_progress(evidence, summary, "upsert_influencer_started", {"row_count": len(influencer_rows)})
+        progress("upsert_influencer_started", {"row_count": len(influencer_rows)})
         writes["influencer"] = client.upsert_rows(
             table_id=table_id,
             rows=influencer_rows,
@@ -1829,12 +1851,12 @@ def run_import(
             "action": "skipped",
             "reason": "daily import must not delete influencer records; only upsert the incoming rows",
         }
-        write_import_progress(evidence, summary, "upsert_influencer_done", writes["influencer"])
-        write_import_progress(evidence, summary, "readback_influencer_started")
+        progress("upsert_influencer_done", writes["influencer"])
+        progress("readback_influencer_started")
         readback = client.readback_by_unique_key(table_id, {row[F_UNIQUE_KEY] for row in influencer_rows})
         writes["influencer"]["readback_count"] = len(readback)
         writes["influencer"]["missing_unique_keys"] = sorted(set(row[F_UNIQUE_KEY] for row in influencer_rows) - set(readback))[:50]
-        write_import_progress(evidence, summary, "readback_influencer_done", {"readback_count": len(readback)})
+        progress("readback_influencer_done", {"readback_count": len(readback)})
 
     summary["field_preflight"] = field_preflight
     summary["writes"] = writes
@@ -1846,7 +1868,7 @@ def run_import(
                 if isinstance(item, dict):
                     missing.extend(item.get("missing_unique_keys") or [])
     summary["status"] = "success" if not missing else "readback_mismatch"
-    write_import_progress(evidence, summary, "complete", {"status": summary["status"]})
+    progress("complete", {"status": summary["status"]})
     return summary
 
 

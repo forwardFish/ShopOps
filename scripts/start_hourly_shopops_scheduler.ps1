@@ -3,10 +3,10 @@ param(
     [string]$Python = "python",
     [string]$ProfileRoot = "$env:LOCALAPPDATA\ShopOpsCdpProfiles",
     [string]$HourlyIntervalTableId = "tblb7aBTN2dZ9ZSF",
-    [int]$StartHour = 9,
-    [int]$EndHour = 24,
-    [int]$IntervalMinutes = 30,
-    [int]$JitterMinutes = 6
+    [int]$StartHour = 8,
+    [int]$EndHour = 23,
+    [int]$IntervalMinutes = 60,
+    [int]$JitterMinutes = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -72,6 +72,14 @@ $args = @(
     "--jitter-minutes",
     "$JitterMinutes",
     "--order-lookback-days",
+    "0",
+    "--min-task-interval-seconds",
+    "3600",
+    "--retry-interval-seconds",
+    "20",
+    "--max-task-attempts",
+    "3",
+    "--failure-retry-minutes",
     "0",
     "--wait-preflight",
     "--preflight-retry-seconds",

@@ -112,7 +112,7 @@ ORDER_FORMULA_FIELDS = {
     "other_fee": "公式_其他费用",
 }
 
-ORDER_TIME_FIELDS = ["支付时间", "付款时间", F_CREATED_AT, "下单时间"]
+ORDER_TIME_FIELDS = [F_CREATED_AT, "下单时间", "订单创建时间", "支付时间", "付款时间"]
 ORDER_RATIO_FIELDS = {"退款率", "客单价", "件单价", "ROI", "平台ROI", "已知费用利润率"}
 ORDER_ADDITIVE_DETAIL_FIELDS = [field_name for field_name in ORDER_DETAIL_NUMBER_FIELDS if field_name not in ORDER_RATIO_FIELDS]
 ORDER_DETAIL_PREFIXES = ("今日累计", "新增")

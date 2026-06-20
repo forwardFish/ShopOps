@@ -11,6 +11,7 @@ from data_robot.hourly_ad_interval_summary import (
     Snapshot,
     latest_previous_snapshot,
     previous_window_start,
+    summarize_orders_for_window,
     summarize_hourly_interval,
 )
 from scripts.import_daily_files_to_feishu import (
@@ -227,6 +228,21 @@ def test_previous_window_start_clamps_to_collection_start_hour():
     assert baseline == "上一轮采集"
 
 
+def test_summarize_orders_for_window_prefers_created_at_over_paid_time(monkeypatch):
+    monkeypatch.setenv("SHOPOPS_ORDER_TABLE_DOUYIN_ID", "time_priority_orders")
+    client = FakeClient()
+
+    summary = summarize_orders_for_window(
+        client,
+        "抖音",
+        datetime(2026, 6, 19, 8, 0, 0),
+        datetime(2026, 6, 19, 9, 0, 0),
+    )
+
+    assert summary.count == 1
+    assert summary.paid_amount == 169
+
+
 def test_latest_previous_snapshot_falls_back_to_today_ad_totals():
     client = FakePreviousSnapshotClient()
 
@@ -342,6 +358,18 @@ class FakeClient:
                     F_QUANTITY: 2,
                     "洗面奶数量": 0,
                     "洗面奶有效销售额": 0,
+                },
+            }
+        elif table_id == "time_priority_orders":
+            yield {
+                "record_id": "created_in_window_paid_later",
+                "fields": {
+                    F_ORDER_NO: "D-created",
+                    F_CREATED_AT: "2026-06-19 08:30:00",
+                    "支付时间": "2026-06-19 10:30:00",
+                    F_PAID_AMOUNT: 169,
+                    F_REFUND_AMOUNT: 0,
+                    F_QUANTITY: 1,
                 },
             }
 

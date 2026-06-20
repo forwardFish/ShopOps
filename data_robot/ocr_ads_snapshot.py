@@ -118,6 +118,16 @@ def open_visible_chrome_page(
         return {"status": "browser_not_found"}
     parsed = urlparse(cdp_url)
     port = parsed.port
+    if port and wait_for_visible_chrome_cdp(cdp_url, timeout_seconds=3):
+        return {
+            "status": "cdp_ready_existing",
+            "platform": platform_code,
+            "url": url,
+            "cdp_url": cdp_url,
+            "cdp_ready": True,
+            "pid": None,
+            "profile": str(visible_browser_profile(platform_code, cdp_url, profile_root)),
+        }
     profile = visible_browser_profile(platform_code, cdp_url, profile_root)
     profile.mkdir(parents=True, exist_ok=True)
     launch_attempts: list[dict[str, Any]] = []
@@ -349,6 +359,13 @@ def number_from_text(value: str | None) -> float | None:
     return round(number / 100, 6) if is_percent else round(number, 6)
 
 
+def joined_split_decimal(lines: list[str], index: int) -> str:
+    value = lines[index].strip()
+    if index + 1 < len(lines) and re.fullmatch(r"\.\d+%?", lines[index + 1].strip()):
+        return value.rstrip("%") + lines[index + 1].strip()
+    return value
+
+
 def first_metric_value(text: str, labels: tuple[str, ...]) -> float | None:
     line_value = first_metric_value_by_line(text, labels)
     if line_value is not None:
@@ -369,16 +386,27 @@ def first_metric_value_by_line(text: str, labels: tuple[str, ...]) -> float | No
     for index, line in enumerate(lines):
         if line not in label_set:
             continue
-        for next_line in lines[index + 1 : index + 4]:
-            value = number_from_text(next_line)
+        for offset in range(index + 1, min(len(lines), index + 4)):
+            value = number_from_text(joined_split_decimal(lines, offset))
             if value is not None:
                 return value
     return None
 
 
+def is_douyin_workspace_landing(text: str) -> bool:
+    normalized = normalize_ocr_text(text)
+    return (
+        "\u6211\u7ba1\u7406\u7684\u7ec4\u7ec7" in normalized
+        and "\u524d\u5f80\u5e73\u53f0" in normalized
+        and "\u5de8\u91cf\u5343\u5ddd" in normalized
+    )
+
+
 def parse_ad_snapshot_text(platform_code: str, text: str, stat_date: str, *, screenshot_path: str = "") -> dict[str, Any]:
     if platform_code not in PLATFORMS:
         raise ValueError(f"Unsupported platform: {platform_code}")
+    if platform_code == "douyin" and is_douyin_workspace_landing(text):
+        raise RuntimeError("Captured Douyin workspace landing page instead of Qianchuan metrics.")
     platform = PLATFORMS[platform_code]
     metrics = {name: first_metric_value(text, labels) for name, labels in METRIC_LABELS.items()}
     spend = metrics["spend"]
@@ -489,7 +517,7 @@ def read_dpapi_login_credential(platform_code: str) -> tuple[str, str] | None:
         ),
         str(path),
     ]
-    completed = subprocess.run(command, text=True, capture_output=True, timeout=20)
+    completed = subprocess.run(command, text=True, capture_output=True, timeout=20, encoding="utf-8", errors="replace")
     if completed.returncode != 0 or "\x1f" not in completed.stdout:
         return None
     username, password = completed.stdout.split("\x1f", 1)
@@ -729,16 +757,34 @@ async def capture_screenshot_direct_cdp(
             require_metric=True,
         )
         page_text = str(metric_wait.get("page_text") or "")
-        screenshot = await asyncio.wait_for(
-            page.send(
-                "Page.captureScreenshot",
-                {"format": "png", "captureBeyondViewport": False},
-                session=True,
-            ),
-            timeout=20,
-        )
-        screenshot_path.write_bytes(base64.b64decode(screenshot["data"]))
+        screenshot_status: dict[str, Any] = {"status": "not_attempted"}
+        try:
+            try:
+                await page.send("Page.stopLoading", session=True, timeout_seconds=3)
+            except Exception:
+                pass
+            screenshot = await asyncio.wait_for(
+                page.send(
+                    "Page.captureScreenshot",
+                    {"format": "png", "captureBeyondViewport": False},
+                    session=True,
+                    timeout_seconds=8,
+                ),
+                timeout=10,
+            )
+            screenshot_path.write_bytes(base64.b64decode(screenshot["data"]))
+            screenshot_status = {"status": "saved", "path": str(screenshot_path)}
+        except Exception as exc:
+            if not page_text:
+                raise
+            screenshot_status = {
+                "status": "skipped_after_error",
+                "error_type": type(exc).__name__,
+                "error": str(exc),
+                "reason": "dom_text_available",
+            }
         final_url = await page.evaluate("location.href", timeout_seconds=3)
+        stale_targets = close_stale_direct_cdp_ad_targets(cdp_url, platform_code, keep_target_id=page.target_id)
         return {
             "manual_wait": manual_wait,
             "metric_wait": {key: value for key, value in metric_wait.items() if key != "page_text"},
@@ -746,6 +792,9 @@ async def capture_screenshot_direct_cdp(
             "page_text": page_text,
             "engine": "direct_cdp",
             "attach": attach_summary,
+            "target_id": page.target_id,
+            "closed_stale_targets": stale_targets,
+            "screenshot_status": screenshot_status,
         }
 
 
@@ -758,18 +807,68 @@ def list_direct_cdp_targets(cdp_url: str) -> list[dict[str, Any]]:
     return [item for item in payload if isinstance(item, dict)]
 
 
+def stale_direct_cdp_ad_target_ids(
+    targets: list[dict[str, Any]],
+    platform_code: str,
+    *,
+    keep_target_id: str = "",
+) -> list[str]:
+    stale: list[str] = []
+    keep_target_id = str(keep_target_id or "")
+    for target in targets:
+        if target.get("type") != "page":
+            continue
+        target_id = str(target.get("id") or "")
+        if not target_id or target_id == keep_target_id:
+            continue
+        url = str(target.get("url") or "").lower()
+        if platform_code == "tmall":
+            if "one.alimama.com" in url or "tuiguangcenter_new" in url:
+                stale.append(target_id)
+        elif platform_code == "douyin":
+            if "qianchuan.jinritemai.com" in url or "business.oceanengine.com" in url:
+                stale.append(target_id)
+    return stale
+
+
+def close_stale_direct_cdp_ad_targets(
+    cdp_url: str,
+    platform_code: str,
+    *,
+    keep_target_id: str = "",
+) -> list[dict[str, str]]:
+    closed: list[dict[str, str]] = []
+    for target_id in stale_direct_cdp_ad_target_ids(
+        list_direct_cdp_targets(cdp_url),
+        platform_code,
+        keep_target_id=keep_target_id,
+    ):
+        try:
+            with urllib.request.urlopen(cdp_url.rstrip("/") + f"/json/close/{target_id}", timeout=5) as response:
+                result = response.read().decode("utf-8", errors="replace").strip()
+            closed.append({"target_id": target_id, "status": "closed", "result": result})
+        except Exception as exc:
+            closed.append({"target_id": target_id, "status": "error", "error": str(exc)})
+    return closed
+
+
 async def attach_existing_direct_cdp_dashboard(
     page: DirectCdpPage,
     *,
     cdp_url: str,
     platform_code: str,
 ) -> dict[str, Any]:
-    if platform_code != "tmall":
+    if platform_code not in {"tmall", "douyin"}:
         return {"status": "not_attached", "reason": "platform_new_target"}
+    target_tokens = (
+        ("tuiguangcenter_new",)
+        if platform_code == "tmall"
+        else ("qianchuan.jinritemai.com", "business.oceanengine.com")
+    )
     targets = [
         target
         for target in list_direct_cdp_targets(cdp_url)
-        if target.get("type") == "page" and "tuiguangcenter_new" in str(target.get("url") or "")
+        if target.get("type") == "page" and any(token in str(target.get("url") or "") for token in target_tokens)
     ]
     targets.sort(key=lambda target: 0 if str(target.get("title") or "").strip() == "推广中心" else 1)
     for target in targets[:4]:
@@ -793,7 +892,7 @@ async def attach_existing_direct_cdp_dashboard(
             except Exception:
                 pass
             continue
-    return {"status": "not_attached", "reason": "no_existing_tmall_dashboard"}
+    return {"status": "not_attached", "reason": f"no_existing_{platform_code}_dashboard"}
 
 
 async def prepare_douyin_ads_dashboard(page: DirectCdpPage) -> dict[str, Any]:
@@ -806,6 +905,37 @@ async def prepare_douyin_ads_dashboard(page: DirectCdpPage) -> dict[str, Any]:
             if label.startswith("全域投放消耗"):
                 break
     return {"clicked": clicks}
+
+
+async def prepare_douyin_ads_dashboard(page: DirectCdpPage) -> dict[str, Any]:
+    clicks: list[str] = []
+    for attempt in range(4):
+        text = await collect_direct_cdp_text(page, platform_code="douyin", timeout_seconds=8)
+        if direct_cdp_text_has_parseable_metric(text, "douyin"):
+            return {"status": "ready", "clicked": clicks, "attempts": attempt + 1}
+        for label in (
+            "\u524d\u5f80\u5e73\u53f0",
+            "\u5de8\u91cf\u5343\u5ddd",
+            "\u5168\u57df\u6295\u653e",
+            "\u5168\u57df\u6295\u653e\u6d88\u8017",
+            "\u8d26\u6237\u6574\u4f53\u6d88\u8017",
+            "\u6570\u636e\u6982\u89c8",
+        ):
+            clicked = await page.click_label(label)
+            if clicked:
+                clicks.append(label)
+                await asyncio.sleep(4)
+                break
+        else:
+            current_url = str(await page.evaluate("location.href", timeout_seconds=3) or "")
+            if "qianchuan.jinritemai.com" not in current_url:
+                await page.navigate(DEFAULT_URLS["douyin"])
+                clicks.append("navigate_qianchuan_home")
+            else:
+                await page.reload()
+                clicks.append("reload_qianchuan_home")
+            await asyncio.sleep(5)
+    return {"status": "unready", "clicked": clicks, "attempts": 4}
 
 
 async def prepare_tmall_ads_dashboard(page: DirectCdpPage, url: str) -> dict[str, Any]:
@@ -916,6 +1046,8 @@ async def collect_direct_cdp_text(page: DirectCdpPage, *, platform_code: str, ti
 
 
 def direct_cdp_text_has_parseable_metric(text: str, platform_code: str) -> bool:
+    if platform_code == "douyin" and is_douyin_workspace_landing(text):
+        return False
     if platform_code == "tmall" and not any(
         anchor in text
         for anchor in (
@@ -978,10 +1110,10 @@ def captured_page_error(text: str) -> str:
 def run_ocr_command(command_template: str, image_path: Path) -> str:
     if "{image}" in command_template:
         command = command_template.format(image=str(image_path))
-        completed = subprocess.run(command, shell=True, text=True, capture_output=True, timeout=120)
+        completed = subprocess.run(command, shell=True, text=True, capture_output=True, timeout=120, encoding="utf-8", errors="replace")
     else:
         parts = command_template.split()
-        completed = subprocess.run([*parts, str(image_path)], text=True, capture_output=True, timeout=120)
+        completed = subprocess.run([*parts, str(image_path)], text=True, capture_output=True, timeout=120, encoding="utf-8", errors="replace")
     if completed.returncode != 0:
         raise RuntimeError(f"OCR command failed: {completed.stderr[-2000:]}")
     return completed.stdout

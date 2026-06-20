@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from data_robot.common import DEFAULT_EVIDENCE_ROOT, evidence_token, write_json
+from data_robot.common import DEFAULT_EVIDENCE_ROOT, GLOBAL_EXPORT_COOLDOWN_KEY, cooldown_remaining, evidence_token, write_json
 from data_robot.daily_download import cdp_base_url
 from data_robot.full_flow import run_command
 from data_robot.hourly_ad_interval_summary import (
@@ -27,6 +27,7 @@ from shopops.config import _load_dotenv, load_settings
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_AD_PLATFORMS = ("douyin", "tmall")
 REQUIRED_AD_PLATFORMS = DEFAULT_AD_PLATFORMS
+CURRENT_STATE_FILE = "hourly-shopops-current-state.json"
 ORDER_PLATFORM_CODES = {"天猫": "tmall", "抖音": "douyin"}
 
 
@@ -119,6 +120,18 @@ def platform_ad_cdp_url(args: argparse.Namespace, platform: str) -> str:
     return ""
 
 
+def write_cycle_state(args: argparse.Namespace, run_token: str, stage: str, **payload: Any) -> None:
+    write_json(
+        Path(args.evidence_root) / CURRENT_STATE_FILE,
+        {
+            "stage": stage,
+            "run_token": run_token,
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+            **payload,
+        },
+    )
+
+
 def run_ads_once(args: argparse.Namespace, stat_date: str, run_token: str) -> list[dict[str, Any]]:
     platforms = ad_platforms_to_collect(args)
     results: list[dict[str, Any]] = []
@@ -130,6 +143,14 @@ def run_ads_once(args: argparse.Namespace, stat_date: str, run_token: str) -> li
         max_attempts = max(1, int(getattr(args, "ad_max_attempts", 1) or 1))
         result: dict[str, Any] = {}
         for attempt in range(1, max_attempts + 1):
+            write_cycle_state(
+                args,
+                run_token,
+                "ads_platform_started",
+                platform=platform,
+                attempt=attempt,
+                evidence=str(evidence),
+            )
             result = run_command(command, timeout=args.ads_timeout_seconds)
             attempts.append(
                 {
@@ -153,6 +174,14 @@ def run_ads_once(args: argparse.Namespace, stat_date: str, run_token: str) -> li
             if retry_interval:
                 time.sleep(retry_interval)
         results.append({"platform": platform, "result": result, "evidence": str(evidence), "attempts": attempts})
+        write_cycle_state(
+            args,
+            run_token,
+            "ads_platform_finished",
+            platform=platform,
+            returncode=result.get("returncode"),
+            evidence=str(evidence),
+        )
     return results
 
 
@@ -160,7 +189,16 @@ def run_cycle(args: argparse.Namespace) -> dict[str, Any]:
     now = datetime.now()
     stat_date = args.import_date or date.today().isoformat()
     run_token = now.strftime("%Y%m%d-%H%M%S")
+    write_cycle_state(args, run_token, "cycle_started", stat_date=stat_date)
+    write_cycle_state(args, run_token, "orders_started", stat_date=stat_date)
     order_summary = None if args.skip_orders else run_orders_once(args)
+    write_cycle_state(
+        args,
+        run_token,
+        "orders_finished",
+        status=(order_summary or {}).get("status") if order_summary else "skipped",
+        order_evidence=(order_summary or {}).get("evidence") if order_summary else "",
+    )
     order_failed = bool(order_summary and order_summary.get("status") != "success")
     ads_results = [] if args.skip_ads or order_failed else run_ads_once(args, stat_date, run_token)
     interval_summary = None
@@ -179,6 +217,7 @@ def run_cycle(args: argparse.Namespace) -> dict[str, Any]:
         status = "ads_failed" if status == "success" else "partial_failed"
     if not args.skip_hourly_interval_summary and not args.skip_ads and not ad_failures and not order_failed and not missing_ad_platforms:
         try:
+            write_cycle_state(args, run_token, "interval_summary_started", stat_date=stat_date)
             interval_summary = summarize_hourly_interval(
                 ads_results,
                 stat_date=stat_date,
@@ -212,6 +251,7 @@ def run_cycle(args: argparse.Namespace) -> dict[str, Any]:
     }
     evidence = Path(args.evidence_root) / f"hourly-shopops-import-{evidence_token(run_token)}.json"
     write_json(evidence, summary)
+    write_cycle_state(args, run_token, "summary_written", status=status, evidence=str(evidence))
     print(json.dumps({**summary, "evidence": str(evidence)}, ensure_ascii=False, indent=2, sort_keys=True, default=str))
     return summary
 
@@ -371,21 +411,59 @@ def first_run_delay_seconds(args: argparse.Namespace, now: datetime, rng: random
             jitter_minutes=args.jitter_minutes,
             rng=rng,
         )
+    if not getattr(args, "force", False):
+        min_task_interval_seconds = int(getattr(args, "min_task_interval_seconds", 0) or 0)
+        export_cooldown = max(
+            cooldown_remaining("tmall_orders", min_task_interval_seconds),
+            cooldown_remaining(GLOBAL_EXPORT_COOLDOWN_KEY, min_task_interval_seconds),
+        )
+        if export_cooldown > 0:
+            return export_cooldown
     latest = latest_successful_run_time(args.evidence_root)
     if not latest:
         return 0
+    return fixed_schedule_delay_seconds(
+        now,
+        start_hour=args.start_hour,
+        end_hour=args.end_hour,
+        interval_minutes=args.interval_minutes,
+        jitter_minutes=args.jitter_minutes,
+        after=latest,
+        rng=rng,
+    )
+
+
+def fixed_schedule_delay_seconds(
+    now: datetime,
+    *,
+    start_hour: int,
+    end_hour: int,
+    interval_minutes: int,
+    jitter_minutes: int = 0,
+    after: datetime | None = None,
+    rng: random.Random | None = None,
+) -> int:
     rng = rng or random.Random()
-    jitter_seconds = rng.randint(-args.jitter_minutes * 60, args.jitter_minutes * 60) if args.jitter_minutes > 0 else 0
-    next_run = latest + timedelta(minutes=args.interval_minutes, seconds=jitter_seconds)
-    if next_run >= day_boundary(now, args.end_hour):
-        return next_delay_seconds(
-            now,
-            start_hour=args.start_hour,
-            end_hour=args.end_hour,
-            interval_minutes=args.interval_minutes,
-            jitter_minutes=args.jitter_minutes,
-            rng=rng,
-        )
+    interval_seconds = max(60, int(interval_minutes) * 60)
+    window_start = next_window_start(now, start_hour=start_hour, end_hour=end_hour)
+    if window_start > now:
+        jitter = rng.randint(0, max(0, jitter_minutes * 60)) if jitter_minutes > 0 else 0
+        return max(0, int((window_start - now).total_seconds()) + jitter)
+
+    window_end = day_boundary(now, end_hour)
+    today_start = now.replace(hour=start_hour, minute=0, second=0, microsecond=0)
+    earliest = max(now, after or now)
+    slots_elapsed = int(((earliest - today_start).total_seconds() // interval_seconds) + 1)
+    next_run = today_start + timedelta(seconds=slots_elapsed * interval_seconds)
+    if jitter_minutes > 0:
+        jitter = rng.randint(-jitter_minutes * 60, jitter_minutes * 60)
+        jittered = next_run + timedelta(seconds=jitter)
+        if jittered > now:
+            next_run = jittered
+    if next_run >= window_end:
+        tomorrow_start = today_start + timedelta(days=1)
+        jitter = rng.randint(0, max(0, jitter_minutes * 60)) if jitter_minutes > 0 else 0
+        return max(0, int((tomorrow_start - now).total_seconds()) + jitter)
     return max(0, int((next_run - now).total_seconds()))
 
 
@@ -464,6 +542,12 @@ def main() -> int:
     parser.add_argument("--ignore-preflight", action="store_true", help="Run even when OCR/CDP preflight is not ready.")
     parser.add_argument("--wait-preflight", action="store_true", help="Keep retrying preflight until CDP/OCR/environment are ready instead of exiting.")
     parser.add_argument("--preflight-retry-seconds", type=int, default=600, help="Seconds between --wait-preflight retries.")
+    parser.add_argument(
+        "--failure-retry-minutes",
+        type=int,
+        default=0,
+        help="Optional short retry after a failed cycle. Default 0 keeps the normal hourly cadence.",
+    )
     args = parser.parse_args()
     while True:
         preflight_summary = preflight(args)
@@ -498,7 +582,7 @@ def main() -> int:
     successful_cycles = 0
     first_delay = first_run_delay_seconds(args, datetime.now())
     if first_delay:
-        print(f"Recent successful ShopOps import found; first run starts in {first_delay} seconds.", flush=True)
+        print(f"First ShopOps scheduled import starts in {first_delay} seconds.", flush=True)
         time.sleep(first_delay)
     while True:
         now = datetime.now()
@@ -529,14 +613,30 @@ def main() -> int:
                 return 0
         if args.once or (args.cycles and completed_cycles >= args.cycles):
             return 0 if result["status"] == "success" else 4
-        delay = next_delay_seconds(
+        delay = fixed_schedule_delay_seconds(
             datetime.now(),
             start_hour=args.start_hour,
             end_hour=args.end_hour,
             interval_minutes=args.interval_minutes,
             jitter_minutes=args.jitter_minutes,
         )
-        print(f"Next ShopOps scheduled import starts in {delay} seconds.", flush=True)
+        export_cooldown = 0
+        if not getattr(args, "force", False):
+            min_task_interval_seconds = int(getattr(args, "min_task_interval_seconds", 0) or 0)
+            export_cooldown = max(
+                cooldown_remaining("tmall_orders", min_task_interval_seconds),
+                cooldown_remaining(GLOBAL_EXPORT_COOLDOWN_KEY, min_task_interval_seconds),
+            )
+            if export_cooldown > 0:
+                delay = max(delay, export_cooldown)
+        if result["status"] != "success" and args.failure_retry_minutes > 0:
+            delay = max(export_cooldown, min(delay, max(60, args.failure_retry_minutes * 60)))
+        next_run_at = datetime.now() + timedelta(seconds=delay)
+        print(
+            f"Next ShopOps scheduled import starts at {next_run_at:%Y-%m-%d %H:%M:%S} "
+            f"(in {delay} seconds; last_status={result['status']}).",
+            flush=True,
+        )
         time.sleep(delay)
 
 

@@ -146,6 +146,8 @@ def chrome_process_ids_for_profile(profile_dir: Path) -> list[int]:
         text=True,
         capture_output=True,
         timeout=20,
+        encoding="utf-8",
+        errors="replace",
     )
     if completed.returncode != 0 or not completed.stdout.strip():
         return []
@@ -167,7 +169,13 @@ def stop_chrome_for_task(
     profile = chrome_profile_dir(task_key, profile_suffix=profile_suffix, profile_root=profile_root)
     pids = chrome_process_ids_for_profile(profile)
     for pid in pids:
-        subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True, text=True)
+        subprocess.run(
+            ["taskkill", "/PID", str(pid), "/T", "/F"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
     if pids:
         time.sleep(wait_seconds)
     return pids

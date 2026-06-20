@@ -26,6 +26,14 @@ def child_python_warnings(existing: str | None) -> str:
     return ",".join(parts)
 
 
+def decode_process_output(value: str | bytes | None) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value
+
+
 def run_command(command: list[str], *, timeout: int) -> dict[str, Any]:
     started = datetime.now()
     env = os.environ.copy()
@@ -36,20 +44,13 @@ def run_command(command: list[str], *, timeout: int) -> dict[str, Any]:
         completed = subprocess.run(
             command,
             cwd=ROOT,
-            text=True,
             capture_output=True,
             timeout=timeout,
-            encoding="utf-8",
-            errors="replace",
             env=env,
         )
     except subprocess.TimeoutExpired as exc:
-        stdout = exc.stdout or ""
-        stderr = exc.stderr or ""
-        if isinstance(stdout, bytes):
-            stdout = stdout.decode(errors="replace")
-        if isinstance(stderr, bytes):
-            stderr = stderr.decode(errors="replace")
+        stdout = decode_process_output(exc.stdout)
+        stderr = decode_process_output(exc.stderr)
         return {
             "command": command,
             "returncode": 124,
@@ -60,6 +61,8 @@ def run_command(command: list[str], *, timeout: int) -> dict[str, Any]:
             "stdout_tail": stdout[-12000:],
             "stderr_tail": stderr[-12000:],
         }
+    stdout = decode_process_output(completed.stdout)
+    stderr = decode_process_output(completed.stderr)
     return {
         "command": command,
         "returncode": completed.returncode,
@@ -67,8 +70,8 @@ def run_command(command: list[str], *, timeout: int) -> dict[str, Any]:
         "timeout_seconds": timeout,
         "started_at": started.isoformat(timespec="seconds"),
         "finished_at": datetime.now().isoformat(timespec="seconds"),
-        "stdout_tail": completed.stdout[-12000:],
-        "stderr_tail": completed.stderr[-12000:],
+        "stdout_tail": stdout[-12000:],
+        "stderr_tail": stderr[-12000:],
     }
 
 
