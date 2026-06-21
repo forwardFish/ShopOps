@@ -1,0 +1,18 @@
+{
+  "task": "wechat_channels_orders",
+  "platform": "\u89c6\u9891\u53f7",
+  "kind": "orders",
+  "date_token": "0613/23\u70b9\u4e0b\u8f7d",
+  "run_token": "20260614-000340",
+  "downloaded": [
+    "data_robot\\downloads\\20260613-111155\\wechat_channels_orders\\\u5fae\u4fe1\u5c0f\u5e97\u8ba2\u5355_wx8248933f80e464e7_2026\u5e7406\u670813\u65e511\u65f612\u520611\u79d2.zip"
+  ],
+  "archived": [
+    {
+      "source": "data_robot\\downloads\\20260613-111155\\wechat_channels_orders\\\u5fae\u4fe1\u5c0f\u5e97\u8ba2\u5355_wx8248933f80e464e7_2026\u5e7406\u670813\u65e511\u65f612\u520611\u79d2.zip",
+      "archived": "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\data\\ShopOps\\0613\\23\u70b9\u4e0b\u8f7d\\\u89c6\u9891\u53f7\\20260614-000340_wechat_channels_orders_orders_\u5fae\u4fe1\u5c0f\u5e97\u8ba2\u5355_wx8248933f80e464e7_2026\u5e7406\u670813\u65e511\u65f612\u520611\u79d2_1.xlsx",
+      "extracted_from": "data_robot\\downloads\\20260613-111155\\wechat_channels_orders\\\u5fae\u4fe1\u5c0f\u5e97\u8ba2\u5355_wx8248933f80e464e7_2026\u5e7406\u670813\u65e511\u65f612\u520611\u79d2.zip",
+      "size_bytes": 195296
+    }
+  ]
+}

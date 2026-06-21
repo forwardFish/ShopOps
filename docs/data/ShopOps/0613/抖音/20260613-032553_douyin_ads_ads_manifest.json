@@ -1,0 +1,18 @@
+{
+  "task": "douyin_ads",
+  "platform": "抖音",
+  "kind": "ads",
+  "date_token": "0613",
+  "run_token": "20260613-032553",
+  "downloaded": [
+    "D:\\lyh\\agent\\agent-frame\\ShopOps\\data_robot\\downloads\\20260613-032553\\douyin_ads\\全域推广数据_商品_2026-06-06 00_00_00-2026-06-12 23_59_59-7650497720729223177.xlsx"
+  ],
+  "archived": [
+    {
+      "source": "D:\\lyh\\agent\\agent-frame\\ShopOps\\data_robot\\downloads\\20260613-032553\\douyin_ads\\全域推广数据_商品_2026-06-06 00_00_00-2026-06-12 23_59_59-7650497720729223177.xlsx",
+      "archived": "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\data\\ShopOps\\0613\\抖音\\20260613-032553_douyin_ads_ads_全域推广数据_商品_2026-06-06 00_00_00-2026-06-12 23_59_59-7650497720729223177.xlsx",
+      "extracted_from": "",
+      "size_bytes": 7911
+    }
+  ]
+}

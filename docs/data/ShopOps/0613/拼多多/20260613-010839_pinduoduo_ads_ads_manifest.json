@@ -1,0 +1,18 @@
+{
+  "task": "pinduoduo_ads",
+  "platform": "拼多多",
+  "kind": "ads",
+  "date_token": "0613",
+  "run_token": "20260613-010839",
+  "downloaded": [
+    "D:\\lyh\\agent\\agent-frame\\ShopOps\\data_robot\\downloads\\20260613-010839\\pinduoduo_ads\\商品推广_账户_分天数据_20260606至20260612.xls"
+  ],
+  "archived": [
+    {
+      "source": "D:\\lyh\\agent\\agent-frame\\ShopOps\\data_robot\\downloads\\20260613-010839\\pinduoduo_ads\\商品推广_账户_分天数据_20260606至20260612.xls",
+      "archived": "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\data\\ShopOps\\0613\\拼多多\\20260613-010839_pinduoduo_ads_ads_商品推广_账户_分天数据_20260606至20260612.xls",
+      "extracted_from": "",
+      "size_bytes": 8192
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "task": "douyin_influencer",
+  "platform": "抖音",
+  "kind": "influencer",
+  "date_token": "0613",
+  "run_token": "20260613-111443",
+  "downloaded": [
+    "D:\\lyh\\agent\\agent-frame\\ShopOps\\data_robot\\downloads\\20260613-111443\\douyin_influencer\\e728fe38-ac43-8e3a-0716-5934b190845c_3825217810897437014.xlsx"
+  ],
+  "archived": [
+    {
+      "source": "D:\\lyh\\agent\\agent-frame\\ShopOps\\data_robot\\downloads\\20260613-111443\\douyin_influencer\\e728fe38-ac43-8e3a-0716-5934b190845c_3825217810897437014.xlsx",
+      "archived": "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\data\\ShopOps\\0613\\抖音\\20260613-111443_douyin_influencer_influencer_e728fe38-ac43-8e3a-0716-5934b190845c_3825217810897437014.xlsx",
+      "extracted_from": "",
+      "size_bytes": 120394
+    }
+  ]
+}
