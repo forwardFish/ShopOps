@@ -1,0 +1,80 @@
+{
+  "status": "success",
+  "target_table_name": "达人筛选表",
+  "target_table": "tblElZpyDFNLwqGU",
+  "run_started_at": "2026-06-22 10:36:02",
+  "run_finished_at": "2026-06-22 10:36:07",
+  "elapsed_seconds": 5.32,
+  "token_usage": {
+    "llm_input_tokens": 0,
+    "llm_output_tokens": 0,
+    "note": "This script does not call an LLM; Codex conversation token usage is not exposed to the script."
+  },
+  "source": "existing_feishu_creator_screening_records_revalidated",
+  "requested_count": 50,
+  "updated_count": 50,
+  "readback_count": 50,
+  "missing_unique_keys": [],
+  "sample_creators": [
+    {
+      "unique_key": "creator_screening_c90da2bca695bd08",
+      "达人名称": "阿纯是质量测评家",
+      "抖音号": "achun1999",
+      "搜索关键词": "洗面奶"
+    },
+    {
+      "unique_key": "creator_screening_5148787127281bb1",
+      "达人名称": "C咖官方旗舰店",
+      "抖音号": "Ckatop01",
+      "搜索关键词": "洗面奶"
+    },
+    {
+      "unique_key": "creator_screening_8888d0e3facb75b7",
+      "达人名称": "草安堂研究所",
+      "抖音号": "caoantang001",
+      "搜索关键词": "洗面奶"
+    },
+    {
+      "unique_key": "creator_screening_8a0a7cfaa175616a",
+      "达人名称": "AOEO官方旗舰店",
+      "抖音号": "aoeoskincare",
+      "搜索关键词": "洗面奶"
+    },
+    {
+      "unique_key": "creator_screening_b37eac0a121ac6a8",
+      "达人名称": "夏洪涛/医用祛痘修复产品/祛痘修护护肤品",
+      "抖音号": "23016097",
+      "搜索关键词": "洗面奶"
+    },
+    {
+      "unique_key": "creator_screening_3e78f9908964dea4",
+      "达人名称": "洗面奶",
+      "抖音号": "355628165",
+      "搜索关键词": "洗面奶"
+    },
+    {
+      "unique_key": "creator_screening_74c4dc54319d67b5",
+      "达人名称": "草安堂研究所（美白专场）",
+      "抖音号": "1675104878",
+      "搜索关键词": "洗面奶"
+    },
+    {
+      "unique_key": "creator_screening_5569957e1946d0cb",
+      "达人名称": "洗面奶",
+      "抖音号": "ZoeS.Dec.28",
+      "搜索关键词": "洗面奶"
+    },
+    {
+      "unique_key": "creator_screening_4f768af6513560bc",
+      "达人名称": "奥兰芝面部护肤直播间",
+      "抖音号": "JZCK6666",
+      "搜索关键词": "洗面奶"
+    },
+    {
+      "unique_key": "creator_screening_351ea3118655a326",
+      "达人名称": "吧唧🍔一口甜",
+      "抖音号": "78451178896",
+      "搜索关键词": "洗面奶"
+    }
+  ]
+}
