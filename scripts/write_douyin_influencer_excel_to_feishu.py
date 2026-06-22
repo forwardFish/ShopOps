@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from collections import Counter
 from dataclasses import replace
 from datetime import datetime
@@ -403,6 +404,12 @@ def is_influencer_row(row: dict[str, str]) -> bool:
     return text_value(row, "\u4f5c\u8005\u8d26\u53f7") not in ("", "-")
 
 
+def apply_row_limit(rows: list[dict[str, Any]], limit: int | None) -> list[dict[str, Any]]:
+    if limit is None or limit <= 0:
+        return rows
+    return rows[:limit]
+
+
 def text_value(row: dict[str, str], key: str) -> str:
     value = row.get(key, "")
     if value in (None, "-"):
@@ -439,12 +446,17 @@ def log(message: str) -> None:
 
 
 def main() -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    started_at = datetime.now()
+    started_perf = time.perf_counter()
     parser = argparse.ArgumentParser()
     parser.add_argument("--excel", required=True)
     parser.add_argument("--target-table", default="")
     parser.add_argument("--skip-jushuitan", action="store_true")
     parser.add_argument("--no-delete-existing-douyin", action="store_true")
     parser.add_argument("--include-no-author", action="store_true", help="Deprecated; all Excel rows with an order id are imported.")
+    parser.add_argument("--limit", type=int, default=0, help="Limit rows written for a bounded smoke/import test. 0 means no limit.")
     parser.add_argument("--evidence", default="")
     args = parser.parse_args()
 
@@ -472,7 +484,8 @@ def main() -> int:
     no_author_rows = [row for row in excel_rows if not is_influencer_row(row)]
     import_rows = excel_rows
     log(f"Excel rows={len(excel_rows)} influencer_rows={len(import_rows)} no_author_rows={len(no_author_rows)}")
-    feishu_rows = doudian_influencer_rows(import_rows, excel_path, jst_orders)
+    mapped_rows = doudian_influencer_rows(import_rows, excel_path, jst_orders)
+    feishu_rows = apply_row_limit(mapped_rows, args.limit or None)
 
     client = FeishuTableClient(settings, target_table)
     log(f"ensuring target table fields table={target_table}")
@@ -492,13 +505,24 @@ def main() -> int:
         if row[F_UNIQUE_KEY] in readback and str(readback[row[F_UNIQUE_KEY]].get(F_ORDER_NO) or "") != str(row[F_ORDER_NO])
     ]
     skipped_order_nos = [text_value(row, "\u8ba2\u5355id") for row in no_author_rows]
+    finished_at = datetime.now()
     summary = {
         "status": "success" if not missing_keys and not mismatched else "readback_mismatch",
+        "run_started_at": started_at.strftime("%Y-%m-%d %H:%M:%S"),
+        "run_finished_at": finished_at.strftime("%Y-%m-%d %H:%M:%S"),
+        "elapsed_seconds": round(time.perf_counter() - started_perf, 3),
+        "token_usage": {
+            "llm_input_tokens": 0,
+            "llm_output_tokens": 0,
+            "note": "This import script does not call an LLM; Codex conversation token usage is not exposed to the script.",
+        },
         "target_table": target_table,
         "excel_file": str(excel_path),
         "excel_row_count": len(excel_rows),
         "skipped_no_author_count": 0,
         "skipped_no_author_order_nos_sample": skipped_order_nos[:30],
+        "mapped_influencer_row_count": len(mapped_rows),
+        "row_limit": args.limit or None,
         "influencer_row_count": len(feishu_rows),
         "unique_key_prefix": "douyin_",
         "created_fields": created_fields,

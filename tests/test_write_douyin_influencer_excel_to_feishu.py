@@ -10,6 +10,7 @@ from scripts.write_douyin_influencer_excel_to_feishu import (
     F_ORDER_NO,
     F_TRAFFIC_SOURCE,
     F_UNIQUE_KEY,
+    apply_row_limit,
     doudian_influencer_rows,
     parse_doudian_xlsx,
 )
@@ -58,3 +59,11 @@ def test_doudian_rows_keep_excel_rows_without_author_account(tmp_path: Path):
     assert len(rows) == 1
     assert rows[0][F_UNIQUE_KEY] == "douyin_6953547102608758621"
     assert rows[0][F_AUTHOR_ACCOUNT] == ""
+
+
+def test_apply_row_limit_keeps_first_n_rows():
+    rows = [{"id": index} for index in range(3)]
+
+    assert apply_row_limit(rows, None) == rows
+    assert apply_row_limit(rows, 0) == rows
+    assert apply_row_limit(rows, 2) == [{"id": 0}, {"id": 1}]
