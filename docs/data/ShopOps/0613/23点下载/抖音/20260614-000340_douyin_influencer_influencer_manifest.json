@@ -1,0 +1,18 @@
+{
+  "task": "douyin_influencer",
+  "platform": "\u6296\u97f3",
+  "kind": "influencer",
+  "date_token": "0613/23\u70b9\u4e0b\u8f7d",
+  "run_token": "20260614-000340",
+  "downloaded": [
+    "data_robot\\downloads\\20260613-111443\\douyin_influencer\\e728fe38-ac43-8e3a-0716-5934b190845c_3825217810897437014.xlsx"
+  ],
+  "archived": [
+    {
+      "source": "data_robot\\downloads\\20260613-111443\\douyin_influencer\\e728fe38-ac43-8e3a-0716-5934b190845c_3825217810897437014.xlsx",
+      "archived": "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\data\\ShopOps\\0613\\23\u70b9\u4e0b\u8f7d\\\u6296\u97f3\\20260614-000340_douyin_influencer_influencer_e728fe38-ac43-8e3a-0716-5934b190845c_3825217810897437014.xlsx",
+      "extracted_from": "",
+      "size_bytes": 120394
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "task": "tmall_orders",
+  "platform": "天猫",
+  "kind": "orders",
+  "date_token": "0612",
+  "run_token": "20260612-221823",
+  "downloaded": [
+    "C:\\Users\\linyanhui\\Downloads\\ExportOrderList26689500348.xlsx"
+  ],
+  "archived": [
+    {
+      "source": "C:\\Users\\linyanhui\\Downloads\\ExportOrderList26689500348.xlsx",
+      "archived": "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\data\\ShopOps\\0612\\天猫\\20260612-221823_tmall_orders_orders_ExportOrderList26689500348.xlsx",
+      "extracted_from": "",
+      "size_bytes": 2038406
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "task": "tmall_orders",
+  "platform": "天猫",
+  "kind": "orders",
+  "date_token": "0613",
+  "run_token": "20260613-022637",
+  "downloaded": [
+    "D:\\lyh\\agent\\agent-frame\\ShopOps\\data_robot\\downloads\\20260613-022637\\tmall_orders\\ExportOrderList26690580271.xlsx"
+  ],
+  "archived": [
+    {
+      "source": "D:\\lyh\\agent\\agent-frame\\ShopOps\\data_robot\\downloads\\20260613-022637\\tmall_orders\\ExportOrderList26690580271.xlsx",
+      "archived": "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\data\\ShopOps\\0613\\天猫\\20260613-022637_tmall_orders_orders_ExportOrderList26690580271.xlsx",
+      "extracted_from": "",
+      "size_bytes": 2045469
+    }
+  ]
+}

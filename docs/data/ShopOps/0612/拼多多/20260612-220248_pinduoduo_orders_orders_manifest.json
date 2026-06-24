@@ -1,0 +1,18 @@
+{
+  "task": "pinduoduo_orders",
+  "platform": "拼多多",
+  "kind": "orders",
+  "date_token": "0612",
+  "run_token": "20260612-220248",
+  "downloaded": [
+    "C:\\Users\\linyanhui\\Downloads\\8248e107e4f1bcf6c24c107dbbbbf803orders_export2026-06-12-22-01-40.csv"
+  ],
+  "archived": [
+    {
+      "source": "C:\\Users\\linyanhui\\Downloads\\8248e107e4f1bcf6c24c107dbbbbf803orders_export2026-06-12-22-01-40.csv",
+      "archived": "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\data\\ShopOps\\0612\\拼多多\\20260612-220248_pinduoduo_orders_orders_8248e107e4f1bcf6c24c107dbbbbf803orders_export2026-06-12-22-01-40.csv",
+      "extracted_from": "",
+      "size_bytes": 1537106
+    }
+  ]
+}

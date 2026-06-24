@@ -1,0 +1,18 @@
+{
+  "task": "tmall_orders",
+  "platform": "\u5929\u732b",
+  "kind": "orders",
+  "date_token": "0613/23\u70b9\u4e0b\u8f7d",
+  "run_token": "20260614-000340",
+  "downloaded": [
+    "data_robot\\downloads\\20260613-022637\\tmall_orders\\ExportOrderList26690580271.xlsx"
+  ],
+  "archived": [
+    {
+      "source": "data_robot\\downloads\\20260613-022637\\tmall_orders\\ExportOrderList26690580271.xlsx",
+      "archived": "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\data\\ShopOps\\0613\\23\u70b9\u4e0b\u8f7d\\\u5929\u732b\\20260614-000340_tmall_orders_orders_ExportOrderList26690580271.xlsx",
+      "extracted_from": "",
+      "size_bytes": 2045469
+    }
+  ]
+}

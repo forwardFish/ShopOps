@@ -1,0 +1,18 @@
+{
+  "task": "wechat_channels_orders",
+  "platform": "视频号",
+  "kind": "orders",
+  "date_token": "0613",
+  "run_token": "20260613-011800",
+  "downloaded": [
+    "D:\\lyh\\agent\\agent-frame\\ShopOps\\data_robot\\downloads\\20260613-011800\\wechat_channels_orders\\微信小店订单_wx8248933f80e464e7_2026年06月13日01时18分10秒.zip"
+  ],
+  "archived": [
+    {
+      "source": "D:\\lyh\\agent\\agent-frame\\ShopOps\\data_robot\\downloads\\20260613-011800\\wechat_channels_orders\\微信小店订单_wx8248933f80e464e7_2026年06月13日01时18分10秒.zip",
+      "archived": "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\data\\ShopOps\\0613\\视频号\\20260613-011800_wechat_channels_orders_orders_微信小店订单_wx8248933f80e464e7_2026年06月13日01时18分10秒_1.xlsx",
+      "extracted_from": "D:\\lyh\\agent\\agent-frame\\ShopOps\\data_robot\\downloads\\20260613-011800\\wechat_channels_orders\\微信小店订单_wx8248933f80e464e7_2026年06月13日01时18分10秒.zip",
+      "size_bytes": 193505
+    }
+  ]
+}

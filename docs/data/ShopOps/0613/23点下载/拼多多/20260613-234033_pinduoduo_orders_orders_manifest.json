@@ -1,0 +1,18 @@
+{
+  "task": "pinduoduo_orders",
+  "platform": "\u62fc\u591a\u591a",
+  "kind": "orders",
+  "date_token": "0613/23",
+  "run_token": "20260613-234033",
+  "downloaded": [
+    "data_robot\\downloads\\pdd_probe_2336\\8248e107e4f1bcf6c24c107dbbbbf803orders_export2026-06-13-22-27-48.csv"
+  ],
+  "archived": [
+    {
+      "source": "data_robot\\downloads\\pdd_probe_2336\\8248e107e4f1bcf6c24c107dbbbbf803orders_export2026-06-13-22-27-48.csv",
+      "archived": "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\data\\ShopOps\\0613\\23\\\u62fc\u591a\u591a\\20260613-234033_pinduoduo_orders_orders_8248e107e4f1bcf6c24c107dbbbbf803orders_export2026-06-13-22-27-48.csv",
+      "extracted_from": "",
+      "size_bytes": 1538143
+    }
+  ]
+}

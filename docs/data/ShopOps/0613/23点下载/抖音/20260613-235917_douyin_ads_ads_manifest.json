@@ -1,0 +1,18 @@
+{
+  "task": "douyin_ads",
+  "platform": "\u6296\u97f3",
+  "kind": "ads",
+  "date_token": "0613/23\u70b9\u4e0b\u8f7d",
+  "run_token": "20260613-235917",
+  "downloaded": [
+    "D:\\lyh\\agent\\agent-frame\\ShopOps\\data_robot\\downloads\\20260613-235917\\douyin_ads\\\u5168\u57df\u63a8\u5e7f\u6570\u636e_\u5546\u54c1_2026-06-06 00_00_00-2026-06-12 23_59_59-7650774819469983795.xlsx"
+  ],
+  "archived": [
+    {
+      "source": "D:\\lyh\\agent\\agent-frame\\ShopOps\\data_robot\\downloads\\20260613-235917\\douyin_ads\\\u5168\u57df\u63a8\u5e7f\u6570\u636e_\u5546\u54c1_2026-06-06 00_00_00-2026-06-12 23_59_59-7650774819469983795.xlsx",
+      "archived": "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\data\\ShopOps\\0613\\23\u70b9\u4e0b\u8f7d\\\u6296\u97f3\\20260613-235917_douyin_ads_ads_\u5168\u57df\u63a8\u5e7f\u6570\u636e_\u5546\u54c1_2026-06-06 00_00_00-2026-06-12 23_59_59-7650774819469983795.xlsx",
+      "extracted_from": "",
+      "size_bytes": 7911
+    }
+  ]
+}

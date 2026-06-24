@@ -1,0 +1,18 @@
+{
+  "task": "tmall_ads",
+  "platform": "天猫",
+  "kind": "ads",
+  "date_token": "0612",
+  "run_token": "20260612-220651",
+  "downloaded": [
+    "C:\\Users\\linyanhui\\Downloads\\营销场景报表_20260612_204905.zip"
+  ],
+  "archived": [
+    {
+      "source": "C:\\Users\\linyanhui\\Downloads\\营销场景报表_20260612_204905.zip",
+      "archived": "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\data\\ShopOps\\0612\\天猫\\20260612-220651_tmall_ads_ads_营销场景报表_20260612_204905.csv",
+      "extracted_from": "C:\\Users\\linyanhui\\Downloads\\营销场景报表_20260612_204905.zip",
+      "size_bytes": 3154
+    }
+  ]
+}

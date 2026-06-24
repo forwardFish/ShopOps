@@ -1,0 +1,18 @@
+{
+  "task": "tmall_ads",
+  "platform": "\u5929\u732b",
+  "kind": "ads",
+  "date_token": "0613/23\u70b9\u4e0b\u8f7d",
+  "run_token": "20260614-000340",
+  "downloaded": [
+    "data_robot\\downloads\\20260613-031904\\tmall_ads\\\u8425\u9500\u573a\u666f\u62a5\u8868_20260612_204849.zip"
+  ],
+  "archived": [
+    {
+      "source": "data_robot\\downloads\\20260613-031904\\tmall_ads\\\u8425\u9500\u573a\u666f\u62a5\u8868_20260612_204849.zip",
+      "archived": "D:\\lyh\\agent\\agent-frame\\ShopOps\\docs\\data\\ShopOps\\0613\\23\u70b9\u4e0b\u8f7d\\\u5929\u732b\\20260614-000340_tmall_ads_ads_\u8425\u9500\u573a\u666f\u62a5\u8868_20260612_204849.csv",
+      "extracted_from": "data_robot\\downloads\\20260613-031904\\tmall_ads\\\u8425\u9500\u573a\u666f\u62a5\u8868_20260612_204849.zip",
+      "size_bytes": 3154
+    }
+  ]
+}
