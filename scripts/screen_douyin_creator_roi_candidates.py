@@ -120,6 +120,106 @@ def comment_metrics(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def median(values: list[float]) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    mid = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[mid]
+    return (ordered[mid - 1] + ordered[mid]) / 2
+
+
+def load_video_samples(row: dict[str, Any]) -> list[dict[str, Any]]:
+    raw = row.get("普通视频样本JSON") or ""
+    if raw:
+        try:
+            parsed = json.loads(str(raw))
+        except (TypeError, json.JSONDecodeError):
+            parsed = []
+        if isinstance(parsed, list):
+            return [item for item in parsed if isinstance(item, dict)]
+    fallback: list[dict[str, Any]] = []
+    for index in range(1, 4):
+        heat = row.get(f"视频{index}获赞/热度")
+        if heat:
+            fallback.append({"sample_rank": index, "heat": heat, "sample_scope": "search_card_or_profile_top3"})
+    return fallback
+
+
+def video_metrics(row: dict[str, Any]) -> dict[str, Any]:
+    samples = load_video_samples(row)
+    heat_values = [parse_number(item.get("heat")) for item in samples]
+    heat_values = [value for value in heat_values if value > 0]
+    max_heat = max(heat_values) if heat_values else 0.0
+    avg_heat = sum(heat_values) / len(heat_values) if heat_values else 0.0
+    median_heat = median(heat_values)
+    low_threshold = max(100.0, median_heat * 0.25)
+    low_count = sum(1 for value in heat_values if value < low_threshold)
+    low_video_rate = low_count / len(heat_values) if heat_values else 1.0
+    max_to_median = max_heat / max(median_heat, 1.0) if heat_values else 0.0
+    enough_profile_sample = len(samples) >= 10
+    source = "主页普通视频样本" if row.get("普通视频样本JSON") else "搜索/主页前三视频"
+    return {
+        "samples": samples,
+        "heat_values": heat_values,
+        "sample_count": len(samples),
+        "numeric_sample_count": len(heat_values),
+        "max_heat": max_heat,
+        "avg_heat": avg_heat,
+        "median_heat": median_heat,
+        "low_video_rate": low_video_rate,
+        "max_to_median_heat_ratio": max_to_median,
+        "enough_profile_sample": enough_profile_sample,
+        "sample_source": source,
+    }
+
+
+def follower_video_risk(row: dict[str, Any], videos: dict[str, Any]) -> dict[str, Any]:
+    followers = parse_number(row.get("粉丝数"))
+    account_likes = parse_number(row.get("获赞数"))
+    median_heat = float(videos["median_heat"])
+    ratio = followers / max(median_heat, 1.0) if followers else 0.0
+    risk = 0.0
+    labels: list[str] = []
+    if followers >= 100_000 and median_heat < 100:
+        risk += 35
+        labels.append("粉丝高但普通视频中位热度低")
+    elif followers >= 50_000 and median_heat < 80:
+        risk += 25
+        labels.append("粉丝不少但普通视频互动弱")
+    if ratio >= 1000:
+        risk += 28
+        labels.append("粉丝/中位热度比过高")
+    elif ratio >= 500:
+        risk += 16
+        labels.append("粉丝/中位热度比偏高")
+    if videos["enough_profile_sample"] and videos["low_video_rate"] >= 0.65:
+        risk += 18
+        labels.append("多数普通视频热度偏低")
+    if videos["max_to_median_heat_ratio"] >= 20 and videos["numeric_sample_count"] >= 5:
+        risk += 14
+        labels.append("头部视频与普通视频断层明显")
+    if account_likes and followers and account_likes / max(followers, 1.0) < 1.5 and followers >= 50_000:
+        risk += 10
+        labels.append("总获赞/粉丝比偏低")
+    stability = 75
+    stability -= min(videos["low_video_rate"] * 35, 35)
+    stability -= min(max(videos["max_to_median_heat_ratio"] - 5, 0) * 2.5, 25)
+    if videos["enough_profile_sample"]:
+        stability += 8
+    elif videos["sample_count"] < 5:
+        stability -= 12
+    return {
+        "followers": followers,
+        "account_likes": account_likes,
+        "follower_to_median_heat_ratio": ratio,
+        "follower_video_risk": clamp(risk),
+        "interaction_stability_score": clamp(stability),
+        "labels": labels,
+    }
+
+
 def creator_type(row: dict[str, Any]) -> str:
     name = str(row.get("达人名称") or "")
     raw = f"{name}\n{row.get('简介') or ''}\n{row.get('原始搜索卡片') or ''}"
@@ -128,31 +228,66 @@ def creator_type(row: dict[str, Any]) -> str:
     return "达人疑似"
 
 
+
+
+def comment_credibility_level_from_score(score: float, sample_count: int) -> str:
+    if sample_count < 10:
+        return "\u6837\u672c\u4e0d\u8db3"
+    if score >= 80:
+        return "\u9ad8"
+    if score >= 60:
+        return "\u4e2d"
+    if score >= 40:
+        return "\u4f4e"
+    return "\u5dee"
+
+
+def interaction_label_from_scores(interaction_score: float, water_risk: float, sample_count: int) -> str:
+    if water_risk >= 65 or interaction_score < 45:
+        return "\u5f02\u5e38"
+    if interaction_score >= 70 and sample_count >= 10:
+        return "\u7a33\u5b9a"
+    return "\u4e00\u822c"
+
+
+def final_decision_from_tier(tier: str) -> str:
+    if tier.startswith(("S", "A")):
+        return "A\u7c7b\uff1a\u4f18\u5148\u8054\u7cfb"
+    if tier.startswith("B"):
+        return "B\u7c7b\uff1a\u4eba\u5de5\u590d\u6838"
+    if tier.startswith("D"):
+        return "D\u7c7b\uff1a\u6dd8\u6c70"
+    return "C\u7c7b\uff1a\u6682\u4e0d\u4f18\u5148"
+
 def screen_row(row: dict[str, Any]) -> dict[str, Any]:
     comments = comment_metrics(row)
-    heat_values = [
-        parse_number(row.get("视频1获赞/热度")),
-        parse_number(row.get("视频2获赞/热度")),
-        parse_number(row.get("视频3获赞/热度")),
-    ]
-    max_heat = max(heat_values)
-    avg_heat = sum(heat_values) / len(heat_values)
+    videos = video_metrics(row)
+    follower_risk = follower_video_risk(row, videos)
+    max_heat = float(videos["max_heat"])
+    avg_heat = float(videos["avg_heat"])
+    median_heat = float(videos["median_heat"])
     comment_total = parse_number(row.get("评论接口返回总数"))
     content_score = parse_number(row.get("内容相关评分"))
     current_score = parse_number(row.get("综合评分"))
     risk_text = str(row.get("评论风险结论") or "")
     type_text = creator_type(row)
+    stored_comment_score = parse_number(row.get("\u8bc4\u8bba\u53ef\u4fe1\u5ea6\u8bc4\u5206"))
+    comment_credibility_score = stored_comment_score if stored_comment_score > 0 else comments["comment_quality_score"]
+    comment_credibility_level = str(row.get("\u8bc4\u8bba\u53ef\u4fe1\u5ea6\u7b49\u7ea7") or comment_credibility_level_from_score(comment_credibility_score, comments["comment_count"]))
 
-    engagement_signal = 10
-    engagement_signal += min(math.log10(max(max_heat, 1)) * 10, 50)
-    engagement_signal += min(math.log10(max(comment_total, 1)) * 10, 35)
-    engagement_signal += comments["meaningful_comment_rate"] * 15
+    engagement_signal = 8
+    engagement_signal += min(math.log10(max(median_heat, 1)) * 12, 48)
+    engagement_signal += min(math.log10(max(max_heat, 1)) * 5, 18)
+    engagement_signal += min(math.log10(max(comment_total, 1)) * 8, 28)
+    engagement_signal += comments["meaningful_comment_rate"] * 14
+    if videos["enough_profile_sample"]:
+        engagement_signal += 8
     if comment_total < 10:
         engagement_signal -= 10
-    if max_heat < 100:
+    if median_heat < 100:
         engagement_signal -= 8
 
-    water_risk = 35
+    water_risk = 28
     if comments["low_value_comment_rate"] > 0.35:
         water_risk += 18
     if comments["duplicate_comment_rate"] > 0.15:
@@ -161,7 +296,7 @@ def screen_row(row: dict[str, Any]) -> dict[str, Any]:
         water_risk += 12
     if comment_total < 10:
         water_risk += 12
-    if max_heat < 100:
+    if median_heat < 100:
         water_risk += 10
     if risk_text == "高":
         water_risk += 18
@@ -169,24 +304,27 @@ def screen_row(row: dict[str, Any]) -> dict[str, Any]:
         water_risk += 8
     if type_text != "达人疑似":
         water_risk += 12
+    water_risk += follower_risk["follower_video_risk"] * 0.45
     if comments["meaningful_comment_rate"] > 0.75 and comments["relevant_comment_rate"] > 0.35:
         water_risk -= 12
-    if comment_total >= 100 and max_heat >= 1000:
+    if comment_total >= 100 and median_heat >= 1000 and follower_risk["follower_video_risk"] < 25:
         water_risk -= 8
+    interaction_label = interaction_label_from_scores(clamp(engagement_signal), clamp(water_risk), videos["sample_count"])
 
     roi_screen_score = 0
-    roi_screen_score += content_score * 0.25
-    roi_screen_score += comments["comment_quality_score"] * 0.30
-    roi_screen_score += clamp(engagement_signal) * 0.20
-    roi_screen_score += (100 - clamp(water_risk)) * 0.15
-    roi_screen_score += current_score * 0.10
+    roi_screen_score += content_score * 0.22
+    roi_screen_score += comment_credibility_score * 0.28
+    roi_screen_score += clamp(engagement_signal) * 0.18
+    roi_screen_score += (100 - clamp(water_risk)) * 0.18
+    roi_screen_score += follower_risk["interaction_stability_score"] * 0.09
+    roi_screen_score += current_score * 0.05
 
     blockers: list[str] = []
     if type_text != "达人疑似":
         blockers.append("疑似品牌号/官方号/直播间")
     if content_score < 60:
         blockers.append("内容相关度不足")
-    if comments["comment_count"] < 5:
+    if comments["comment_count"] < 8:
         blockers.append("真实评论样本过少")
     if comments["meaningful_comment_rate"] < 0.45:
         blockers.append("有意义评论比例偏低")
@@ -194,32 +332,40 @@ def screen_row(row: dict[str, Any]) -> dict[str, Any]:
         blockers.append("注水/低质互动风险偏高")
     if comment_total < 10:
         blockers.append("评论总量过低")
+    if follower_risk["follower_video_risk"] >= 35:
+        blockers.append("粉丝与普通视频互动错配")
+    if videos["sample_count"] < 10:
+        blockers.append("普通视频样本不足")
 
     if type_text != "达人疑似":
         tier = "D-非达人池"
     elif (
-        not blockers
-        and roi_screen_score >= 75
+        len([item for item in blockers if item != "普通视频样本不足"]) == 0
+        and roi_screen_score >= 76
         and content_score >= 60
-        and comments["comment_quality_score"] >= 80
-        and comment_total >= 100
-        and max_heat >= 1000
-        and clamp(water_risk) < 35
+        and comment_credibility_score >= 80
+        and comment_total >= 80
+        and median_heat >= 500
+        and clamp(water_risk) < 38
     ):
         tier = "S-优先联系小额测试"
     elif (
-        len(blockers) <= 1
+        len([item for item in blockers if item != "普通视频样本不足"]) <= 1
         and roi_screen_score >= 68
-        and comments["comment_quality_score"] >= 75
-        and comment_total >= 50
-        and max_heat >= 300
-        and clamp(water_risk) < 45
+        and comment_credibility_score >= 72
+        and comment_total >= 40
+        and median_heat >= 150
+        and clamp(water_risk) < 50
     ):
         tier = "A-进入报价沟通"
-    elif content_score >= 60 and comments["comment_quality_score"] >= 60:
+    elif content_score >= 60 and comment_credibility_score >= 58:
         tier = "B-补采主页后再决定"
     else:
         tier = "C-暂不投入"
+
+    data_limit = "已纳入主页普通视频样本" if videos["enough_profile_sample"] else "普通视频样本不足；增强采集建议补到近30条非置顶视频。"
+    if not row.get("粉丝数"):
+        data_limit += " 缺主页粉丝数。"
 
     return {
         "unique_key": row.get("unique_key"),
@@ -228,15 +374,35 @@ def screen_row(row: dict[str, Any]) -> dict[str, Any]:
         "搜索排名": row.get("搜索排名"),
         "账号类型判断": type_text,
         "ROI筛选等级": tier,
+        "\u6700\u7ec8\u7ed3\u8bba": row.get("\u6700\u7ec8\u7ed3\u8bba") or final_decision_from_tier(tier),
+        "\u5185\u5bb9\u76f8\u5173\u5ea6": row.get("\u5185\u5bb9\u76f8\u5173\u5ea6") or ("\u9ad8" if content_score >= 60 else "\u4e2d" if content_score >= 45 else "\u4f4e"),
+        "\u666e\u901a\u89c6\u9891\u4e92\u52a8\u60c5\u51b5": row.get("\u666e\u901a\u89c6\u9891\u4e92\u52a8\u60c5\u51b5") or interaction_label,
+        "\u8bc4\u8bba\u53ef\u4fe1\u5ea6\u8bc4\u5206": round(comment_credibility_score, 1),
+        "\u8bc4\u8bba\u53ef\u4fe1\u5ea6\u7b49\u7ea7": comment_credibility_level,
+        "\u8bc4\u8bba\u5206\u6790": row.get("\u8bc4\u8bba\u5206\u6790") or "",
+        "\u8bc4\u8bba\u539f\u59cb\u6837\u672c": row.get("\u8bc4\u8bba\u539f\u59cb\u6837\u672c") or "",
         "ROI筛选分": round(clamp(roi_screen_score), 1),
         "内容相关评分": round(content_score, 1),
         "原综合评分": round(current_score, 1),
         "评论质量评分": comments["comment_quality_score"],
         "互动信号评分": round(clamp(engagement_signal), 1),
+        "互动稳定性评分": round(follower_risk["interaction_stability_score"], 1),
         "注水风险评分": round(clamp(water_risk), 1),
+        "粉赞错配风险": round(follower_risk["follower_video_risk"], 1),
+        "粉丝数": int(follower_risk["followers"]),
+        "获赞数": int(follower_risk["account_likes"]),
+        "粉丝/中位热度比": round(follower_risk["follower_to_median_heat_ratio"], 1),
+        "粉赞风险标签": "；".join(follower_risk["labels"]),
         "评论风险结论": risk_text,
         "真实评论条数": comments["comment_count"],
         "评论接口返回总数": int(comment_total),
+        "普通视频样本数": videos["sample_count"],
+        "普通视频可解析热度数": videos["numeric_sample_count"],
+        "普通视频最高热度": int(max_heat),
+        "普通视频中位热度": int(median_heat),
+        "普通视频平均热度": round(avg_heat, 1),
+        "普通视频低热视频比例": round(videos["low_video_rate"], 3),
+        "最高/中位热度比": round(videos["max_to_median_heat_ratio"], 1),
         "视频最高可见热度": int(max_heat),
         "视频平均可见热度": round(avg_heat, 1),
         "有意义评论率": comments["meaningful_comment_rate"],
@@ -252,7 +418,8 @@ def screen_row(row: dict[str, Any]) -> dict[str, Any]:
         "购买意图样例": " | ".join(comments["purchase_examples"][:2]),
         "质疑样例": " | ".join(comments["doubt_examples"][:2]),
         "作品标题": compact_text(str(row.get("评论来源作品标题") or ""), 90),
-        "数据限制": "当前缺主页粉丝数和近10条视频，仅为第一轮数据筛人；入选后需补采主页和报价。",
+        "数据来源强度": videos["sample_source"],
+        "数据限制": data_limit,
     }
 
 
@@ -260,9 +427,9 @@ def suggested_action(tier: str, blockers: list[str]) -> str:
     if tier.startswith("S"):
         return "优先联系，谈寄样+低基础费+佣金；预算单人不超过500-700元"
     if tier.startswith("A"):
-        return "可联系报价，先要主页数据和近10条视频截图，再决定是否测试"
+        return "可联系报价，先要主页数据和近30条普通视频截图/互动，再决定是否测试"
     if tier.startswith("B"):
-        return "先补采主页粉丝、近10条视频点赞评论、报价；暂不付款"
+        return "先补采主页粉丝、近30条普通视频点赞评论、报价；暂不付款"
     if tier.startswith("D"):
         return "移出达人池；如有品牌自播合作需求再单独评估"
     return "暂不投入；除非后续补采数据显著改善"
@@ -320,7 +487,7 @@ def write_markdown(output_path: Path, ranked: list[dict[str, Any]], source_path:
         f"- C 暂不投入：{len(c_tier)}",
         f"- D 非达人池：{len(d_tier)}",
         "",
-        "当前结论是第一轮数据筛人，不是最终投放名单。原因是现有数据有真实评论，但缺少主页粉丝数、近10条视频完整互动和报价。",
+        "当前结论是数据筛人，不是最终投放名单。若输入包含主页粉丝和近30条非置顶普通视频，评分会纳入粉赞错配和互动稳定性；否则仍标记为待补采。",
         "",
         "## 优先名单",
         "",
@@ -342,13 +509,13 @@ def write_markdown(output_path: Path, ranked: list[dict[str, Any]], source_path:
         "",
         "- `ROI筛选分`：内容相关、评论质量、互动信号、低注水风险和原综合评分的加权分。",
         "- `评论质量评分`：看真实评论里是否有购买意图、使用问题、产品相关讨论，以及无意义评论和重复评论比例。",
-        "- `互动信号评分`：使用搜索卡片可见热度、评论总量和有意义评论率粗略判断互动强弱。",
-        "- `注水风险评分`：分数越高风险越大；当前只能判断低质互动风险，不能完全证明粉丝无注水。",
+        "- `互动信号评分`：优先使用主页近30条非置顶普通视频的中位/平均热度、评论总量和有意义评论率；缺增强数据时回退到搜索卡片热度。",
+        "- `注水风险评分`：分数越高风险越大；纳入无效/重复评论、粉丝-普通视频热度错配、头部视频与普通视频断层、品牌号风险。",
         "- `账号类型判断`：名称或文本中出现官方、旗舰店、直播间、专场等，会标记为疑似品牌/官方/直播间，避免混入达人池。",
         "",
         "## 下一步",
         "",
-        "1. 对 S/A 名单补采主页粉丝、总获赞、作品数和近10条视频互动。",
+        "1. 对 S/A 名单补采主页粉丝、总获赞、作品数和近30条非置顶普通视频互动。",
         "2. 询价时优先谈寄样 + 低基础费 + 佣金，单个达人首测控制在 500-700 元以内。",
         "3. 排除品牌号、官方号、直播间号和明显低质评论账号。",
         "4. 第一轮测试后按成交、点击、私信、加购和有效评论决定复投。",
