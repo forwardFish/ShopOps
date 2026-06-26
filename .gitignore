@@ -27,3 +27,5 @@ data_robot/downloads/
 data_robot/profiles/
 data_robot/recordings/
 data_robot/.state/
+/docs/live-evidence/*
+.codex/*

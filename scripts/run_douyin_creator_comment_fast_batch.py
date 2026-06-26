@@ -17,10 +17,15 @@ from crawl_douyin_creator_screening_to_feishu import (
     CreatorScreeningFeishuClient,
     MOBILE_USER_AGENT,
     TABLE_NAME,
+    add_creator_browser_args,
     ai_screen,
+    close_creator_browser_page,
     collect_search_candidates,
     comment_signal_summary,
+    comment_credibility_fields,
+    concise_decision_fields,
     fetch_real_comments,
+    open_creator_browser_page,
     score_creator,
     write_json,
 )
@@ -71,6 +76,8 @@ def build_row(keyword: str, candidate: Any, comments: dict[str, Any]) -> dict[st
         comment_summary["评论采样限制"] = "当前为公开接口首批评论抽样，不翻评论用户主页，不保存用户UID/头像；授权后可扩大到多页评论和回复链。"
     videos = [{"heat": parse_card_counts(candidate.raw_card).get("video_visible_count_2", "")}]
     scoring = score_creator(keyword, candidate.name, candidate.source_video_title, "", "", "", comment_summary, videos)
+    comment_fields = comment_credibility_fields(keyword, raw_comments, "\n".join([candidate.raw_card, comment_text]))
+    decision_fields = concise_decision_fields(scoring, comment_fields, videos)
     level, reason = ai_screen(keyword, candidate.name, candidate.source_video_title, "", videos)
     unique_source = f"fast-comment|{keyword}|{candidate.name}|{candidate.aweme_id}|{now}"
     unique_key = "creator_comment_" + hashlib.sha1(unique_source.encode("utf-8")).hexdigest()[:16]
@@ -88,6 +95,7 @@ def build_row(keyword: str, candidate: Any, comments: dict[str, Any]) -> dict[st
         "认证/身份": "",
         "简介": candidate.source_video_title,
         "主页链接": "",
+        **decision_fields,
         "主页截图": "",
         "评论来源作品ID": candidate.aweme_id,
         "评论来源作品标题": candidate.source_video_title,
@@ -97,7 +105,7 @@ def build_row(keyword: str, candidate: Any, comments: dict[str, Any]) -> dict[st
         "真实评论条数": str(real_comment_count),
         "评论接口返回总数": str(comments.get("total") or real_comment_count),
         "评论原始数据JSON": compact_json(raw_comments),
-        "评论原始数据范围": "so.douyin.com 评论接口首批公开评论；字段保留 cid/text/create_time/digg_count/reply_comment_total/commenter_nickname，不保存用户UID/头像/主页。",
+        "评论原始数据范围": "so.douyin.com 评论接口公开评论分页抽样，默认最多50条；字段保留 cid/text/create_time/digg_count/reply_comment_total/commenter_nickname，不保存用户UID/头像/主页。",
         **comment_summary,
         **scoring,
         "AI初筛等级": level,
@@ -140,8 +148,8 @@ async def async_main(args: argparse.Namespace) -> int:
 
     if not args.upload_only:
         async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(channel="chrome", headless=True)
-            page = await browser.new_page(viewport={"width": 390, "height": 844}, user_agent=MOBILE_USER_AGENT)
+            session = await open_creator_browser_page(playwright, args, start_url="https://so.douyin.com/")
+            page = session.page
             for keyword_index, keyword in enumerate(keywords, 1):
                 if len(rows) >= args.target:
                     break
@@ -193,7 +201,7 @@ async def async_main(args: argparse.Namespace) -> int:
                     }
                 )
                 write_json(evidence_dir / "keyword-runs.partial.json", {"keyword_runs": keyword_runs})
-            await browser.close()
+            await close_creator_browser_page(session)
 
     write_json(evidence_dir / "rows.json", {"rows": rows})
     feishu = CreatorScreeningFeishuClient()
@@ -240,13 +248,14 @@ def main() -> int:
     parser.add_argument("--target", type=int, default=50)
     parser.add_argument("--keywords", default=",".join(DEFAULT_KEYWORDS))
     parser.add_argument("--per-keyword-candidates", type=int, default=12)
-    parser.add_argument("--comments-per-creator", type=int, default=20)
+    parser.add_argument("--comments-per-creator", type=int, default=50)
     parser.add_argument("--search-timeout-seconds", type=int, default=120)
     parser.add_argument("--comment-timeout-seconds", type=int, default=20)
     parser.add_argument("--evidence-dir", default="docs/live-evidence")
     parser.add_argument("--seed-rows", default="")
     parser.add_argument("--upload-only", action="store_true")
     parser.add_argument("--allow-empty-comments", action="store_true")
+    add_creator_browser_args(parser)
     args = parser.parse_args()
     args.require_comments = not args.allow_empty_comments
     return asyncio.run(async_main(args))
