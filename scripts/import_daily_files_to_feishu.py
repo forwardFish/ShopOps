@@ -687,7 +687,7 @@ class FeishuDailyClient:
 
 
 def is_retryable_feishu_response(status_code: int, body: dict[str, Any]) -> bool:
-    return status_code in {429, 500, 502, 503, 504} or body.get("code") == 1254607
+    return status_code in {429, 500, 502, 503, 504} or body.get("code") in {1254607, 1255002}
 
 
 def discover_daily_files(batch_dir: Path) -> dict[str, dict[str, list[Path]]]:

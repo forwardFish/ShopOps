@@ -62,14 +62,17 @@ LOGIN_BUTTON_SELECTORS = (
 )
 
 TASK_FILENAME_HINTS = {
-    "pinduoduo_orders": ("orders_export", "订单"),
-    "pinduoduo_ads": ("商品推广", "账户", "分天数据"),
-    "wechat_channels_orders": ("微信小店订单",),
-    "douyin_ads": ("全域推广数据", "商品"),
+    "pinduoduo_orders": ("orders_export", "\u8ba2\u5355"),
+    "pinduoduo_ads": ("\u5546\u54c1\u63a8\u5e7f", "\u8d26\u6237", "\u5206\u5929\u6570\u636e"),
+    "wechat_channels_orders": ("\u5fae\u4fe1\u5c0f\u5e97\u8ba2\u5355",),
+    "douyin_ads": ("\u5168\u57df\u63a8\u5e7f\u6570\u636e", "\u5546\u54c1"),
     "tmall_orders": ("ExportOrderList",),
-    "tmall_ads": ("营销场景报表",),
+    "tmall_ads": ("\u8425\u9500\u573a\u666f\u62a5\u8868",),
 }
 
+TASK_FILENAME_REJECT_HINTS = {
+    "pinduoduo_ads": ("\u6c47\u603b\u6570\u636e",),
+}
 
 def json_text(payload: Any) -> str:
     return json.dumps(payload, ensure_ascii=True, indent=2, default=str)
@@ -301,6 +304,8 @@ def summarize_task_results(results: list[dict[str, Any]]) -> str:
         return "skipped_cooldown"
     if any(status == "error" for status in statuses):
         return "finished_with_errors"
+    if any(status == "downloaded_unmatched" for status in statuses):
+        return "finished_with_unmatched_downloads"
     if any(status == "no_download" for status in statuses):
         return "finished_with_missing_downloads"
     if any(status == "skipped_cooldown" for status in statuses):
@@ -318,6 +323,8 @@ def summarize_platform_results(results: list[dict[str, Any]]) -> str:
         return "skipped_cooldown"
     if any(status == "finished_with_errors" for status in statuses):
         return "finished_with_errors"
+    if any(status == "finished_with_unmatched_downloads" for status in statuses):
+        return "finished_with_unmatched_downloads"
     if any(status == "finished_with_missing_downloads" for status in statuses):
         return "finished_with_missing_downloads"
     if any(status in {"finished_with_skips", "skipped_cooldown"} for status in statuses):
@@ -452,6 +459,7 @@ async def collect_task(task: RobotTask, options: CollectOptions, *, date_token: 
         downloaded.extend(path for path in watched if path.resolve() not in known)
 
     archived = archive_downloads(task, downloaded, options.archive_root, date_token=date_token, run_token=run_token)
+    rejected_downloads = rejected_download_reasons(task, downloaded, archived)
     manifest_path = write_archive_manifest(
         task,
         archived,
@@ -472,12 +480,13 @@ async def collect_task(task: RobotTask, options: CollectOptions, *, date_token: 
         )
     return {
         "task": task.key,
-        "status": "downloaded" if archived else "no_download",
+        "status": task_download_status(downloaded, archived),
         "platform": task.platform,
         "kind": task.kind,
         "downloaded": [str(path) for path in downloaded],
         "watch_dir": str(options.watch_dir) if options.watch_dir else "",
         "diagnostics": diagnostics,
+        "rejected_downloads": rejected_downloads,
         "archived": [str(item.archived) for item in archived],
         "manifest": str(manifest_path) if manifest_path else "",
         "import_check": import_check,
@@ -902,6 +911,7 @@ async def collect_task_direct_cdp(
         diagnostics["closed_duplicate_targets"] = await page.close_duplicate_targets(task.url)
 
     archived = archive_downloads(task, downloaded, options.archive_root, date_token=date_token, run_token=run_token)
+    rejected_downloads = rejected_download_reasons(task, downloaded, archived)
     manifest_path = write_archive_manifest(
         task,
         archived,
@@ -922,12 +932,13 @@ async def collect_task_direct_cdp(
         )
     return {
         "task": task.key,
-        "status": "downloaded" if archived else "no_download",
+        "status": task_download_status(downloaded, archived),
         "platform": task.platform,
         "kind": task.kind,
         "downloaded": [str(path) for path in downloaded],
         "watch_dir": str(options.watch_dir) if options.watch_dir else "",
         "diagnostics": diagnostics,
+        "rejected_downloads": rejected_downloads,
         "archived": [str(item.archived) for item in archived],
         "manifest": str(manifest_path) if manifest_path else "",
         "import_check": import_check,
@@ -2224,18 +2235,58 @@ def archive_downloads(task: RobotTask, files: list[Path], archive_root: Path, *,
     return archived
 
 
+def task_download_status(downloaded: list[Path], archived: list[ArchivedFile]) -> str:
+    if archived:
+        return "downloaded"
+    if downloaded:
+        return "downloaded_unmatched"
+    return "no_download"
+
+
+def rejected_download_reasons(task: RobotTask, files: list[Path], archived: list[ArchivedFile]) -> list[dict[str, str]]:
+    archived_sources = {item.source.resolve() for item in archived if item.source.exists()}
+    rejected: list[dict[str, str]] = []
+    for source in files:
+        try:
+            resolved = source.resolve()
+        except OSError:
+            resolved = source
+        if resolved in archived_sources:
+            continue
+        rejected.append({"path": str(source), "reason": task_filename_reject_reason(task, source.name)})
+    return rejected
+
+
+def task_filename_reject_reason(task: RobotTask, filename: str) -> str:
+    suffix = Path(filename).suffix.lower()
+    if suffix not in {".csv", ".xls", ".xlsx", ".zip"}:
+        return f"unsupported_suffix:{suffix or 'none'}"
+    if task.key == "pinduoduo_ads" and filename_contains_any(filename, TASK_FILENAME_REJECT_HINTS.get(task.key, ())):
+        return "pinduoduo_ads_summary_report_not_daily_report"
+    if not matches_task_filename(task, filename):
+        return "filename_does_not_match_task"
+    return "not_archived"
+
+
 def matches_task_filename(task: RobotTask, filename: str) -> bool:
     if task.key == "douyin_influencer":
         return bool(
             re.match(r"^[0-9a-f-]{20,}_[0-9]+(?: \(\d+\))?\.xlsx$", filename, flags=re.IGNORECASE)
-            or "佣金" in filename
-            or "达人" in filename
+            or "\u4f63\u91d1" in filename
+            or "\u8fbe\u4eba" in filename
         )
-    if task.key == "pinduoduo_ads" and "分天数据" not in filename:
-        return False
+    if task.key == "pinduoduo_ads":
+        if filename_contains_any(filename, TASK_FILENAME_REJECT_HINTS.get(task.key, ())):
+            return False
+        if not filename_contains_any(filename, ("\u5206\u5929\u6570\u636e",)):
+            return False
     hints = TASK_FILENAME_HINTS.get(task.key)
     if not hints:
         return True
+    return filename_contains_any(filename, hints)
+
+
+def filename_contains_any(filename: str, hints: tuple[str, ...]) -> bool:
     lowered = filename.lower()
     return any(hint.lower() in lowered for hint in hints)
 

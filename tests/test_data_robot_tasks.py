@@ -204,6 +204,17 @@ def test_daily_download_does_not_restart_after_partial_success():
     assert not platform_result_failed_on_cdp_connect(result)
 
 
+def test_downloaded_unmatched_summarizes_as_unmatched_failure():
+    assert summarize_task_results([
+        {"status": "downloaded"},
+        {"status": "downloaded_unmatched"},
+    ]) == "finished_with_unmatched_downloads"
+    assert summarize_platform_results([
+        {"status": "downloaded"},
+        {"status": "finished_with_unmatched_downloads"},
+    ]) == "finished_with_unmatched_downloads"
+
+
 def test_common_parser_defaults_to_eight_minute_cooldown_and_five_attempts():
     from data_robot.common import options_from_args, parse_common_args
 

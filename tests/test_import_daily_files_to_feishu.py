@@ -1019,5 +1019,6 @@ def test_unique_key_rules_are_stable():
 
 def test_feishu_data_not_ready_response_is_retryable():
     assert is_retryable_feishu_response(400, {"code": 1254607})
+    assert is_retryable_feishu_response(200, {"code": 1255002})
     assert is_retryable_feishu_response(429, {"code": 99991663})
     assert not is_retryable_feishu_response(400, {"code": 1254000})
