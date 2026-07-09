@@ -549,6 +549,7 @@ def test_run_import_can_limit_orders_to_selected_date_without_changing_influence
 
 def test_jushuitan_selected_dates_query_only_requested_order_day(monkeypatch):
     posted_bodies = []
+    sessions = []
 
     class FakeResponse:
         def raise_for_status(self) -> None:
@@ -582,6 +583,9 @@ def test_jushuitan_selected_dates_query_only_requested_order_day(monkeypatch):
     class FakeSession:
         trust_env = False
 
+        def __init__(self):
+            sessions.append(self)
+
         def post(self, url, params=None, json=None, timeout=None):
             posted_bodies.append(json)
             return FakeResponse()
@@ -598,6 +602,8 @@ def test_jushuitan_selected_dates_query_only_requested_order_day(monkeypatch):
     rows, info = daily_import.fetch_jushuitan_douyin_order_rows(settings, {"2026-06-17"})
 
     assert [row[F_ORDER_NO] for row in rows] == ["target"]
+    assert sessions[0].trust_env is True
+    assert info["trust_env_proxy"] is True
     assert posted_bodies[0]["modified_begin"] == "2026-06-17 00:00:00"
     assert posted_bodies[0]["modified_end"].startswith("2026-06-18")
     assert info["query_window_source"] == "selected_dates"

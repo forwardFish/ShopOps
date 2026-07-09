@@ -1000,7 +1000,7 @@ def fetch_jushuitan_douyin_order_rows(settings: Any, selected_dates: set[str] | 
         raise RuntimeError(f"Missing Jushuitan credentials for Douyin fallback: {', '.join(missing)}")
 
     session = requests.Session()
-    session.trust_env = False
+    session.trust_env = jushuitan_trust_env_proxy()
     fetched_at = datetime.now()
     start_at, end_at, query_info = jushuitan_query_window(selected_dates, fetched_at)
     api_settings = replace(
@@ -1074,7 +1074,15 @@ def fetch_jushuitan_douyin_order_rows(settings: Any, selected_dates: set[str] | 
         "paid_orders": len(paid_orders),
         "rows": len(rows),
         "date_filter_applied": date_filter_applied,
+        "trust_env_proxy": session.trust_env,
     }
+
+
+def jushuitan_trust_env_proxy() -> bool:
+    value = os.getenv("SHOPOPS_JUSHUITAN_TRUST_ENV_PROXY")
+    if value is None:
+        return True
+    return value.strip().lower() not in {"0", "false", "no", "off"}
 
 
 def jushuitan_query_window(selected_dates: set[str] | None, fetched_at: datetime) -> tuple[datetime, datetime, dict[str, Any]]:
