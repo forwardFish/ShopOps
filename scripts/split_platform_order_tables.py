@@ -24,6 +24,7 @@ from shopops.services.product_breakdown import (
     DEFAULT_PRODUCT_CATALOG_TABLE_ID,
     ProductRule,
     effective_sales_amount,
+    extract_order_product_code,
     product_breakdown_values,
     product_field_names,
     product_rules_from_records,
@@ -82,6 +83,7 @@ F_ORDER_NO = "订单号"
 F_CREATED_AT = "创建时间"
 F_BUYER_NICK = "买家昵称"
 F_PRODUCT_NAME = "商品名称"
+F_PRODUCT_CODE = "商品编码"
 F_UNIT_PRICE = "单价"
 F_QUANTITY = "数量"
 F_FULFILL_STATUS = "履约/售后状态"
@@ -108,6 +110,7 @@ UNIFIED_FIELDS = [
     (F_CREATED_AT, TEXT_FIELD),
     (F_BUYER_NICK, TEXT_FIELD),
     (F_PRODUCT_NAME, TEXT_FIELD),
+    (F_PRODUCT_CODE, TEXT_FIELD),
     (F_UNIT_PRICE, NUMBER_FIELD),
     (F_QUANTITY, NUMBER_FIELD),
     (F_FULFILL_STATUS, TEXT_FIELD),
@@ -632,6 +635,7 @@ def merge_rows_by_unique_key(rows: list[dict[str, Any]]) -> tuple[list[dict[str,
 
 def merge_duplicate_order_row(target: dict[str, Any], source: dict[str, Any]) -> None:
     target[F_PRODUCT_NAME] = join_unique_text(target.get(F_PRODUCT_NAME), source.get(F_PRODUCT_NAME))
+    target[F_PRODUCT_CODE] = join_unique_text(target.get(F_PRODUCT_CODE), source.get(F_PRODUCT_CODE))
     for field in (F_QUANTITY, F_PAID_AMOUNT, F_REFUND_AMOUNT, F_PRODUCT_COST, F_FREIGHT_COST, F_PLATFORM_FEE, F_OTHER_FEE):
         target[field] = round((number(target.get(field)) or 0) + (number(source.get(field)) or 0), 2)
     target[F_FULFILL_STATUS] = join_unique_text(target.get(F_FULFILL_STATUS), source.get(F_FULFILL_STATUS), separator="/")
@@ -1079,6 +1083,7 @@ def apply_product_breakdown_values(rows: list[dict[str, Any]], product_rules: li
             product_breakdown_values(
                 product_rules,
                 product_name=row.get(F_PRODUCT_NAME),
+                product_code=extract_order_product_code(row),
                 actual_quantity=row.get(F_QUANTITY),
                 valid_sales=effective_sales_amount(row.get(F_PAID_AMOUNT), row.get(F_REFUND_AMOUNT)),
             )

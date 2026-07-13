@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from data_robot.common import DEFAULT_ARCHIVE_ROOT, DEFAULT_EVIDENCE_ROOT, evidence_token, hourly_batch_token, write_json
+from data_robot.common import DEFAULT_ARCHIVE_ROOT, DEFAULT_EVIDENCE_ROOT, add_batch_layout_args, evidence_token, hourly_batch_token, write_json
 from data_robot.start_chrome import start_chrome_for_task_with_log, stop_chrome_for_task
 from data_robot.verify_batch import verify_batch
 
@@ -106,7 +106,7 @@ def run_browser_check(
 def main() -> int:
     parser = argparse.ArgumentParser(description="Diagnose ShopOps data robot runtime readiness.")
     parser.add_argument("--date-token", default=datetime.now().strftime("%m%d"))
-    parser.add_argument("--batch-hour", default=datetime.now().strftime("%H"))
+    add_batch_layout_args(parser, batch_hour_default=datetime.now().strftime("%H"))
     parser.add_argument("--archive-root", default=str(DEFAULT_ARCHIVE_ROOT))
     parser.add_argument("--evidence-root", default=str(DEFAULT_EVIDENCE_ROOT))
     parser.add_argument("--task", default="pinduoduo_orders")
@@ -117,7 +117,7 @@ def main() -> int:
 
     evidence_root = Path(args.evidence_root)
     evidence_root.mkdir(parents=True, exist_ok=True)
-    batch_token = hourly_batch_token(args.date_token, args.batch_hour)
+    batch_token = args.date_token if args.flat_date_folder else hourly_batch_token(args.date_token, args.batch_hour)
     summary = {
         "status": "unknown",
         "date_token": args.date_token,

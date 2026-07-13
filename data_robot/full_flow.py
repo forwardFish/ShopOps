@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from data_robot.common import DEFAULT_ARCHIVE_ROOT, DEFAULT_EVIDENCE_ROOT, evidence_token, hourly_batch_token, print_json, write_json
+from data_robot.common import DEFAULT_ARCHIVE_ROOT, DEFAULT_EVIDENCE_ROOT, add_batch_layout_args, evidence_token, hourly_batch_token, print_json, write_json
 from data_robot.verify_batch import verify_batch
 
 
@@ -144,6 +144,7 @@ def build_doctor_command(args: argparse.Namespace, date_token: str, batch_hour: 
     ]
     if args.browser_profile_root:
         command.extend(["--browser-profile-root", args.browser_profile_root])
+    command.append("--flat-date-folder" if args.flat_date_folder else "--hourly-batch")
     return command
 
 
@@ -185,8 +186,7 @@ def build_download_command(args: argparse.Namespace, date_token: str, batch_hour
         command.extend(["--task", task])
     if args.force:
         command.append("--force")
-    if args.flat_date_folder:
-        command.append("--flat-date-folder")
+    command.append("--flat-date-folder" if args.flat_date_folder else "--hourly-batch")
     if args.no_cdp:
         command.append("--no-cdp")
     if args.direct_cdp:
@@ -234,8 +234,7 @@ def build_import_command(args: argparse.Namespace, batch_dir: Path) -> list[str]
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run ShopOps downloader, verify the batch, then import it into Feishu.")
     parser.add_argument("--date-token", default=datetime.now().strftime("%m%d"))
-    parser.add_argument("--batch-hour", default=datetime.now().strftime("%H"), help="Hourly archive subfolder. Defaults to current hour.")
-    parser.add_argument("--flat-date-folder", action="store_true", help="Use the old docs/data/ShopOps/<MMDD> layout without an hourly subfolder.")
+    add_batch_layout_args(parser, batch_hour_default=datetime.now().strftime("%H"))
     parser.add_argument("--archive-root", default=str(DEFAULT_ARCHIVE_ROOT))
     parser.add_argument("--evidence-root", default=str(DEFAULT_EVIDENCE_ROOT))
     parser.add_argument("--watch-dir", default=str(Path.home() / "Downloads"))
@@ -244,8 +243,8 @@ def main() -> int:
     parser.add_argument("--timeout-seconds", type=int, default=900)
     parser.add_argument("--idle-seconds", type=int, default=30)
     parser.add_argument("--max-downloads", type=int, default=5)
-    parser.add_argument("--min-task-interval-seconds", type=int, default=480)
-    parser.add_argument("--retry-interval-seconds", type=int, default=480)
+    parser.add_argument("--min-task-interval-seconds", type=int, default=0)
+    parser.add_argument("--retry-interval-seconds", type=int, default=0)
     parser.add_argument("--max-task-attempts", type=int, default=5)
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--no-cdp", action="store_true")

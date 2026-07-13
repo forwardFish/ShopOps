@@ -12,6 +12,9 @@ from data_robot.common import (
     files_created_since,
     hourly_batch_token,
     matches_task_filename,
+    rejected_download_reasons,
+    task_download_status,
+    task_filename_reject_reason,
     wait_for_watched_files,
     write_archive_manifest,
 )
@@ -77,6 +80,34 @@ def test_archive_download_accepts_hourly_batch_token(tmp_path: Path):
 def test_pinduoduo_ads_requires_daily_report_file():
     assert matches_task_filename(TASKS["pinduoduo_ads"], "商品推广_账户_分天数据_20260606至20260612.xls")
     assert not matches_task_filename(TASKS["pinduoduo_ads"], "商品推广_账户_汇总数据_商品_20260606至20260612.xls")
+
+
+def test_pinduoduo_ads_reject_reason_identifies_summary_report():
+    assert (
+        task_filename_reject_reason(
+            TASKS["pinduoduo_ads"],
+            "\u5546\u54c1\u63a8\u5e7f_\u8d26\u6237_\u6c47\u603b\u6570\u636e_\u5546\u54c1_20260627\u81f320260703.xls",
+        )
+        == "pinduoduo_ads_summary_report_not_daily_report"
+    )
+
+
+def test_downloaded_unmatched_status_keeps_wrong_files_out_of_success(tmp_path: Path):
+    source = tmp_path / "\u5546\u54c1\u63a8\u5e7f_\u8d26\u6237_\u6c47\u603b\u6570\u636e_\u5546\u54c1_20260627\u81f320260703.xls"
+    source.write_bytes(b"summary")
+    archived = archive_downloads(
+        TASKS["pinduoduo_ads"],
+        [source],
+        tmp_path / "archive",
+        date_token="0704",
+        run_token="20260704-120000",
+    )
+
+    assert archived == []
+    assert task_download_status([source], archived) == "downloaded_unmatched"
+    assert rejected_download_reasons(TASKS["pinduoduo_ads"], [source], archived) == [
+        {"path": str(source), "reason": "pinduoduo_ads_summary_report_not_daily_report"}
+    ]
 
 
 def test_archive_download_skips_non_tabular_files(tmp_path: Path):

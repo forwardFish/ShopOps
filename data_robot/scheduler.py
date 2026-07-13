@@ -4,6 +4,7 @@ import argparse
 import asyncio
 from datetime import datetime
 
+from data_robot.common import DEFAULT_ARCHIVE_ROOT, DEFAULT_EVIDENCE_ROOT, add_batch_layout_args
 from data_robot.run_all import PLATFORMS, run
 
 
@@ -25,8 +26,9 @@ def main() -> int:
     parser.add_argument("--platform", action="append", choices=PLATFORMS, help="Only run selected platform; repeatable.")
     parser.add_argument("--task", action="append", help="Only run selected task key; repeatable.")
     parser.add_argument("--date-token", default="", help="Archive date directory, e.g. 0612. Defaults to today.")
-    parser.add_argument("--archive-root", default=r"D:\lyh\agent\agent-frame\ShopOps\docs\data\ShopOps")
-    parser.add_argument("--evidence-root", default=r"D:\lyh\agent\agent-frame\ShopOps\docs\live-evidence\data-robot")
+    add_batch_layout_args(parser)
+    parser.add_argument("--archive-root", default=str(DEFAULT_ARCHIVE_ROOT))
+    parser.add_argument("--evidence-root", default=str(DEFAULT_EVIDENCE_ROOT))
     parser.add_argument("--timeout-seconds", type=int, default=0)
     parser.add_argument("--idle-seconds", type=int, default=20)
     parser.add_argument("--max-downloads", type=int, default=5)
@@ -39,6 +41,7 @@ def main() -> int:
     parser.add_argument("--headless", action="store_true")
     parser.add_argument("--browser-channel", default="chrome")
     parser.add_argument("--cdp-url", default="")
+    parser.add_argument("--direct-cdp", action="store_true")
     parser.add_argument("--watch-dir", default="")
     parser.add_argument("--run-import-check", action="store_true")
     parser.add_argument("--skip-import-check", action="store_true", help=argparse.SUPPRESS)

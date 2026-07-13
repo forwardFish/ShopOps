@@ -17,8 +17,10 @@ from shopops.services.product_breakdown import (
     DEFAULT_PRODUCT_CATALOG_TABLE_ID,
     ORDER_ACTUAL_QUANTITY_FORMULA_FIELD,
     ORDER_PRODUCT_NAME_FIELD,
+    ORDER_PRODUCT_CODE_FIELD,
     ORDER_QUANTITY_FIELD,
     ORDER_VALID_SALES_FORMULA_FIELD,
+    extract_order_product_code,
     product_breakdown_values,
     product_field_names,
     product_rules_from_records,
@@ -48,6 +50,7 @@ class ProductBreakdownBackfill:
         product_fields = product_field_names(rules)
         read_fields = [
             ORDER_PRODUCT_NAME_FIELD,
+            ORDER_PRODUCT_CODE_FIELD,
             ORDER_QUANTITY_FIELD,
             ORDER_ACTUAL_QUANTITY_FORMULA_FIELD,
             ORDER_VALID_SALES_FORMULA_FIELD,
@@ -90,6 +93,7 @@ class ProductBreakdownBackfill:
             values = product_breakdown_values(
                 rules,
                 product_name=fields.get(ORDER_PRODUCT_NAME_FIELD),
+                product_code=extract_order_product_code(fields),
                 actual_quantity=source_quantity(fields),
                 valid_sales=fields.get(ORDER_VALID_SALES_FORMULA_FIELD),
             )
@@ -102,6 +106,7 @@ class ProductBreakdownBackfill:
                         {
                             "record_id": record.get("record_id"),
                             ORDER_PRODUCT_NAME_FIELD: fields.get(ORDER_PRODUCT_NAME_FIELD),
+                            ORDER_PRODUCT_CODE_FIELD: fields.get(ORDER_PRODUCT_CODE_FIELD),
                             ORDER_QUANTITY_FIELD: fields.get(ORDER_QUANTITY_FIELD),
                             "原始数量": raw_source_quantity(fields.get(RAW_FIELD)),
                             ORDER_ACTUAL_QUANTITY_FORMULA_FIELD: fields.get(ORDER_ACTUAL_QUANTITY_FORMULA_FIELD),

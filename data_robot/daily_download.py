@@ -13,6 +13,8 @@ from typing import Any
 from data_robot.common import (
     DEFAULT_ARCHIVE_ROOT,
     DEFAULT_EVIDENCE_ROOT,
+    add_batch_layout_args,
+    configure_console_encoding,
     evidence_token,
     hourly_batch_token,
     is_recoverable_cdp_error,
@@ -42,6 +44,41 @@ PLATFORM_ENTRY_TASK = {
 }
 
 
+def ensure_platform_cdp(
+    platform: str,
+    *,
+    profile_suffix: str,
+    profile_root: str,
+    timeout_seconds: int = 30,
+) -> dict[str, Any]:
+    """Use an existing CDP browser or start the dedicated platform profile."""
+    port = PLATFORM_PORTS[platform]
+    if wait_for_cdp(port, timeout_seconds=2):
+        return {"status": "ready", "started": False, "port": port}
+    task_key = PLATFORM_ENTRY_TASK[platform]
+    try:
+        process = start_chrome_for_task(
+            task_key,
+            port=port,
+            profile_suffix=profile_suffix,
+            profile_root=profile_root,
+        )
+    except Exception as exc:
+        return {
+            "status": "start_failed",
+            "started": False,
+            "port": port,
+            "error": f"{type(exc).__name__}: {exc}",
+        }
+    ready = wait_for_cdp(port, timeout_seconds=timeout_seconds)
+    return {
+        "status": "ready" if ready else "not_ready",
+        "started": True,
+        "port": port,
+        "pid": process.pid,
+    }
+
+
 def cdp_base_url(platform: str) -> str:
     return f"http://localhost:{PLATFORM_PORTS[platform]}"
 
@@ -59,8 +96,11 @@ def launch_login_browsers(
     launched: dict[str, str] = {}
     for platform in platforms:
         port = PLATFORM_PORTS[platform]
-        task_key = PLATFORM_ENTRY_TASK[platform]
-        start_chrome_for_task(task_key, port=port, profile_suffix=profile_suffix, profile_root=profile_root)
+        ensure_platform_cdp(
+            platform,
+            profile_suffix=profile_suffix,
+            profile_root=profile_root,
+        )
         launched[platform] = cdp_base_url(platform)
     return launched
 
@@ -116,6 +156,14 @@ async def run_daily(args: argparse.Namespace) -> dict[str, Any]:
     date_token = args.date_token or datetime.now().strftime("%m%d")
     batch_token = date_token if args.flat_date_folder else hourly_batch_token(date_token, args.batch_hour)
     watch_dir = Path(args.watch_dir) if args.watch_dir else default_downloads_dir()
+    cdp_bootstrap: dict[str, dict[str, Any]] = {}
+    if not args.no_cdp:
+        for platform in platforms:
+            cdp_bootstrap[platform] = ensure_platform_cdp(
+                platform,
+                profile_suffix=args.browser_profile_suffix,
+                profile_root=args.browser_profile_root,
+            )
     results = []
     for platform in platforms:
         cdp_url = "" if args.no_cdp else cdp_base_url(platform)
@@ -142,9 +190,19 @@ async def run_daily(args: argparse.Namespace) -> dict[str, Any]:
             evidence_root=args.evidence_root,
         )
         platform_result = await run_platform(platform, platform_args)
+        if cdp_url and platform_result_failed_on_cdp_connect(platform_result):
+            # Preserve the existing Chrome session and retry through the
+            # minimal direct-CDP path.  This is especially important for
+            # long-running Tmall pages whose Playwright attachment can stall
+            # while normal browser input remains available.
+            direct_args = Namespace(**vars(platform_args))
+            direct_args.direct_cdp = True
+            print(f"[{platform}] Playwright CDP attach failed; retrying through direct CDP without restarting Chrome.", flush=True)
+            platform_result = await run_platform(platform, direct_args)
+            platform_result["retried_with_direct_cdp"] = True
         if (
             cdp_url
-            and not args.no_restart_stale_cdp
+            and args.restart_stale_cdp
             and platform_result_failed_on_cdp_connect(platform_result)
         ):
             print(f"[{platform}] CDP connection is stale; restarting the dedicated Chrome profile and retrying once.", flush=True)
@@ -170,6 +228,7 @@ async def run_daily(args: argparse.Namespace) -> dict[str, Any]:
         "batch_token": batch_token,
         "batch_dir": str(Path(args.archive_root) / batch_token),
         "watch_dir": str(watch_dir),
+        "cdp_bootstrap": cdp_bootstrap,
         "platforms": platforms,
         "results": results,
         "verification": verification,
@@ -182,21 +241,21 @@ async def run_daily(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def main() -> int:
+    configure_console_encoding()
     parser = argparse.ArgumentParser(description="Daily ShopOps Excel/CSV downloader for all configured platforms.")
     parser.add_argument("--prepare-login", action="store_true", help="Open one normal Chrome session per platform for login.")
     parser.add_argument("--platform", action="append", choices=PLATFORMS, help="Only run selected platform; repeatable.")
     parser.add_argument("--task", action="append", help="Only run selected task key; repeatable.")
     parser.add_argument("--date-token", default="", help="Archive date directory, e.g. 0611. Defaults to today.")
-    parser.add_argument("--batch-hour", default="", help="Hourly archive subfolder, e.g. 23. Defaults to current hour.")
-    parser.add_argument("--flat-date-folder", action="store_true", help="Use the old docs/data/ShopOps/<MMDD> layout without an hourly subfolder.")
+    add_batch_layout_args(parser)
     parser.add_argument("--archive-root", default=str(DEFAULT_ARCHIVE_ROOT))
     parser.add_argument("--evidence-root", default=str(DEFAULT_EVIDENCE_ROOT))
     parser.add_argument("--watch-dir", default=str(default_downloads_dir()))
     parser.add_argument("--timeout-seconds", type=int, default=900)
     parser.add_argument("--idle-seconds", type=int, default=30)
     parser.add_argument("--max-downloads", type=int, default=5)
-    parser.add_argument("--min-task-interval-seconds", type=int, default=480, help="Minimum interval between two export attempts for the same task.")
-    parser.add_argument("--retry-interval-seconds", type=int, default=480, help="Wait before retrying a task that produced no download.")
+    parser.add_argument("--min-task-interval-seconds", type=int, default=0, help="Optional interval override; platform floors are applied automatically.")
+    parser.add_argument("--retry-interval-seconds", type=int, default=0, help="Optional retry interval override; platform floors are applied automatically.")
     parser.add_argument("--max-task-attempts", type=int, default=5, help="Maximum attempts per task before skipping to the next task.")
     parser.add_argument("--force", action="store_true", help="Bypass the anti-risk cooldown.")
     parser.add_argument("--auto-actions", action="store_true")
@@ -211,7 +270,17 @@ def main() -> int:
     parser.add_argument("--browser-profile-root", default="", help="Root folder for browser user-data profiles.")
     parser.add_argument("--no-cdp", action="store_true", help="Use Playwright-launched browser profiles instead of normal Chrome CDP sessions.")
     parser.add_argument("--direct-cdp", action="store_true", help="Use direct Chrome DevTools Protocol instead of the Playwright driver. Requires CDP mode.")
-    parser.add_argument("--no-restart-stale-cdp", action="store_true", help="Do not restart dedicated Chrome when CDP attaches time out.")
+    parser.add_argument(
+        "--restart-stale-cdp",
+        action="store_true",
+        help="Explicitly restart the managed Chrome profile after a stale CDP connection. Disabled by default to preserve open pages and login sessions.",
+    )
+    parser.add_argument(
+        "--no-restart-stale-cdp",
+        action="store_false",
+        dest="restart_stale_cdp",
+        help=argparse.SUPPRESS,
+    )
     parser.add_argument("--run-import-check", action="store_true")
     parser.add_argument("--skip-final-verify", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()

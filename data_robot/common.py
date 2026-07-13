@@ -29,8 +29,14 @@ PROFILE_ROOT = DATA_ROBOT_DIR / "profiles"
 ACTION_ROOT = DATA_ROBOT_DIR / "actions"
 STATE_ROOT = DATA_ROBOT_DIR / ".state"
 COOLDOWN_STATE_PATH = STATE_ROOT / "download_cooldown.json"
+PENDING_EXPORT_STATE_PATH = STATE_ROOT / "pending_exports.json"
 GLOBAL_EXPORT_COOLDOWN_KEY = "__global_export__"
 TMALL_ORDER_EXPORT_LIST_URL = "https://myseller.taobao.com/home.htm/trade-platform/tp/export-list"
+PINDUODUO_ORDER_EXPORT_LIST_URL = "https://mms.pinduoduo.com/orders/exportExcel"
+DEFAULT_PLATFORM_EXPORT_INTERVAL_SECONDS = 120
+PLATFORM_EXPORT_INTERVAL_SECONDS = {
+    "tmall": 300,
+}
 
 USERNAME_SELECTORS = (
     "input[name='fm-login-id']",
@@ -62,17 +68,29 @@ LOGIN_BUTTON_SELECTORS = (
 )
 
 TASK_FILENAME_HINTS = {
-    "pinduoduo_orders": ("orders_export", "订单"),
-    "pinduoduo_ads": ("商品推广", "账户", "分天数据"),
-    "wechat_channels_orders": ("微信小店订单",),
-    "douyin_ads": ("全域推广数据", "商品"),
+    "pinduoduo_orders": ("orders_export", "\u8ba2\u5355"),
+    "pinduoduo_ads": ("\u5546\u54c1\u63a8\u5e7f", "\u8d26\u6237", "\u5206\u5929\u6570\u636e"),
+    "wechat_channels_orders": ("\u5fae\u4fe1\u5c0f\u5e97\u8ba2\u5355",),
+    "douyin_ads": ("\u5168\u57df\u63a8\u5e7f\u6570\u636e", "\u5546\u54c1"),
     "tmall_orders": ("ExportOrderList",),
-    "tmall_ads": ("营销场景报表",),
+    "tmall_ads": ("\u8425\u9500\u573a\u666f\u62a5\u8868",),
 }
 
+TASK_FILENAME_REJECT_HINTS = {
+    "pinduoduo_ads": ("\u6c47\u603b\u6570\u636e",),
+}
 
 def json_text(payload: Any) -> str:
     return json.dumps(payload, ensure_ascii=True, indent=2, default=str)
+
+
+def configure_console_encoding() -> None:
+    """Keep Windows console diagnostics from aborting on non-GBK characters."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, OSError):
+            pass
 
 
 def write_json(path: Path, payload: Any) -> None:
@@ -92,6 +110,27 @@ def hourly_batch_token(date_token: str, batch_hour: str = "") -> str:
     hour = batch_hour or datetime.now().strftime("%H")
     hour_label = hour if hour.endswith("下载") else f"{hour}点下载"
     return f"{date_token}/{hour_label}"
+
+
+def add_batch_layout_args(parser: argparse.ArgumentParser, *, batch_hour_default: str = "") -> None:
+    parser.add_argument(
+        "--batch-hour",
+        default=batch_hour_default,
+        help="Hourly archive subfolder when --hourly-batch is used, e.g. 23.",
+    )
+    parser.add_argument(
+        "--flat-date-folder",
+        dest="flat_date_folder",
+        action="store_true",
+        help="Use the standard docs/data/ShopOps_Order/<MMDD> folder (the default).",
+    )
+    parser.add_argument(
+        "--hourly-batch",
+        dest="flat_date_folder",
+        action="store_false",
+        help="Store this run under <MMDD>/<HH点下载> to isolate repeated same-day runs.",
+    )
+    parser.set_defaults(flat_date_folder=True)
 
 
 @dataclass(frozen=True)
@@ -134,8 +173,7 @@ def parse_common_args(description: str) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--task", action="append", choices=sorted(TASKS), help="Only run selected task key; repeatable.")
     parser.add_argument("--date-token", default="", help="Archive date directory, e.g. 0612. Defaults to today.")
-    parser.add_argument("--batch-hour", default="", help="Hourly archive subfolder, e.g. 23. Defaults to current hour.")
-    parser.add_argument("--flat-date-folder", action="store_true", help="Use the old docs/data/ShopOps/<MMDD> layout without an hourly subfolder.")
+    add_batch_layout_args(parser)
     parser.add_argument("--archive-root", default=str(DEFAULT_ARCHIVE_ROOT), help="Root folder for normalized daily files.")
     parser.add_argument("--timeout-seconds", type=int, default=0, help="Download wait timeout. 0 uses task default.")
     parser.add_argument("--idle-seconds", type=int, default=20, help="After the first download, keep watching this many seconds.")
@@ -147,8 +185,8 @@ def parse_common_args(description: str) -> argparse.ArgumentParser:
     parser.add_argument("--cdp-url", default="", help="Attach to an existing Chrome remote debugging URL, e.g. http://127.0.0.1:9222.")
     parser.add_argument("--direct-cdp", action="store_true", help="Use a lightweight CDP client instead of the Playwright driver. Requires --cdp-url.")
     parser.add_argument("--watch-dir", default="", help="Also archive new csv/xls/xlsx/zip files created in this folder during the run.")
-    parser.add_argument("--min-task-interval-seconds", type=int, default=480, help="Minimum interval between two export attempts for the same task. Default: 480 seconds.")
-    parser.add_argument("--retry-interval-seconds", type=int, default=480, help="Wait this many seconds before retrying a task that produced no download. Default: 480 seconds.")
+    parser.add_argument("--min-task-interval-seconds", type=int, default=0, help="Optional interval override. The platform floor is 300 seconds for Tmall and 120 seconds for other platforms.")
+    parser.add_argument("--retry-interval-seconds", type=int, default=0, help="Optional retry interval override. The platform floor is 300 seconds for Tmall and 120 seconds for other platforms.")
     parser.add_argument("--max-task-attempts", type=int, default=5, help="Maximum attempts per task before skipping to the next task. Default: 5.")
     parser.add_argument("--force", action="store_true", help="Bypass the anti-risk cooldown.")
     parser.add_argument("--run-import-check", action="store_true", help="Optional: run import_daily_files_to_feishu.py dry-run after archiving.")
@@ -181,6 +219,23 @@ def resolve_task_keys(platform: str, selected: list[str] | None) -> list[str]:
     if not selected:
         return allowed
     return [key for key in selected if key in allowed]
+
+
+def platform_export_interval_floor_seconds(task: RobotTask | str) -> int:
+    task_key = task.key if isinstance(task, RobotTask) else str(task)
+    robot_task = TASKS.get(task_key)
+    platform_code = robot_task.platform_code if robot_task else ""
+    return PLATFORM_EXPORT_INTERVAL_SECONDS.get(platform_code, DEFAULT_PLATFORM_EXPORT_INTERVAL_SECONDS)
+
+
+def effective_min_task_interval_seconds(task: RobotTask, requested_seconds: int) -> int:
+    return max(0, requested_seconds, platform_export_interval_floor_seconds(task))
+
+
+def effective_retry_interval_seconds(result: dict[str, Any], options: CollectOptions) -> int:
+    task_key = str(result.get("task") or "")
+    floor = platform_export_interval_floor_seconds(task_key) if task_key in TASKS else DEFAULT_PLATFORM_EXPORT_INTERVAL_SECONDS
+    return max(0, options.retry_interval_seconds, floor)
 
 
 async def run_platform(platform: str, args: argparse.Namespace) -> dict[str, Any]:
@@ -260,6 +315,12 @@ def is_recoverable_cdp_error(result: dict[str, Any]) -> bool:
         "URLError",
         "ConnectionClosedError",
         "ConnectionRefusedError",
+        "ConnectionResetError",
+        "ConnectionAbortedError",
+        "ERR_CONNECTION_CLOSED",
+        "ERR_CONNECTION_RESET",
+        "ERR_CONNECTION_TIMED_OUT",
+        "net::ERR_",
         "CDP",
         "TimeoutError",
     )
@@ -284,11 +345,11 @@ def is_recoverable_export_error(result: dict[str, Any]) -> bool:
 
 def retry_wait_seconds(result: dict[str, Any], options: CollectOptions) -> int:
     if str(result.get("status", "")) == "error" and is_recoverable_cdp_error(result):
-        return min(60, max(5, options.retry_interval_seconds))
+        return effective_retry_interval_seconds(result, options)
     if str(result.get("status", "")) == "skipped_cooldown":
-        remaining = int(result.get("cooldown_remaining_seconds") or options.retry_interval_seconds)
-        return max(5, min(options.retry_interval_seconds, remaining))
-    return options.retry_interval_seconds
+        remaining = int(result.get("cooldown_remaining_seconds") or effective_retry_interval_seconds(result, options))
+        return max(5, remaining)
+    return effective_retry_interval_seconds(result, options)
 
 
 def summarize_task_results(results: list[dict[str, Any]]) -> str:
@@ -301,6 +362,8 @@ def summarize_task_results(results: list[dict[str, Any]]) -> str:
         return "skipped_cooldown"
     if any(status == "error" for status in statuses):
         return "finished_with_errors"
+    if any(status == "downloaded_unmatched" for status in statuses):
+        return "finished_with_unmatched_downloads"
     if any(status == "no_download" for status in statuses):
         return "finished_with_missing_downloads"
     if any(status == "skipped_cooldown" for status in statuses):
@@ -318,6 +381,8 @@ def summarize_platform_results(results: list[dict[str, Any]]) -> str:
         return "skipped_cooldown"
     if any(status == "finished_with_errors" for status in statuses):
         return "finished_with_errors"
+    if any(status == "finished_with_unmatched_downloads" for status in statuses):
+        return "finished_with_unmatched_downloads"
     if any(status == "finished_with_missing_downloads" for status in statuses):
         return "finished_with_missing_downloads"
     if any(status in {"finished_with_skips", "skipped_cooldown"} for status in statuses):
@@ -328,27 +393,19 @@ def summarize_platform_results(results: list[dict[str, Any]]) -> str:
 async def collect_task(task: RobotTask, options: CollectOptions, *, date_token: str, use_actions: bool = False) -> dict[str, Any]:
     if options.direct_cdp:
         return await collect_task_direct_cdp(task, options, date_token=date_token, use_actions=use_actions)
-
-    from playwright.async_api import TimeoutError as PlaywrightTimeoutError
-    from playwright.async_api import async_playwright
-
-    run_token = datetime.now().strftime("%Y%m%d-%H%M%S")
-    download_dir = DOWNLOAD_ROOT / run_token / task.key
-    download_dir.mkdir(parents=True, exist_ok=True)
-    profile_dir = PROFILE_ROOT / task.profile
-    profile_dir.mkdir(parents=True, exist_ok=True)
-    timeout_ms = (options.timeout_seconds or task.default_timeout_seconds) * 1000
-    started_at = datetime.now().timestamp()
-    downloaded: list[Path] = []
+    task_interval_seconds = effective_min_task_interval_seconds(task, options.min_task_interval_seconds)
     diagnostics: dict[str, Any] = {
         "page_url": "",
         "page_title": "",
-        "local_capture_dir": str(download_dir),
+        "local_capture_dir": "",
         "watch_dir": str(options.watch_dir) if options.watch_dir else "",
+        "min_export_interval_seconds": task_interval_seconds,
     }
-    task_cooldown = cooldown_remaining(task.key, options.min_task_interval_seconds)
-    global_cooldown = cooldown_remaining(GLOBAL_EXPORT_COOLDOWN_KEY, options.min_task_interval_seconds)
-    cooldown = max(task_cooldown, global_cooldown)
+    task_cooldown = cooldown_remaining(task.key, task_interval_seconds)
+    # Cooldowns are scoped to the task.  A PDD export must not block the
+    # independent WeChat, Douyin, or Tmall export in the same daily run.
+    global_cooldown = 0
+    cooldown = task_cooldown
     if cooldown > 0 and not options.force:
         return {
             "task": task.key,
@@ -366,6 +423,19 @@ async def collect_task(task: RobotTask, options: CollectOptions, *, date_token: 
             "import_check": None,
         }
 
+    from playwright.async_api import TimeoutError as PlaywrightTimeoutError
+    from playwright.async_api import async_playwright
+
+    run_token = datetime.now().strftime("%Y%m%d-%H%M%S")
+    download_dir = DOWNLOAD_ROOT / run_token / task.key
+    profile_dir = PROFILE_ROOT / task.profile
+    profile_dir.mkdir(parents=True, exist_ok=True)
+    timeout_ms = (options.timeout_seconds or task.default_timeout_seconds) * 1000
+    started_at = datetime.now().timestamp()
+    downloaded: list[Path] = []
+    export_attempted = False
+    diagnostics["local_capture_dir"] = str(download_dir)
+
     async with async_playwright() as playwright:
         browser = None
         if options.cdp_url:
@@ -373,6 +443,7 @@ async def collect_task(task: RobotTask, options: CollectOptions, *, date_token: 
             context = browser.contexts[0] if browser.contexts else await browser.new_context(accept_downloads=True)
             page = await select_page_for_task(context, task)
         else:
+            download_dir.mkdir(parents=True, exist_ok=True)
             launch_kwargs: dict[str, Any] = {}
             if options.browser_channel:
                 launch_kwargs["channel"] = options.browser_channel
@@ -388,15 +459,24 @@ async def collect_task(task: RobotTask, options: CollectOptions, *, date_token: 
         if not should_preserve_current_page(task, page.url):
             await page.goto(task.url, wait_until="domcontentloaded", timeout=120_000)
         await page.bring_to_front()
-        record_export_attempt(task.key, datetime.now().timestamp())
-        record_export_attempt(GLOBAL_EXPORT_COOLDOWN_KEY, datetime.now().timestamp())
 
         try:
             first_download_task = asyncio.create_task(page.wait_for_event("download", timeout=timeout_ms))
-            if use_actions:
+            login_result = await wait_for_playwright_login_ready(
+                page,
+                task,
+                timeout_seconds=min(240, max(1, timeout_ms // 1000)),
+            )
+            diagnostics["login"] = login_result
+            export_attempted = login_result.get("status") in {"not_needed", "ready"}
+            if export_attempted:
+                record_export_attempt(task.key, datetime.now().timestamp())
+            if not export_attempted:
+                print(f"[{task.key}] Login was not completed before timeout; skipping export attempt.", flush=True)
+            elif use_actions:
                 await run_actions(page, task)
             elif options.manual:
-                print(f"[{task.key}] Browser opened. Log in if needed, set the date range, then click the export/download button.", flush=True)
+                print(f"[{task.key}] Browser opened. Set the date range, then click the export/download button.", flush=True)
             else:
                 print(f"[{task.key}] Browser opened. The robot will try export/download buttons automatically after login.", flush=True)
                 await run_smart_export(
@@ -409,11 +489,14 @@ async def collect_task(task: RobotTask, options: CollectOptions, *, date_token: 
                 )
             first_download = None
             watched_files: list[Path] = []
-            if options.watch_dir:
+            if not export_attempted:
+                pass
+            elif options.watch_dir:
                 first_download, watched_files = await wait_for_first_download_or_watched_file(
                     first_download_task,
                     options.watch_dir,
                     started_at,
+                    task=task,
                     timeout_seconds=timeout_ms / 1000,
                     limit=options.max_downloads,
                 )
@@ -423,14 +506,18 @@ async def collect_task(task: RobotTask, options: CollectOptions, *, date_token: 
                 except PlaywrightTimeoutError:
                     first_download = None
             if first_download is not None:
+                download_dir.mkdir(parents=True, exist_ok=True)
                 downloaded.append(await save_download(first_download, download_dir))
                 while len(downloaded) < options.max_downloads:
                     try:
                         next_download = await page.wait_for_event("download", timeout=options.idle_seconds * 1000)
+                        download_dir.mkdir(parents=True, exist_ok=True)
                         downloaded.append(await save_download(next_download, download_dir))
                     except PlaywrightTimeoutError:
                         break
             downloaded.extend(watched_files)
+            if task.key == "tmall_orders":
+                downloaded, diagnostics["tmall_order_export_date_check"] = filter_tmall_order_exports_for_today(downloaded)
             diagnostics.update(await collect_page_diagnostics(page))
         finally:
             if "first_download_task" in locals() and not first_download_task.done():
@@ -441,10 +528,11 @@ async def collect_task(task: RobotTask, options: CollectOptions, *, date_token: 
             else:
                 await context.close()
 
-    if options.watch_dir:
+    if options.watch_dir and export_attempted:
         watched = wait_for_watched_files(
             options.watch_dir,
             started_at,
+            task=task,
             limit=options.max_downloads,
             timeout_seconds=max(1, options.idle_seconds),
         )
@@ -452,6 +540,7 @@ async def collect_task(task: RobotTask, options: CollectOptions, *, date_token: 
         downloaded.extend(path for path in watched if path.resolve() not in known)
 
     archived = archive_downloads(task, downloaded, options.archive_root, date_token=date_token, run_token=run_token)
+    rejected_downloads = rejected_download_reasons(task, downloaded, archived)
     manifest_path = write_archive_manifest(
         task,
         archived,
@@ -472,12 +561,13 @@ async def collect_task(task: RobotTask, options: CollectOptions, *, date_token: 
         )
     return {
         "task": task.key,
-        "status": "downloaded" if archived else "no_download",
+        "status": task_download_status(downloaded, archived),
         "platform": task.platform,
         "kind": task.kind,
         "downloaded": [str(path) for path in downloaded],
         "watch_dir": str(options.watch_dir) if options.watch_dir else "",
         "diagnostics": diagnostics,
+        "rejected_downloads": rejected_downloads,
         "archived": [str(item.archived) for item in archived],
         "manifest": str(manifest_path) if manifest_path else "",
         "import_check": import_check,
@@ -495,6 +585,35 @@ async def collect_page_diagnostics(page: Any) -> dict[str, str]:
     except Exception:
         pass
     return diagnostics
+
+
+async def wait_for_playwright_login_ready(
+    page: Any,
+    task: RobotTask,
+    *,
+    timeout_seconds: int,
+) -> dict[str, Any]:
+    """Wait for a visible CDP browser to finish manual login before exporting."""
+    current_url = str(getattr(page, "url", "") or "")
+    if not url_looks_like_login(current_url):
+        return {"status": "not_needed", "url": current_url}
+    deadline = time.monotonic() + max(1, timeout_seconds)
+    checks = 0
+    last_url = current_url
+    while time.monotonic() < deadline:
+        checks += 1
+        last_url = str(getattr(page, "url", "") or "")
+        if not url_looks_like_login(last_url):
+            return {"status": "ready", "checks": checks, "url": last_url}
+        print(
+            f"[{task.key}] Login/security page detected; waiting for manual login in the visible Chrome window.",
+            flush=True,
+        )
+        try:
+            await page.wait_for_timeout(5000)
+        except Exception:
+            await asyncio.sleep(5)
+    return {"status": "login_timeout", "checks": checks, "url": last_url}
 
 
 def cooldown_remaining(task_key: str, min_interval_seconds: int) -> int:
@@ -530,6 +649,41 @@ def read_cooldown_state() -> dict[str, float]:
     if not isinstance(payload, dict):
         return {}
     return {str(key): float(value) for key, value in payload.items() if isinstance(value, int | float)}
+
+
+def pending_export_for(task_key: str, date_token: str) -> bool:
+    entry = read_pending_export_state().get(task_key)
+    return isinstance(entry, dict) and str(entry.get("date_token") or "") == date_token
+
+
+def record_pending_export(task_key: str, date_token: str) -> None:
+    STATE_ROOT.mkdir(parents=True, exist_ok=True)
+    state = read_pending_export_state()
+    state[task_key] = {
+        "date_token": date_token,
+        "requested_at": datetime.now().isoformat(timespec="seconds"),
+    }
+    write_json(PENDING_EXPORT_STATE_PATH, state)
+
+
+def clear_pending_export(task_key: str) -> None:
+    state = read_pending_export_state()
+    if task_key not in state:
+        return
+    del state[task_key]
+    write_json(PENDING_EXPORT_STATE_PATH, state)
+
+
+def read_pending_export_state() -> dict[str, dict[str, Any]]:
+    if not PENDING_EXPORT_STATE_PATH.exists():
+        return {}
+    try:
+        payload = json.loads(PENDING_EXPORT_STATE_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    return {str(key): value for key, value in payload.items() if isinstance(value, dict)}
 
 
 def load_local_env_files() -> None:
@@ -603,7 +757,15 @@ class DirectCdpPage:
         self.next_id = 0
         self.session_id = ""
         self.target_id = ""
+        # The browser and its tabs belong to the operator.  A run may attach to
+        # or create a target, but it must leave the visible session available
+        # for the next run and for manual login.
         self.close_target_on_exit = False
+        self.reused_target = False
+        self.created_new_target = False
+        self.replaced_unhealthy_target = False
+        self.health_probe_error = ""
+        self.export_confirmation: dict[str, Any] = {}
 
     async def __aenter__(self) -> "DirectCdpPage":
         import websockets
@@ -653,14 +815,38 @@ class DirectCdpPage:
     async def open(self, url: str, *, download_dir: Path) -> None:
         await self.send("Browser.setDownloadBehavior", {"behavior": "allow", "downloadPath": str(download_dir)})
         target_id = await self.reusable_target_id(url)
+        current_url = ""
         if target_id:
+            targets = await self.send("Target.getTargets")
+            current_url = next(
+                (
+                    str(item.get("url") or "")
+                    for item in targets.get("targetInfos") or []
+                    if str(item.get("targetId") or item.get("id") or "") == target_id
+                ),
+                "",
+            )
             await self.attach(target_id, close_on_exit=False)
-        else:
+            self.reused_target = True
+            if not await self.health_probe():
+                self.replaced_unhealthy_target = True
+                await self.detach()
+                target_id = ""
+        if not target_id:
             created = await self.send("Target.createTarget", {"url": "about:blank"})
             self.target_id = str(created["targetId"])
-            await self.attach(self.target_id, close_on_exit=True)
-        await self.navigate(url)
-        await self.close_duplicate_targets(url)
+            await self.attach(self.target_id, close_on_exit=False)
+            self.created_new_target = True
+        if not direct_cdp_preserves_current_page(current_url, url):
+            await self.navigate(url)
+
+    async def health_probe(self) -> bool:
+        try:
+            await self.evaluate("1 + 1", timeout_seconds=3)
+            return True
+        except Exception as exc:
+            self.health_probe_error = f"{type(exc).__name__}: {exc}"
+            return False
 
     async def reusable_target_id(self, url: str) -> str:
         targets = await self.send("Target.getTargets")
@@ -686,9 +872,15 @@ class DirectCdpPage:
         self.close_target_on_exit = close_on_exit
         attached = await self.send("Target.attachToTarget", {"targetId": target_id, "flatten": True})
         self.session_id = str(attached["sessionId"])
-        await self.send("Page.enable", session=True)
-        await self.send("Runtime.enable", session=True)
-        await self.send("Page.bringToFront", session=True)
+        # Some long-running Alibaba pages acknowledge Target.attachToTarget but
+        # stall on Page.enable.  CDP input events still work without these
+        # domains, so degrade to the minimal attached session instead of
+        # blocking or restarting the user's browser.
+        for method in ("Page.enable", "Runtime.enable", "Page.bringToFront"):
+            try:
+                await self.send(method, session=True, timeout_seconds=3)
+            except Exception:
+                continue
 
     async def detach(self) -> None:
         if not self.session_id:
@@ -836,22 +1028,24 @@ async def collect_task_direct_cdp(
     if use_actions:
         print("[direct-cdp] action JSON is not supported; using built-in smart export clicks.", flush=True)
 
-    run_token = datetime.now().strftime("%Y%m%d-%H%M%S")
-    download_dir = DOWNLOAD_ROOT / run_token / task.key
-    download_dir.mkdir(parents=True, exist_ok=True)
-    timeout_seconds = options.timeout_seconds or task.default_timeout_seconds
-    started_at = datetime.now().timestamp()
+    pending_export = pending_export_for(task.key, date_token)
+    task_interval_seconds = effective_min_task_interval_seconds(task, options.min_task_interval_seconds)
     diagnostics: dict[str, Any] = {
         "page_url": "",
         "page_title": "",
-        "local_capture_dir": str(download_dir),
+        "local_capture_dir": "",
         "watch_dir": str(options.watch_dir) if options.watch_dir else "",
         "engine": "direct-cdp",
+        "min_export_interval_seconds": task_interval_seconds,
     }
 
-    task_cooldown = cooldown_remaining(task.key, options.min_task_interval_seconds)
-    global_cooldown = cooldown_remaining(GLOBAL_EXPORT_COOLDOWN_KEY, options.min_task_interval_seconds)
-    cooldown = max(task_cooldown, global_cooldown)
+    task_cooldown = cooldown_remaining(task.key, task_interval_seconds)
+    # Keep the direct-CDP path consistent with the normal Playwright path:
+    # cooldowns protect a task, not unrelated platforms.
+    global_cooldown = 0
+    # A pending PDD report is a download-only continuation, not another export
+    # request. It may resume immediately without consuming an export slot.
+    cooldown = 0 if pending_export and task.key == "pinduoduo_orders" else task_cooldown
     if cooldown > 0 and not options.force:
         return {
             "task": task.key,
@@ -869,13 +1063,63 @@ async def collect_task_direct_cdp(
             "import_check": None,
         }
 
+    run_token = datetime.now().strftime("%Y%m%d-%H%M%S")
+    download_dir = DOWNLOAD_ROOT / run_token / task.key
+    timeout_seconds = options.timeout_seconds or task.default_timeout_seconds
+    started_at = datetime.now().timestamp()
+    diagnostics["local_capture_dir"] = str(download_dir)
+
     async with DirectCdpPage(options.cdp_url) as page:
-        await page.open(direct_cdp_initial_url(task), download_dir=download_dir)
+        download_dir.mkdir(parents=True, exist_ok=True)
+        initial_url = direct_cdp_initial_url(task, resume_pending_export=pending_export)
+        await page.open(initial_url, download_dir=download_dir)
+        diagnostics["cdp_target"] = {
+            "reused": page.reused_target,
+            "created_new": page.created_new_target,
+            "replaced_unhealthy": page.replaced_unhealthy_target,
+            "health_probe_error": page.health_probe_error,
+        }
+        if await direct_cdp_recover_blank_business_page(page, task):
+            diagnostics["render_recovery"] = "reloaded_blank_business_view"
+            await asyncio.sleep(8)
         login_result = await direct_cdp_login_if_needed(page, task, timeout_seconds=min(timeout_seconds, 240))
         diagnostics["login"] = login_result
-        record_export_attempt(task.key, datetime.now().timestamp())
-        record_export_attempt(GLOBAL_EXPORT_COOLDOWN_KEY, datetime.now().timestamp())
-        if options.manual:
+        export_attempted = login_result.get("status") in {"not_needed", "ready"}
+        export_started = False
+        page_ready = False
+        if export_attempted:
+            readiness = await direct_cdp_prepare_business_page(page, task, requested_url=initial_url)
+            diagnostics["business_page"] = readiness
+            page_ready = readiness.get("status") == "ready"
+        if not export_attempted:
+            print(f"[{task.key}] Login was not completed before timeout; skipping export attempt.", flush=True)
+        elif not page_ready:
+            print(f"[{task.key}] Business page did not become ready; skipping export click and preserving the open tab.", flush=True)
+        elif pending_export and task.key == "pinduoduo_orders":
+            print(f"[{task.key}] Resuming an existing report request from the export list.", flush=True)
+            export_started = await direct_cdp_click_existing_export_result(
+                page,
+                task,
+                deadline=time.monotonic() + timeout_seconds,
+                watch_dirs=[download_dir, *([options.watch_dir] if options.watch_dir else [])],
+                started_at=started_at,
+            )
+            if not export_started and await direct_cdp_pinduoduo_export_list_is_empty(page):
+                clear_pending_export(task.key)
+                print(f"[{task.key}] The export list confirms no report task exists; creating one replacement request.", flush=True)
+                await page.navigate(task.url)
+                if await direct_cdp_recover_blank_business_page(page, task):
+                    diagnostics["render_recovery"] = "reloaded_blank_business_view"
+                    await asyncio.sleep(8)
+                export_started = await run_direct_cdp_smart_export(
+                    page,
+                    task,
+                    timeout_seconds=timeout_seconds,
+                    watch_dirs=[download_dir, *([options.watch_dir] if options.watch_dir else [])],
+                    started_at=started_at,
+                    date_token=date_token,
+                )
+        elif options.manual:
             print(f"[{task.key}] Direct CDP page opened. Click export/download manually in the browser.", flush=True)
             export_started = True
         else:
@@ -886,22 +1130,33 @@ async def collect_task_direct_cdp(
                 timeout_seconds=timeout_seconds,
                 watch_dirs=[download_dir, *( [options.watch_dir] if options.watch_dir else [] )],
                 started_at=started_at,
+                date_token=date_token,
             )
-        download_wait_seconds = timeout_seconds if export_started else min(timeout_seconds, max(30, options.idle_seconds))
+        if export_started and not (pending_export and task.key == "pinduoduo_orders"):
+            record_export_attempt(task.key, datetime.now().timestamp())
+        download_wait_seconds = timeout_seconds if export_attempted and export_started else min(timeout_seconds, max(30, options.idle_seconds))
         downloaded = wait_for_direct_cdp_downloads(
             [download_dir, *( [options.watch_dir] if options.watch_dir else [] )],
             started_at,
+            task=task,
             limit=options.max_downloads,
             timeout_seconds=download_wait_seconds,
             idle_seconds=options.idle_seconds,
         )
+        if downloaded and pending_export_for(task.key, date_token):
+            clear_pending_export(task.key)
         if task.key == "tmall_orders":
             downloaded, diagnostics["tmall_order_export_date_check"] = filter_tmall_order_exports_for_today(downloaded)
         diagnostics["page_url"] = str(await page.evaluate("location.href", timeout_seconds=3) or "")
         diagnostics["page_title"] = str(await page.evaluate("document.title", timeout_seconds=3) or "")
-        diagnostics["closed_duplicate_targets"] = await page.close_duplicate_targets(task.url)
+        if page.export_confirmation:
+            diagnostics["export_confirmation"] = page.export_confirmation
+        # Never close operator-owned tabs.  Duplicate targets are retained so
+        # the next run can reuse whichever page already has a valid session.
+        diagnostics["closed_duplicate_targets"] = []
 
     archived = archive_downloads(task, downloaded, options.archive_root, date_token=date_token, run_token=run_token)
+    rejected_downloads = rejected_download_reasons(task, downloaded, archived)
     manifest_path = write_archive_manifest(
         task,
         archived,
@@ -922,12 +1177,13 @@ async def collect_task_direct_cdp(
         )
     return {
         "task": task.key,
-        "status": "downloaded" if archived else "no_download",
+        "status": task_download_status(downloaded, archived),
         "platform": task.platform,
         "kind": task.kind,
         "downloaded": [str(path) for path in downloaded],
         "watch_dir": str(options.watch_dir) if options.watch_dir else "",
         "diagnostics": diagnostics,
+        "rejected_downloads": rejected_downloads,
         "archived": [str(item.archived) for item in archived],
         "manifest": str(manifest_path) if manifest_path else "",
         "import_check": import_check,
@@ -941,9 +1197,19 @@ async def run_direct_cdp_smart_export(
     timeout_seconds: int,
     watch_dirs: list[Path],
     started_at: float,
+    date_token: str,
 ) -> bool:
     deadline = time.monotonic() + timeout_seconds
+    render_recovery_attempted = False
     if task.key == "tmall_orders":
+        if await direct_cdp_click_existing_export_result(
+            page,
+            task,
+            deadline=deadline,
+            watch_dirs=watch_dirs,
+            started_at=started_at,
+        ):
+            return True
         return await direct_cdp_export_tmall_orders_default_range(
             page,
             task,
@@ -951,11 +1217,24 @@ async def run_direct_cdp_smart_export(
             watch_dirs=watch_dirs,
             started_at=started_at,
         )
-    if await direct_cdp_click_existing_export_result(page, task, deadline=deadline, watch_dirs=watch_dirs, started_at=started_at):
+    if task.key == "pinduoduo_orders":
+        # A fresh PDD run begins on the order page. Only probe the generated
+        # report list when that page is already attached; otherwise the probe
+        # would navigate away before the primary export can be clicked.
+        current_url = str(await page.evaluate("location.href", timeout_seconds=3) or "")
+        if "/orders/exportExcel" in current_url and await direct_cdp_click_existing_export_result(
+            page, task, deadline=deadline, watch_dirs=watch_dirs, started_at=started_at
+        ):
+            return True
+    elif await direct_cdp_click_existing_export_result(page, task, deadline=deadline, watch_dirs=watch_dirs, started_at=started_at):
         return True
 
     clicked = False
-    while time.monotonic() < deadline:
+    for check_number in range(3):
+        if not render_recovery_attempted and await direct_cdp_recover_blank_business_page(page, task):
+            render_recovery_attempted = True
+            await asyncio.sleep(8)
+            continue
         clicked_at = await direct_cdp_special_primary_export(page, task)
         if clicked_at:
             print(f"[{task.key}] direct-cdp clicked primary via {clicked_at}", flush=True)
@@ -971,11 +1250,30 @@ async def run_direct_cdp_smart_export(
                 break
         if clicked:
             break
-        await asyncio.sleep(1)
+        if check_number < 2:
+            await asyncio.sleep(10)
 
     if not clicked:
         print(f"[{task.key}] Direct CDP did not find an export/download button.", flush=True)
         return False
+
+    if task.key == "pinduoduo_orders":
+        return await direct_cdp_confirm_pinduoduo_export_task(
+            page,
+            task,
+            deadline=deadline,
+            watch_dirs=watch_dirs,
+            started_at=started_at,
+            date_token=date_token,
+        )
+    if task.key == "tmall_ads":
+        return await direct_cdp_confirm_tmall_ads_export_task(
+            page,
+            task,
+            deadline=deadline,
+            watch_dirs=watch_dirs,
+            started_at=started_at,
+        )
 
     clicked_followups: set[str] = set()
     followup_deadline = min(deadline, time.monotonic() + followup_poll_seconds(task))
@@ -1002,7 +1300,9 @@ async def run_direct_cdp_smart_export(
     return direct_cdp_download_started(watch_dirs, started_at)
 
 
-def direct_cdp_initial_url(task: RobotTask) -> str:
+def direct_cdp_initial_url(task: RobotTask, *, resume_pending_export: bool = False) -> str:
+    if task.key == "pinduoduo_orders" and resume_pending_export:
+        return PINDUODUO_ORDER_EXPORT_LIST_URL
     if task.key == "tmall_orders":
         return task.url
     return task.url
@@ -1065,6 +1365,25 @@ async def direct_cdp_click_existing_export_result(
     watch_dirs: list[Path],
     started_at: float,
 ) -> bool:
+    if task.key == "pinduoduo_orders":
+        current_url = str(await page.evaluate("location.href", timeout_seconds=3) or "")
+        if "/orders/exportExcel" not in current_url:
+            await page.navigate(PINDUODUO_ORDER_EXPORT_LIST_URL)
+        # Pinduoduo creates order exports asynchronously.  On later runs we
+        # make one bounded attempt to download the completed report and leave
+        # the request pending if the platform has not exposed it yet.
+        poll_deadline = min(deadline, time.monotonic() + 20)
+        while time.monotonic() < poll_deadline:
+            try:
+                clicked = await page.click_label("\u4e0b\u8f7d\u62a5\u8868", exact=True)
+            except (TimeoutError, asyncio.TimeoutError, RuntimeError):
+                clicked = None
+            if clicked:
+                print(f"[{task.key}] direct-cdp clicked existing generated report via {clicked}", flush=True)
+                return True
+            await asyncio.sleep(2)
+        print(f"[{task.key}] report is still pending; keeping it for the next scheduled retry.", flush=True)
+        return False
     if task.key != "tmall_orders":
         return False
     if "/trade-platform/tp/export-list" not in str(await page.evaluate("location.href", timeout_seconds=3) or ""):
@@ -1076,8 +1395,318 @@ async def direct_cdp_click_existing_export_result(
         started_at=started_at,
     )
     if not clicked:
+        clicked = await direct_cdp_click_tmall_download_coordinate(page, watch_dirs=watch_dirs, started_at=started_at)
+    if not clicked:
         print(f"[{task.key}] direct-cdp found no existing generated report covering today; creating a new export task.", flush=True)
     return clicked
+
+
+async def direct_cdp_pinduoduo_export_list_is_empty(page: DirectCdpPage) -> bool:
+    try:
+        body_text = str(await page.evaluate("document.body ? document.body.innerText : ''", timeout_seconds=5) or "")
+    except (TimeoutError, asyncio.TimeoutError, RuntimeError):
+        return False
+    return pinduoduo_export_list_is_empty(body_text)
+
+
+def pinduoduo_export_list_is_empty(body_text: str) -> bool:
+    normalized = re.sub(r"\s+", "", body_text)
+    return all(
+        marker in normalized
+        for marker in ("\u5df2\u751f\u6210\u62a5\u8868", "\u6682\u65e0\u6570\u636e", "\u5171\u67090\u6761")
+    )
+
+
+async def direct_cdp_confirm_pinduoduo_export_task(
+    page: DirectCdpPage,
+    task: RobotTask,
+    *,
+    deadline: float,
+    watch_dirs: list[Path],
+    started_at: float,
+    date_token: str,
+) -> bool:
+    """Confirm that PDD created a report before waiting for a file."""
+    # Pinduoduo opens a modal after the primary export click.  The modal's
+    # actual submit control is "生成报表"; the older confirmation labels are
+    # only fallbacks for older account/page variants.
+    for label in ("生成报表", "确认导出", "确认"):
+        try:
+            clicked = await page.click_label(label, exact=True)
+        except (TimeoutError, asyncio.TimeoutError, RuntimeError):
+            clicked = None
+        if clicked:
+            print(f"[{task.key}] direct-cdp clicked task confirmation '{label}' via {clicked}", flush=True)
+            await asyncio.sleep(2)
+            # One modal submission is enough.  Continuing to search for a
+            # generic "确认" after "生成报表" can click an unrelated control
+            # after the modal has already closed.
+            break
+
+    await page.navigate(PINDUODUO_ORDER_EXPORT_LIST_URL)
+    list_deadline = min(deadline, time.monotonic() + 20)
+    while time.monotonic() < list_deadline:
+        if direct_cdp_download_started(watch_dirs, started_at):
+            page.export_confirmation = {"status": "download_started"}
+            return True
+        try:
+            body = str(await page.evaluate("document.body ? document.body.innerText : ''", timeout_seconds=5) or "")
+        except (TimeoutError, asyncio.TimeoutError, RuntimeError):
+            await asyncio.sleep(3)
+            continue
+        if "下载报表" in body:
+            clicked = await page.click_label("下载报表", exact=True)
+            if clicked:
+                page.export_confirmation = {"status": "report_ready", "clicked": clicked}
+                record_pending_export(task.key, date_token)
+                return True
+        if pinduoduo_export_list_is_empty(body):
+            page.export_confirmation = {"status": "task_not_created", "reason": "export_list_empty"}
+            clear_pending_export(task.key)
+            return False
+        if any(marker in body for marker in ("生成中", "处理中", "排队", "报告")):
+            page.export_confirmation = {"status": "task_pending"}
+            record_pending_export(task.key, date_token)
+            return False
+        await asyncio.sleep(3)
+    page.export_confirmation = {"status": "task_confirmation_timeout"}
+    record_pending_export(task.key, date_token)
+    return False
+
+
+async def direct_cdp_click_tmall_ads_generated_download(page: DirectCdpPage) -> dict[str, Any]:
+    """Click only a generated Tmall ads task row, never the top navigation link."""
+    result = await page.evaluate(
+        r"""
+        (() => {
+          const visible = (element) => {
+            const rect = element.getBoundingClientRect();
+            const style = window.getComputedStyle(element);
+            return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+          };
+          const textOf = (element) => (element.innerText || element.textContent || '').replace(/\s+/g, ' ').trim();
+          const rowCandidates = Array.from(document.querySelectorAll('tr,li,section,[class*="row"],[class*="item"],[class*="card"]'))
+            .filter((row) => {
+              const text = textOf(row);
+              return text.includes('营销场景报表') && /生成成功|下载|完成|可下载/.test(text) && /20\d{2}|\d{1,2}[/-]\d{1,2}/.test(text);
+            });
+          rowCandidates.sort((left, right) => textOf(right).localeCompare(textOf(left)));
+          const row = rowCandidates[0];
+          if (!row) {
+            const body = textOf(document.body);
+            return { clicked: false, pending: /生成中|处理中|排队|任务/.test(body), bodyText: body.slice(0, 800) };
+          }
+          const controls = Array.from(row.querySelectorAll('button,a,[role=button]')).filter(visible);
+          const downloadControl = controls.find((element) => {
+            const text = `${textOf(element)} ${element.getAttribute('aria-label') || ''} ${element.getAttribute('title') || ''}`;
+            return /下载/.test(text);
+          }) || controls.find((element) => !/删除/.test(textOf(element))) || row.querySelector('td:last-child');
+          if (!downloadControl || !visible(downloadControl)) {
+            return { clicked: false, pending: false, ready: true, controlMissing: true, rowText: textOf(row).slice(0, 800) };
+          }
+          downloadControl.scrollIntoView({ block: 'center', inline: 'center' });
+          const rect = downloadControl.getBoundingClientRect();
+          return {
+            clicked: false,
+            canClick: true,
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+            controlText: textOf(downloadControl).slice(0, 120),
+            rowText: textOf(row).slice(0, 800),
+          };
+        })()
+        """,
+        timeout_seconds=8,
+    )
+    if not isinstance(result, dict):
+        return {"clicked": False, "pending": False}
+    if result.get("canClick"):
+        try:
+            x = float(result["x"])
+            y = float(result["y"])
+            await page.send(
+                "Input.dispatchMouseEvent",
+                {"type": "mouseMoved", "x": x, "y": y},
+                session=True,
+                timeout_seconds=5,
+            )
+            await page.send(
+                "Input.dispatchMouseEvent",
+                {"type": "mousePressed", "x": x, "y": y, "button": "left", "clickCount": 1},
+                session=True,
+                timeout_seconds=5,
+            )
+            await page.send(
+                "Input.dispatchMouseEvent",
+                {"type": "mouseReleased", "x": x, "y": y, "button": "left", "clickCount": 1},
+                session=True,
+                timeout_seconds=5,
+            )
+            return {**result, "clicked": True, "click_method": "cdp_mouse"}
+        except (KeyError, TypeError, ValueError, TimeoutError, asyncio.TimeoutError, RuntimeError) as exc:
+            result = {**result, "click_error": f"{type(exc).__name__}: {exc}"}
+            try:
+                await page.evaluate(
+                    r"""
+                    (() => {
+                      const visible = (element) => {
+                        const rect = element.getBoundingClientRect();
+                        const style = window.getComputedStyle(element);
+                        return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+                      };
+                      const textOf = (element) => (element.innerText || element.textContent || '').replace(/\s+/g, ' ').trim();
+                      const row = Array.from(document.querySelectorAll('tr,li,section,[class*="row"],[class*="item"],[class*="card"]'))
+                        .find((candidate) => {
+                          const text = textOf(candidate);
+                          return text.includes('\u8425\u9500\u573a\u666f\u62a5\u8868') && /\u751f\u6210\u6210\u529f|\u4e0b\u8f7d|\u5b8c\u6210|\u53ef\u4e0b\u8f7d/.test(text);
+                        });
+                      if (!row) return false;
+                      const controls = Array.from(row.querySelectorAll('button,a,[role=button]')).filter(visible);
+                      const control = controls.find((element) => /\u4e0b\u8f7d/.test(`${textOf(element)} ${element.getAttribute('aria-label') || ''} ${element.getAttribute('title') || ''}`))
+                        || controls.find((element) => !/\u5220\u9664/.test(textOf(element)));
+                      if (!control) return false;
+                      control.click();
+                      return true;
+                    })()
+                    """,
+                    timeout_seconds=5,
+                )
+                return {**result, "clicked": True, "click_method": "dom_fallback"}
+            except Exception as fallback_exc:
+                return {**result, "clicked": False, "fallback_error": f"{type(fallback_exc).__name__}: {fallback_exc}"}
+    return result
+
+
+async def direct_cdp_click_tmall_ads_generated_download_exact(page: DirectCdpPage) -> dict[str, Any]:
+    """Click the generated-report action row used by the Alibaba sticky table."""
+    result = await page.evaluate(
+        r"""
+        (() => {
+          const visible = (element) => {
+            const rect = element.getBoundingClientRect();
+            const style = window.getComputedStyle(element);
+            return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+          };
+          const textOf = (element) => (element.innerText || element.textContent || '').replace(/\s+/g, ' ').trim();
+          const fileCells = Array.from(document.querySelectorAll('td')).filter((cell) => {
+            const cellText = textOf(cell);
+            const rowText = textOf(cell.closest('tr') || cell);
+            return cellText.includes('\u8425\u9500\u573a\u666f\u62a5\u8868')
+              && /\u751f\u6210\u6210\u529f|\u5b8c\u6210/.test(rowText)
+              && /20\d{2}|\d{1,2}[/-]\d{1,2}/.test(rowText);
+          });
+          fileCells.sort((left, right) => textOf(right).localeCompare(textOf(left)));
+          const fileCell = fileCells[0];
+          const dataRow = fileCell && fileCell.closest('tr');
+          const actionRow = dataRow && dataRow.nextElementSibling;
+          if (!dataRow || !actionRow) {
+            const body = textOf(document.body);
+            return { clicked: false, pending: /\u751f\u6210\u4e2d|\u5904\u7406\u4e2d|\u6392\u961f|\u4efb\u52a1/.test(body), bodyText: body.slice(0, 800) };
+          }
+          const controls = Array.from(actionRow.querySelectorAll('[mx-click*="getDownloadUrl"],button,a,[role=button]')).filter(visible);
+          const downloadControl = controls.find((element) => /getDownloadUrl|\u4e0b\u8f7d/.test(`${element.getAttribute('mx-click') || ''} ${textOf(element)}`))
+            || controls.find((element) => !/\u5220\u9664/.test(textOf(element)));
+          if (!downloadControl) {
+            return { clicked: false, pending: false, ready: true, controlMissing: true, rowText: `${textOf(dataRow)} ${textOf(actionRow)}`.slice(0, 800) };
+          }
+          downloadControl.scrollIntoView({ block: 'center', inline: 'center' });
+          downloadControl.click();
+          return { clicked: true, click_method: 'dom_exact_action_row', controlText: textOf(downloadControl).slice(0, 120), rowText: `${textOf(dataRow)} ${textOf(actionRow)}`.slice(0, 800) };
+        })()
+        """,
+        timeout_seconds=8,
+    )
+    return result if isinstance(result, dict) else {"clicked": False, "pending": False}
+
+
+async def direct_cdp_confirm_tmall_ads_export_task(
+    page: DirectCdpPage,
+    task: RobotTask,
+    *,
+    deadline: float,
+    watch_dirs: list[Path],
+    started_at: float,
+) -> bool:
+    """Confirm a Tmall ads task row before attempting its download button."""
+    for label in ("确定", "确认"):
+        try:
+            clicked = await page.click_label(label, exact=True)
+        except (TimeoutError, asyncio.TimeoutError, RuntimeError):
+            clicked = None
+        if clicked:
+            print(f"[{task.key}] direct-cdp clicked task confirmation '{label}' via {clicked}", flush=True)
+            await asyncio.sleep(2)
+
+    manager_clicked = None
+    for label in ("下载任务管理", "下载管理"):
+        try:
+            manager_clicked = await page.click_label(label, exact=True)
+        except (TimeoutError, asyncio.TimeoutError, RuntimeError):
+            manager_clicked = None
+        if manager_clicked:
+            print(f"[{task.key}] direct-cdp opened task manager via '{label}'", flush=True)
+            await asyncio.sleep(4)
+            break
+    if not manager_clicked:
+        await page.navigate("https://one.alimama.com/index.html#!/report/download-list")
+        await asyncio.sleep(4)
+    page.export_confirmation = {"status": "task_manager_opened", "clicked": bool(manager_clicked)}
+    followup_deadline = min(deadline, time.monotonic() + followup_poll_seconds(task))
+    while time.monotonic() < followup_deadline:
+        if direct_cdp_download_started(watch_dirs, started_at):
+            page.export_confirmation = {"status": "download_started"}
+            return True
+        try:
+            result = await direct_cdp_click_tmall_ads_generated_download_exact(page)
+        except (TimeoutError, asyncio.TimeoutError, RuntimeError) as exc:
+            page.export_confirmation = {"status": "task_page_unresponsive", "error": type(exc).__name__}
+            await asyncio.sleep(10)
+            continue
+        if result.get("clicked"):
+            print(f"[{task.key}] direct-cdp clicked generated task download: {result}", flush=True)
+            page.export_confirmation = {"status": "task_ready", **result}
+            return True
+        page.export_confirmation = {
+            "status": (
+                "task_ready_control_missing"
+                if result.get("controlMissing")
+                else "task_pending"
+                if result.get("pending")
+                else "task_not_created"
+            ),
+            "body_text": result.get("bodyText", ""),
+            "row_text": result.get("rowText", ""),
+        }
+        await asyncio.sleep(10)
+    return direct_cdp_download_started(watch_dirs, started_at)
+
+
+async def direct_cdp_click_tmall_download_coordinate(
+    page: DirectCdpPage,
+    *,
+    watch_dirs: list[Path],
+    started_at: float,
+) -> bool:
+    """Click the visible Alibaba download control when its closed component tree is opaque."""
+    try:
+        metrics = await page.send("Page.getLayoutMetrics", session=True, timeout_seconds=5)
+        viewport = metrics.get("cssLayoutViewport") or metrics.get("layoutViewport") or {}
+        width = float(viewport.get("clientWidth") or 0)
+        height = float(viewport.get("clientHeight") or 0)
+        if width <= 0 or height <= 0:
+            return False
+        # The order-report card places its action at roughly 83% width and
+        # 38.5% height in the stable seller-page viewport.  Input events work
+        # even when the control lives in a closed shadow component.
+        x = width * 0.83
+        y = height * 0.385
+        await page.send("Input.dispatchMouseEvent", {"type": "mouseMoved", "x": x, "y": y, "button": "none"}, session=True, timeout_seconds=5)
+        await page.send("Input.dispatchMouseEvent", {"type": "mousePressed", "x": x, "y": y, "button": "left", "clickCount": 1}, session=True, timeout_seconds=5)
+        await page.send("Input.dispatchMouseEvent", {"type": "mouseReleased", "x": x, "y": y, "button": "left", "clickCount": 1}, session=True, timeout_seconds=5)
+        await asyncio.sleep(2)
+        return direct_cdp_download_started(watch_dirs, started_at)
+    except Exception:
+        return False
 
 
 async def direct_cdp_click_tmall_report_covering_today(
@@ -1198,8 +1827,6 @@ async def direct_cdp_click_tmall_report_covering_today(
     started_at: float,
 ) -> bool:
     target_date = date.today().isoformat()
-    list_deadline = deadline
-    transient_errors = 0
     click_expression = r"""
     ((targetDate) => {
       const visible = (element) => {
@@ -1208,44 +1835,24 @@ async def direct_cdp_click_tmall_report_covering_today(
         return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
       };
       const textOf = (element) => (element.innerText || element.textContent || '').replace(/\s+/g, ' ').trim();
-      const downloadTextPattern = /\u4e0b\u8f7d\u8ba2\u5355\u62a5\u8868|\u4e0b\u8f7d\u62a5\u8868|\u4e0b\u8f7d/;
+      const downloadTextPattern = /^\u4e0b\u8f7d\u8ba2\u5355\u62a5\u8868$|^\u4e0b\u8f7d\u62a5\u8868$/;
       const reportTimePattern = /\u62a5\u8868\u7533\u8bf7\u65f6\u95f4[:\uff1a]\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/;
-      const clickableSelector = 'button,a,[role=button],div,span';
-      const buttonCandidates = Array.from(document.querySelectorAll(clickableSelector))
+      const markerCount = (text) => (text.match(/\u62a5\u8868\u7533\u8bf7\u65f6\u95f4[:\uff1a]/g) || []).length;
+      const clickableSelector = 'button,a,[role=button]';
+      const reportCardFor = (button) => {
+        for (let cursor = button.parentElement, depth = 0; cursor && depth < 12; depth += 1, cursor = cursor.parentElement) {
+          const text = textOf(cursor);
+          if (text.includes(targetDate) && markerCount(text) === 1) return { element: cursor, text };
+        }
+        return null;
+      };
+      const candidates = Array.from(document.querySelectorAll(clickableSelector))
         .filter((element) => visible(element) && downloadTextPattern.test(textOf(element)))
         .map((button) => {
-          let cursor = button;
-          let rowText = textOf(button);
-          for (let depth = 0; cursor && depth < 10; depth += 1, cursor = cursor.parentElement) {
-            const text = textOf(cursor);
-            if (text.includes(targetDate)) {
-              rowText = text;
-              break;
-            }
-          }
-          return { element: button, text: rowText };
+          const card = reportCardFor(button);
+          return card ? { element: button, text: card.text } : null;
         })
-        .filter((item) => item.text.includes(targetDate));
-      const blockSelectors = [
-        '.order-export_order-block__pyg21',
-        '[class*="order-export_order-block"]',
-        '[class*="order-block"]',
-        '[class*="export"]',
-        '[class*="list"] > *',
-        'tr',
-        'li',
-      ];
-      const blockCandidates = Array.from(new Set(blockSelectors.flatMap((selector) => Array.from(document.querySelectorAll(selector)))))
-        .filter((element) => visible(element) && textOf(element).includes(targetDate))
-        .map((block) => {
-          const text = textOf(block);
-          const button = Array.from(block.querySelectorAll(clickableSelector))
-            .filter((element) => visible(element))
-            .find((element) => downloadTextPattern.test(textOf(element)));
-          return { element: button, text };
-        })
-        .filter((item) => item.element);
-      const candidates = buttonCandidates.concat(blockCandidates);
+        .filter(Boolean);
       candidates.sort((left, right) => {
         const leftMatch = left.text.match(reportTimePattern);
         const rightMatch = right.text.match(reportTimePattern);
@@ -1255,11 +1862,14 @@ async def direct_cdp_click_tmall_report_covering_today(
       });
       const candidate = candidates[0];
       if (!candidate) {
+        const pending = Array.from(document.querySelectorAll('div,li,tr,section'))
+          .filter((element) => visible(element))
+          .map(textOf)
+          .some((text) => text.includes(targetDate) && markerCount(text) === 1 && /\u751f\u6210\u4e2d/.test(text));
         return {
           clicked: false,
+          pending,
           candidateCount: 0,
-          buttonCandidateCount: buttonCandidates.length,
-          blockCandidateCount: blockCandidates.length,
           bodyText: (document.body.innerText || '').slice(0, 500)
         };
       }
@@ -1268,49 +1878,22 @@ async def direct_cdp_click_tmall_report_covering_today(
       return {
         clicked: true,
         candidateCount: candidates.length,
-        buttonCandidateCount: buttonCandidates.length,
-        blockCandidateCount: blockCandidates.length,
         rowText: candidate.text.slice(0, 600)
       };
     })(
     """
-    while time.monotonic() < list_deadline:
-        try:
-            clicked = await page.evaluate(click_expression + json.dumps(target_date) + ")", timeout_seconds=10)
-            transient_errors = 0
-        except (TimeoutError, asyncio.TimeoutError, RuntimeError) as exc:
-            transient_errors += 1
-            print(
-                f"[tmall_orders] direct-cdp report-list query failed ({type(exc).__name__}); refreshing and continuing.",
-                flush=True,
-            )
-            if transient_errors <= 3:
-                try:
-                    await page.reload()
-                except Exception:
-                    pass
-            await asyncio.sleep(min(10, 2 * transient_errors))
-            continue
-        print(f"[tmall_orders] direct-cdp searched report covering today: {clicked}", flush=True)
-        if isinstance(clicked, dict) and clicked.get("clicked"):
-            if await wait_direct_cdp_download_started(watch_dirs, started_at, timeout_seconds=10):
-                return True
-            clicked_at = None
-            try:
-                clicked_at = await page.click_label("\u4e0b\u8f7d\u8ba2\u5355\u62a5\u8868", exact=True)
-            except (TimeoutError, asyncio.TimeoutError) as exc:
-                print(
-                    f"[tmall_orders] direct-cdp fallback report-label click timed out; continuing download wait: {type(exc).__name__}",
-                    flush=True,
-                )
-            if clicked_at:
-                print(f"[tmall_orders] direct-cdp fallback clicked report label via {clicked_at}", flush=True)
-                if await wait_direct_cdp_download_started(watch_dirs, started_at, timeout_seconds=10):
-                    return True
-        if direct_cdp_download_started(watch_dirs, started_at):
-            return True
-        await asyncio.sleep(10)
-    return False
+    try:
+        result = await page.evaluate(click_expression + json.dumps(target_date) + ")", timeout_seconds=10)
+    except (TimeoutError, asyncio.TimeoutError, RuntimeError) as exc:
+        print(f"[tmall_orders] report-list query failed without refreshing the operator page: {type(exc).__name__}", flush=True)
+        return False
+    print(f"[tmall_orders] direct-cdp searched report covering today: {result}", flush=True)
+    if isinstance(result, dict) and result.get("clicked"):
+        return True
+    if isinstance(result, dict) and result.get("pending"):
+        print("[tmall_orders] today's report is still generating; keeping the page and waiting for a later scheduled retry.", flush=True)
+        return True
+    return direct_cdp_download_started(watch_dirs, started_at)
 
 
 async def direct_cdp_special_primary_export(page: DirectCdpPage, task: RobotTask) -> str | None:
@@ -1319,7 +1902,13 @@ async def direct_cdp_special_primary_export(page: DirectCdpPage, task: RobotTask
     clicked = await page.evaluate(
         """
         (() => {
-          const element = document.querySelector('.qc-report-download-btn.download-btn');
+          const visible = (element) => {
+            const rect = element.getBoundingClientRect();
+            const style = window.getComputedStyle(element);
+            return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+          };
+          const element = Array.from(document.querySelectorAll('.qc-report-download-btn.download-btn'))
+            .find((candidate) => visible(candidate));
           if (!element) return false;
           element.scrollIntoView({ block: 'center', inline: 'center' });
           element.click();
@@ -1465,6 +2054,7 @@ def wait_for_direct_cdp_downloads(
     watch_dirs: list[Path],
     since_timestamp: float,
     *,
+    task: RobotTask | None = None,
     limit: int,
     timeout_seconds: int,
     idle_seconds: int,
@@ -1473,12 +2063,16 @@ def wait_for_direct_cdp_downloads(
     last_seen: list[Path] = []
     while time.monotonic() < deadline:
         current = collect_unique_watched_files(watch_dirs, since_timestamp, limit=limit)
+        if task is not None:
+            current = [path for path in current if matches_task_filename(task, path.name)]
         partials = [partial for folder in watch_dirs for partial in active_partial_downloads(folder, since_timestamp)]
         if current and not partials:
             last_seen = current
             idle_deadline = time.monotonic() + max(1, idle_seconds)
             while time.monotonic() < idle_deadline:
                 expanded = collect_unique_watched_files(watch_dirs, since_timestamp, limit=limit)
+                if task is not None:
+                    expanded = [path for path in expanded if matches_task_filename(task, path.name)]
                 if len(expanded) > len(last_seen):
                     last_seen = expanded
                     idle_deadline = time.monotonic() + max(1, idle_seconds)
@@ -1511,7 +2105,8 @@ def collect_unique_watched_files(watch_dirs: list[Path], since_timestamp: float,
     return files[:limit]
 
 
-async def connect_over_cdp_with_retry(playwright: Any, cdp_url: str, *, attempts: int = 3, timeout_ms: int = 120_000) -> Any:
+async def connect_over_cdp_with_retry(playwright: Any, cdp_url: str, *, attempts: int = 1, timeout_ms: int = 20_000) -> Any:
+    """Probe Playwright briefly, then let the caller use direct CDP if it stalls."""
     last_error: Exception | None = None
     for attempt in range(1, attempts + 1):
         try:
@@ -1535,11 +2130,20 @@ async def select_page_for_task(context: Any, task: RobotTask) -> Any:
     scored = sorted(((page_match_score(page.url, task.url), page) for page in pages), key=lambda item: item[0], reverse=True)
     if scored[0][0] > 0:
         return scored[0][1]
-    return pages[0]
+    # Do not navigate an unrelated logged-in business page to another
+    # platform or task.  Keeping it open preserves its session for later
+    # runs; the new task gets its own reusable tab.
+    for page in pages:
+        if not page.url or page.url == "about:blank":
+            return page
+    return await context.new_page()
 
 
 def should_preserve_current_page(task: RobotTask, current_url: str) -> bool:
     page = urlparse(current_url)
+    task_page = urlparse(task.url)
+    if page.hostname == task_page.hostname and url_looks_like_login(current_url):
+        return True
     if task.key == "pinduoduo_orders":
         return page.hostname == "mms.pinduoduo.com" and page.path == "/orders/exportExcel"
     if task.key == "tmall_orders":
@@ -1564,6 +2168,19 @@ def page_match_score(page_url: str, task_url: str) -> int:
     return score
 
 
+def direct_cdp_preserves_current_page(current_url: str, requested_url: str) -> bool:
+    """Keep an operator's open page stable when it already is the target."""
+    if not current_url:
+        return False
+    if current_url.rstrip("/") == requested_url.rstrip("/"):
+        return True
+    return (
+        "myseller.taobao.com" in current_url
+        and "/trade-platform/tp/export-list" in current_url
+        and "/trade-platform/tp/sold" in requested_url
+    )
+
+
 def direct_cdp_page_family(url: str) -> str:
     parsed = urlparse(url)
     hostname = parsed.hostname or ""
@@ -1578,7 +2195,6 @@ def direct_cdp_page_family(url: str) -> str:
 
 
 def direct_cdp_reusable_target_id(targets: list[dict[str, Any]], task_url: str) -> str:
-    fallback_id = ""
     scored: list[tuple[int, str]] = []
     task_family = direct_cdp_page_family(task_url)
     for target in targets:
@@ -1597,11 +2213,9 @@ def direct_cdp_reusable_target_id(targets: list[dict[str, Any]], task_url: str) 
         score = page_match_score(page_url, task_url)
         if score > 0:
             scored.append((score, target_id))
-        elif not task_family and not fallback_id:
-            fallback_id = target_id
     if scored:
         return sorted(scored, key=lambda item: item[0], reverse=True)[0][1]
-    return fallback_id
+    return ""
 
 
 def direct_cdp_duplicate_target_ids(
@@ -1737,14 +2351,25 @@ async def refresh_task_page(page: Any, task: RobotTask) -> Any:
 
 async def click_existing_export_result(page: Any, task: RobotTask, *, deadline: float) -> bool:
     if task.key == "tmall_orders" and "/trade-platform/tp/export-list" in page.url:
+        pending_seen = False
         while time.monotonic() < deadline:
             clicked_at = await click_first_visible_label(page, "下载订单报表", exact=True)
             if clicked_at:
                 print(f"[{task.key}] clicked existing generated report '下载订单报表' via {clicked_at}", flush=True)
                 await page.wait_for_timeout(2000)
                 return True
-            await page.wait_for_timeout(1500)
-        return False
+            if await tmall_order_export_is_pending(page):
+                pending_seen = True
+                try:
+                    await page.reload(wait_until="domcontentloaded", timeout=30_000)
+                except Exception:
+                    pass
+                await page.wait_for_timeout(10_000)
+            else:
+                await page.wait_for_timeout(1500)
+        # Do not create another report while the platform still has today's
+        # report generation in progress.  A later scheduled run can reuse it.
+        return pending_seen
     if task.key != "pinduoduo_orders" or "/orders/exportExcel" not in page.url:
         return False
     while time.monotonic() < deadline:
@@ -1760,24 +2385,27 @@ async def click_existing_export_result(page: Any, task: RobotTask, *, deadline: 
 
 
 async def click_pinduoduo_generated_report_button(page: Any) -> str | None:
-    clicked = await page.evaluate(
-        r"""
-        () => {
-          const label = '\u4e0b\u8f7d\u62a5\u8868';
-          const buttons = Array.from(document.querySelectorAll('button'));
-          const visibleButtons = buttons.filter((button) => {
-            const text = (button.innerText || button.textContent || '').trim();
-            if (text !== label) return false;
-            const rect = button.getBoundingClientRect();
-            const style = window.getComputedStyle(button);
-            return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
-          });
-          if (!visibleButtons.length) return false;
-          visibleButtons[0].click();
-          return true;
-        }
-        """
-    )
+    try:
+        clicked = await page.evaluate(
+            r"""
+            () => {
+              const label = '\u4e0b\u8f7d\u62a5\u8868';
+              const buttons = Array.from(document.querySelectorAll('button'));
+              const visibleButtons = buttons.filter((button) => {
+                const text = (button.innerText || button.textContent || '').trim();
+                if (text !== label) return false;
+                const rect = button.getBoundingClientRect();
+                const style = window.getComputedStyle(button);
+                return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+              });
+              if (!visibleButtons.length) return false;
+              visibleButtons[0].click();
+              return true;
+            }
+            """
+        )
+    except Exception:
+        return None
     return "pinduoduo generated report button" if clicked else None
 
 
@@ -1848,9 +2476,24 @@ async def click_first_visible_label(page: Any, label: str, *, exact: bool = Fals
             return name
         except Exception:
             continue
-    if await click_visible_text_by_dom(page, label, exact=exact):
-        return "dom text"
+    try:
+        if await click_visible_text_by_dom(page, label, exact=exact):
+            return "dom text"
+    except Exception:
+        # Commerce pages frequently replace the document immediately after a
+        # click.  Treat the destroyed execution context as a transient miss;
+        # the caller will refresh and retry without closing the tab.
+        return None
     return None
+
+
+async def tmall_order_export_is_pending(page: Any) -> bool:
+    try:
+        text = await page.locator("body").inner_text(timeout=3000)
+    except Exception:
+        return False
+    today = date.today().isoformat()
+    return today in text and ("报表生成中" in text or "生成中" in text)
 
 
 def exact_text_pattern(label: str) -> re.Pattern[str]:
@@ -1909,6 +2552,7 @@ async def wait_for_first_download_or_watched_file(
     watch_dir: Path,
     since_timestamp: float,
     *,
+    task: RobotTask,
     timeout_seconds: float,
     limit: int,
 ) -> tuple[Any | None, list[Path]]:
@@ -1921,7 +2565,11 @@ async def wait_for_first_download_or_watched_file(
                 return await download_task, []
             except PlaywrightTimeoutError:
                 return None, []
-        watched = files_created_since(watch_dir, since_timestamp, limit=limit)
+        watched = [
+            path
+            for path in files_created_since(watch_dir, since_timestamp, limit=limit)
+            if matches_task_filename(task, path.name)
+        ]
         if watched and not active_partial_downloads(watch_dir, since_timestamp):
             return None, watched
         await asyncio.sleep(0.5)
@@ -1935,7 +2583,7 @@ def smart_export_labels(task: RobotTask) -> list[str]:
     common = ["导出", "下载", "导出数据", "下载数据", "导出报表", "下载报表", "导出明细"]
     by_task = {
         "pinduoduo_orders": ["批量导出"],
-        "pinduoduo_ads": ["下载报表", "导出报表", "导出数据", "下载数据", "导出"],
+        "pinduoduo_ads": ["下载分天数据", "下载报表", "导出报表", "导出数据", "下载数据", "导出"],
         "wechat_channels_orders": ["全部导出", "导出订单", "批量导出"],
         "douyin_ads": ["下载数据", "导出数据", "下载报表", "导出报表"],
         "douyin_influencer": ["导出数据", "导出明细"],
@@ -1956,7 +2604,7 @@ def followup_export_labels(task: RobotTask) -> list[str]:
         "douyin_ads": ["确认", "下载文件", "立即下载"],
         "douyin_influencer": ["确认", "下载列表", "下载文件", "立即下载"],
         "tmall_orders": ["确认", "确定", "生成报表", "下载订单报表", "下载文件", "立即下载"],
-        "tmall_ads": ["确定", "确认", "下载任务管理", "下载"],
+        "tmall_ads": ["确定", "确认", "下载任务管理"],
     }
     if task.key == "tmall_ads":
         return by_task[task.key]
@@ -1980,22 +2628,146 @@ def url_looks_like_login(url: str) -> bool:
 
 
 def text_looks_like_login(text: str) -> bool:
-    haystack = text.lower()
+    haystack = re.sub(r"\s+", "", text.lower())
+    if any(token in haystack for token in ("login", "captcha", "verify")):
+        return True
     return any(
-        token.lower() in haystack
-        for token in (
-            "登录",
-            "扫码",
-            "二维码",
-            "验证码",
-            "安全验证",
-            "滑块",
-            "短信验证",
-            "login",
-            "captcha",
-            "verify",
+        marker in haystack
+        for marker in (
+            "\u626b\u7801\u767b\u5f55",
+            "\u8bf7\u626b\u7801",
+            "\u9a8c\u8bc1\u7801\u767b\u5f55",
+            "\u77ed\u4fe1\u9a8c\u8bc1",
+            "\u5b89\u5168\u9a8c\u8bc1",
+            "\u6ed1\u5757\u9a8c\u8bc1",
         )
     )
+
+
+async def direct_cdp_recover_blank_business_page(page: DirectCdpPage, task: RobotTask) -> bool:
+    """Refresh only a visibly blank business canvas while retaining the browser session."""
+    if task.key not in {"pinduoduo_orders", "pinduoduo_ads", "douyin_ads", "tmall_ads"}:
+        return False
+    try:
+        blank = bool(
+            await page.evaluate(
+                r"""
+                (() => {
+                  const body = (document.body && (document.body.innerText || document.body.textContent || '') || '').trim();
+                  const normalizedBody = body.replace(/\s+/g, '');
+                  const point = document.elementFromPoint(
+                    Math.floor(window.innerWidth * 0.62),
+                    Math.floor(window.innerHeight * 0.5),
+                  );
+                  if (!point && !normalizedBody) return true;
+                  const hasConnectionError = /页面加载失败|ERR_CONNECTION_|无法访问此网站|网络链接关闭|网络连接/.test(body);
+                  if (hasConnectionError) return true;
+                  if (normalizedBody.length > 80) return false;
+                  if (!point) return true;
+                  const text = (point.innerText || point.textContent || '').trim();
+                  const style = window.getComputedStyle(point);
+                  return document.readyState === 'complete'
+                    && style.visibility !== 'hidden'
+                    && style.display !== 'none'
+                    && (!text || text.includes('\u9875\u9762\u52a0\u8f7d\u5931\u8d25'));
+                })()
+                """,
+                timeout_seconds=5,
+            )
+        )
+    except (TimeoutError, asyncio.TimeoutError, RuntimeError):
+        return False
+    if not blank:
+        return False
+    print(f"[{task.key}] Detected a blank business view; reloading the same logged-in tab.", flush=True)
+    await page.reload()
+    return True
+
+
+def direct_cdp_business_page_ready(
+    task: RobotTask,
+    *,
+    page_url: str,
+    body_text: str,
+    has_qianchuan_download_button: bool = False,
+) -> bool:
+    """Return true only when the requested platform view exposes business content."""
+    normalized = re.sub(r"\s+", "", body_text)
+    if url_looks_like_login(page_url) or text_looks_like_login(body_text):
+        return False
+    if not normalized or any(marker in normalized for marker in ("页面加载失败", "网络链接关闭", "网络连接")):
+        return False
+    if task.key == "pinduoduo_orders":
+        if "/orders/exportExcel" in page_url:
+            return "已生成报表" in normalized and ("下载报表" in normalized or "暂无数据" in normalized)
+        return "共有" in normalized and any(
+            marker in normalized for marker in ("订单编号", "买家昵称", "批量导出")
+        )
+    if task.key == "douyin_ads":
+        if "暂无数据" in normalized:
+            return False
+        return has_qianchuan_download_button or ("数据明细" in normalized and "下载" in normalized)
+    if task.key == "tmall_ads":
+        return "营销场景报表" in normalized and "下载报表" in normalized
+    return True
+
+
+async def direct_cdp_business_page_state(page: DirectCdpPage, task: RobotTask) -> dict[str, Any]:
+    result = await page.evaluate(
+        r"""
+        (() => ({
+          url: location.href,
+          title: document.title,
+          readyState: document.readyState,
+          bodyText: document.body ? (document.body.innerText || document.body.textContent || '') : '',
+          hasQianchuanDownloadButton: Array.from(document.querySelectorAll('.qc-report-download-btn.download-btn')).some((element) => {
+            const rect = element.getBoundingClientRect();
+            const style = window.getComputedStyle(element);
+            return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+          }),
+        }))()
+        """,
+        timeout_seconds=6,
+    )
+    if not isinstance(result, dict):
+        result = {}
+    page_url = str(result.get("url") or "")
+    body_text = str(result.get("bodyText") or "")
+    result["ready"] = direct_cdp_business_page_ready(
+        task,
+        page_url=page_url,
+        body_text=body_text,
+        has_qianchuan_download_button=bool(result.get("hasQianchuanDownloadButton")),
+    )
+    result["bodyText"] = body_text[:1200]
+    return result
+
+
+async def direct_cdp_prepare_business_page(
+    page: DirectCdpPage,
+    task: RobotTask,
+    *,
+    requested_url: str,
+) -> dict[str, Any]:
+    """Repair one stale route with a bounded reload/navigation sequence."""
+    actions: list[str] = []
+    last_state: dict[str, Any] = {}
+    for action in ("initial", "reload", "navigate"):
+        if action == "reload":
+            await page.reload()
+            actions.append("reload")
+        elif action == "navigate":
+            await page.navigate(requested_url)
+            actions.append("navigate")
+        for _ in range(3):
+            try:
+                last_state = await direct_cdp_business_page_state(page, task)
+            except (TimeoutError, asyncio.TimeoutError, RuntimeError) as exc:
+                last_state = {"ready": False, "error": f"{type(exc).__name__}: {exc}"}
+            if last_state.get("ready"):
+                return {"status": "ready", "actions": actions, "state": last_state}
+            await asyncio.sleep(3 if action != "initial" else 2)
+    return {"status": "not_ready", "actions": actions, "state": last_state}
 
 
 async def direct_cdp_login_if_needed(page: DirectCdpPage, task: RobotTask, *, timeout_seconds: int) -> dict[str, Any]:
@@ -2224,18 +2996,58 @@ def archive_downloads(task: RobotTask, files: list[Path], archive_root: Path, *,
     return archived
 
 
+def task_download_status(downloaded: list[Path], archived: list[ArchivedFile]) -> str:
+    if archived:
+        return "downloaded"
+    if downloaded:
+        return "downloaded_unmatched"
+    return "no_download"
+
+
+def rejected_download_reasons(task: RobotTask, files: list[Path], archived: list[ArchivedFile]) -> list[dict[str, str]]:
+    archived_sources = {item.source.resolve() for item in archived if item.source.exists()}
+    rejected: list[dict[str, str]] = []
+    for source in files:
+        try:
+            resolved = source.resolve()
+        except OSError:
+            resolved = source
+        if resolved in archived_sources:
+            continue
+        rejected.append({"path": str(source), "reason": task_filename_reject_reason(task, source.name)})
+    return rejected
+
+
+def task_filename_reject_reason(task: RobotTask, filename: str) -> str:
+    suffix = Path(filename).suffix.lower()
+    if suffix not in {".csv", ".xls", ".xlsx", ".zip"}:
+        return f"unsupported_suffix:{suffix or 'none'}"
+    if task.key == "pinduoduo_ads" and filename_contains_any(filename, TASK_FILENAME_REJECT_HINTS.get(task.key, ())):
+        return "pinduoduo_ads_summary_report_not_daily_report"
+    if not matches_task_filename(task, filename):
+        return "filename_does_not_match_task"
+    return "not_archived"
+
+
 def matches_task_filename(task: RobotTask, filename: str) -> bool:
     if task.key == "douyin_influencer":
         return bool(
             re.match(r"^[0-9a-f-]{20,}_[0-9]+(?: \(\d+\))?\.xlsx$", filename, flags=re.IGNORECASE)
-            or "佣金" in filename
-            or "达人" in filename
+            or "\u4f63\u91d1" in filename
+            or "\u8fbe\u4eba" in filename
         )
-    if task.key == "pinduoduo_ads" and "分天数据" not in filename:
-        return False
+    if task.key == "pinduoduo_ads":
+        if filename_contains_any(filename, TASK_FILENAME_REJECT_HINTS.get(task.key, ())):
+            return False
+        if not filename_contains_any(filename, ("\u5206\u5929\u6570\u636e",)):
+            return False
     hints = TASK_FILENAME_HINTS.get(task.key)
     if not hints:
         return True
+    return filename_contains_any(filename, hints)
+
+
+def filename_contains_any(filename: str, hints: tuple[str, ...]) -> bool:
     lowered = filename.lower()
     return any(hint.lower() in lowered for hint in hints)
 
@@ -2289,11 +3101,20 @@ def files_created_since(folder: Path, since_timestamp: float, *, limit: int = 20
     return candidates[:limit]
 
 
-def wait_for_watched_files(folder: Path, since_timestamp: float, *, limit: int = 20, timeout_seconds: int = 20) -> list[Path]:
+def wait_for_watched_files(
+    folder: Path,
+    since_timestamp: float,
+    *,
+    task: RobotTask | None = None,
+    limit: int = 20,
+    timeout_seconds: int = 20,
+) -> list[Path]:
     deadline = time.monotonic() + max(0, timeout_seconds)
     last_candidates: list[Path] = []
     while True:
         candidates = files_created_since(folder, since_timestamp, limit=limit)
+        if task is not None:
+            candidates = [path for path in candidates if matches_task_filename(task, path.name)]
         partials = active_partial_downloads(folder, since_timestamp)
         if candidates and not partials:
             return candidates

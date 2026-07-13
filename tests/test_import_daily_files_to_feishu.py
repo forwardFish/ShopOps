@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import csv
+import json
+import sys
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -44,7 +46,63 @@ from scripts.import_daily_files_to_feishu import (
     parse_ad_rows,
     parse_order_rows,
     run_import,
+    run_formula_dynamic_summary,
 )
+
+
+def test_run_formula_dynamic_summary_refreshes_today_without_scanning_history(monkeypatch, tmp_path: Path):
+    captured: dict[str, object] = {}
+
+    class Completed:
+        returncode = 0
+        stdout = b'{"summary_table": {"table_id": "tblepMIg19Ov1kSw"}}'
+        stderr = b""
+
+    def fake_run(command, **kwargs):
+        captured.setdefault("commands", []).append(command)
+        captured["kwargs"] = kwargs
+        return Completed()
+
+    monkeypatch.setattr(daily_import.subprocess, "run", fake_run)
+    monkeypatch.setenv("SHOPOPS_FORMULA_SUMMARY_TABLE_ID", "tblepMIg19Ov1kSw")
+
+    result = run_formula_dynamic_summary(evidence_dir=tmp_path, timeout_seconds=17)
+
+    assert result["status"] == "success"
+    command = captured["commands"][0]
+    assert "--refresh-source-dates" not in command
+    assert command[command.index("--days-ahead") + 1] == "0"
+    assert "--force-summary-formula-updates" not in command
+    assert "--summary-table-id" in command
+    assert "tblepMIg19Ov1kSw" in command
+    assert captured["kwargs"]["timeout"] == 17
+    assert len(captured["commands"]) == 3
+    assert "repair_formula_summary_product_detail_formulas.py" in captured["commands"][1][1]
+    assert "repair_formula_summary_product_order_sales.py" in captured["commands"][2][1]
+
+
+def test_main_marks_summary_refresh_failure_as_import_failure(monkeypatch, tmp_path: Path):
+    evidence = tmp_path / "import.json"
+    monkeypatch.setattr(
+        daily_import,
+        "run_import",
+        lambda **kwargs: {"status": "success", "batch_dir": str(tmp_path)},
+    )
+    monkeypatch.setattr(
+        daily_import,
+        "run_formula_dynamic_summary",
+        lambda **kwargs: {"status": "failed", "returncode": 4},
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["import_daily_files_to_feishu.py", "--batch-dir", str(tmp_path), "--evidence", str(evidence)],
+    )
+
+    assert daily_import.main() == 4
+    payload = json.loads(evidence.read_text(encoding="utf-8"))
+    assert payload["status"] == "formula_summary_failed"
+    assert payload["formula_summary"]["status"] == "failed"
 
 
 def test_discovers_date_first_daily_folder_layout(tmp_path: Path):
@@ -1025,5 +1083,6 @@ def test_unique_key_rules_are_stable():
 
 def test_feishu_data_not_ready_response_is_retryable():
     assert is_retryable_feishu_response(400, {"code": 1254607})
+    assert is_retryable_feishu_response(200, {"code": 1255002})
     assert is_retryable_feishu_response(429, {"code": 99991663})
     assert not is_retryable_feishu_response(400, {"code": 1254000})

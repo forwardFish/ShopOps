@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from shopops.services.product_breakdown import (
+    best_product_rule_for_order,
+    best_product_rule_from_order_fields,
     effective_sales_amount,
+    extract_product_code_from_raw,
     order_product_formula_fields,
     product_breakdown_values,
     product_rules_from_records,
@@ -36,15 +39,12 @@ def test_summary_and_total_product_formulas_sum_product_fields():
     summary = summary_product_formula_fields(["订单明细-天猫", "订单明细-抖音"], rules)
     total = total_product_formula_fields("公式动态经营汇总表", rules)
 
-    assert summary["洗面奶数量"]["expression"] == (
-        '[订单明细-天猫].FILTER(CurrentValue.[公式_统计日期]=[统计日期]&&'
-        '([平台]="全平台总计"||CurrentValue.[平台]=[平台])).[洗面奶数量].SUM()+'
-        '[订单明细-抖音].FILTER(CurrentValue.[公式_统计日期]=[统计日期]&&'
-        '([平台]="全平台总计"||CurrentValue.[平台]=[平台])).[洗面奶数量].SUM()'
-    )
-    assert total["洗面奶有效销售额"]["expression"] == (
-        "[公式动态经营汇总表].FILTER(CurrentValue.[平台]=[平台]).[洗面奶有效销售额].SUM()"
-    )
+    expression = summary["洗面奶数量"]["expression"]
+    assert 'IFBLANK([商品名称],"")=""' in expression
+    assert '[商品名称]="洗面奶"' in expression
+    assert "CurrentValue.[商品名称]" not in expression
+    assert ".[洗面奶数量].SUM()" in expression
+    assert 'IFBLANK(CurrentValue.[商品名称],"")=""' in total["洗面奶有效销售额"]["expression"]
 
 
 def test_product_breakdown_values_copy_existing_metrics_to_best_keyword_match():
@@ -73,6 +73,65 @@ def test_product_breakdown_values_copy_existing_metrics_to_best_keyword_match():
     assert values["两用喷壶数量"] == 1
     assert values["喷壶数量"] == 0
 
+
+def test_product_code_takes_priority_when_title_is_blank_or_ambiguous():
+    rules = product_rules_from_records(
+        [
+            {"fields": {"商品名称": "洗面奶", "商品编码": "QBPH004", "搜索关键词": "洗面奶"}},
+            {"fields": {"商品名称": "皂液器", "商品编码": "QB006", "搜索关键词": "皂液器"}},
+        ]
+    )
+
+    matched = best_product_rule_for_order(rules, product_name="", product_code="qbph004")
+    values = product_breakdown_values(rules, product_name="", product_code="QBPH004", actual_quantity=2, valid_sales=338)
+    formulas = order_product_formula_fields(rules)
+
+    assert matched is not None
+    assert matched.name == "洗面奶"
+    assert values["洗面奶数量"] == 2
+    assert values["洗面奶有效销售额"] == 338
+    assert values["皂液器数量"] == 0
+    assert extract_product_code_from_raw({"row": {"商家编码": "qbph004"}}) == "QBPH004"
+    assert '[商品编码]="QBPH004"' in formulas["洗面奶数量"]["expression"]
+
+
+def test_importer_owned_product_fields_take_priority_over_title_fallback():
+    rules = product_rules_from_records(
+        [
+            {"fields": {"商品名称": "洗面奶", "搜索关键词": "洗面奶"}},
+            {"fields": {"商品名称": "皂液器", "搜索关键词": "皂液器"}},
+        ]
+    )
+
+    matched = best_product_rule_from_order_fields(
+        rules,
+        {"洗面奶数量": 2, "洗面奶有效销售额": 338},
+        product_name="洁面产品",
+    )
+
+    assert matched is not None
+    assert matched.name == "洗面奶"
+
+
+def test_soap_dispenser_alias_matches_foaming_device_names():
+    rules = product_rules_from_records(
+        [
+            {"fields": {"商品名称": "皂液器", "搜索关键词": "皂液器"}},
+            {"fields": {"商品名称": "洗面奶", "搜索关键词": "洗面奶"}},
+        ]
+    )
+
+    values = product_breakdown_values(
+        rules,
+        product_name="趣白洁面起泡器【达人专属】全自动感应打泡沫机绵密泡沫洗脸神器",
+        actual_quantity=0,
+        valid_sales=169,
+    )
+
+    assert rules[0].keywords == ("皂液器", "洁面起泡器")
+    assert values["皂液器数量"] == 0
+    assert values["皂液器有效销售额"] == 169
+    assert values["洗面奶有效销售额"] == 0
 
 def test_product_breakdown_quantity_uses_source_quantity_for_accessories_and_price_diff():
     rules = product_rules_from_records(

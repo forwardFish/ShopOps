@@ -3,15 +3,12 @@
 Playwright scripts for collecting daily Excel/CSV exports, normalizing filenames, extracting zip files, and copying the usable files into:
 
 ```powershell
-D:\lyh\agent\agent-frame\ShopOps\docs\data\ShopOps\<MMDD>\<平台>
+D:\lyh\agent\agent-frame\ShopOps\docs\data\ShopOps_Order\<MMDD>\<平台>
 ```
 
-Default archive layout is hourly: `docs\data\ShopOps\<MMDD>\<HH点下载>\<platform>`.
-For example, a run at 23:15 on June 13 archives into
-`docs\data\ShopOps\0613\23点下载\...`. This prevents a later run on the same day
-from passing verification just because older files already exist in `0613`.
-Use `--flat-date-folder` only when you intentionally need the older
-`docs\data\ShopOps\<MMDD>` layout.
+The standard archive layout is the date folder `docs\data\ShopOps_Order\<MMDD>\<平台>` so the stability archive remains separate from the formal import folder.
+Use `--hourly-batch --batch-hour 23` when repeated same-day runs must be isolated under
+`docs\data\ShopOps_Order\<MMDD>\23点下载\<平台>`.
 
 ## First-time setup
 
@@ -20,6 +17,41 @@ cd D:\lyh\agent\agent-frame\ShopOps
 python -m pip install -r requirements.txt
 python -m playwright install chromium
 ```
+
+For a new Windows computer, use the repository setup and browser scripts. They
+use stable profiles, reuse an already-running CDP port, and never close the
+operator's existing browser windows:
+
+```powershell
+.\scripts\setup_shopops_data_robot.ps1
+.\scripts\start_shopops_cdp_browsers.ps1
+python -m data_robot.check_cdp
+```
+
+Log in once in each of the four visible browser windows. Leave those windows
+open for later runs. The profiles are stored in `data_robot\profiles` unless
+`-ProfileRoot` is supplied. The standard one-command flow is:
+
+```powershell
+.\scripts\run_standard_shopops_flow.ps1 -DateToken 0711
+```
+
+The command downloads all seven configured files, verifies
+`docs\data\ShopOps_Order\0711`, and only then invokes the existing standard
+importer. A batch is never imported when any configured task is missing. Each
+attempt is separated by the platform floor (2 minutes for non-Tmall tasks, 5
+minutes for Tmall tasks), so the default five attempts do not create a
+high-frequency click loop. Use `-MaxTaskAttempts 1` for a single-pass smoke
+test, or rerun after the platform floor when a portal is still generating a
+report.
+
+The downloader records the difference between a browser click and a real
+platform result. `task_not_created` means the portal did not create a report
+task, `task_pending` means the report is still asynchronous, and
+`download_started` means a file or partial download was observed. A hung CDP
+target is detached from the automation session and replaced with a new tab;
+the old tab remains open so its login state and manual inspection are not
+destroyed.
 
 ## Login/profile warm-up
 
@@ -62,11 +94,11 @@ python -m data_robot.full_flow --date-token 0613
 This runs `daily_download`, verifies the archived batch, then calls:
 
 ```powershell
-python scripts\import_daily_files_to_feishu.py --batch-dir D:\lyh\agent\agent-frame\ShopOps\docs\data\ShopOps\0613
+python scripts\import_daily_files_to_feishu.py --batch-dir D:\lyh\agent\agent-frame\ShopOps\docs\data\ShopOps_Order\0613
 ```
 
-With the default hourly layout, the actual batch directory is
-`D:\lyh\agent\agent-frame\ShopOps\docs\data\ShopOps\0613\<HH点下载>`.
+With the default date layout, the actual batch directory is
+`D:\lyh\agent\agent-frame\ShopOps\docs\data\ShopOps_Order\0613`.
 
 By default the command is strict: if the fresh download run has errors, it does not import just because older files already exist. When a portal is temporarily blocked but the archive folder is already complete and you intentionally want to import the existing batch, use:
 
@@ -93,8 +125,8 @@ python -m data_robot.full_flow --date-token 0614 --browser-profile-suffix cdp-te
 ```
 
 The first command opens one browser per platform. Log in once in those windows.
-The second command keeps the same hourly layout, for example
-`docs\data\ShopOps\0614\11点下载`, and then downloads, verifies, and imports that
+The second command uses the stability archive, for example
+`docs\data\ShopOps_Order\0614`, and then downloads, verifies, and imports that
 fresh batch only.
 
 When the Python Playwright driver is blocked but a Chrome/Edge CDP port is
@@ -137,18 +169,20 @@ After each platform is logged in and usable, run the seven configured downloads:
 python -m data_robot.daily_download --date-token 0611
 ```
 
-This uses four fixed Chrome debug ports: Pinduoduo `9222`, WeChat Channels `9223`, Douyin `9224`, and Tmall `9225`. It watches your default Downloads folder and archives new Excel/CSV/zip files into `docs\data\ShopOps\<MMDD>\<平台>`.
+This uses four fixed Chrome debug ports: Pinduoduo `9222`, WeChat Channels `9223`, Douyin `9224`, and Tmall `9225`. It watches your default Downloads folder and archives new Excel/CSV/zip files into `docs\data\ShopOps_Order\<MMDD>\<平台>`.
+
+The standard command reuses those existing Chrome windows and logged-in pages; it does not close or restart them during a normal run. If a platform's Playwright/CDP attachment is temporarily blocked, the runner retries the task through the lightweight direct-CDP path without restarting Chrome. For Tmall order reports this path can click the visible existing `下载订单报表` control by the live CSS viewport and then archive the newly created file from the Downloads folder. Use `--restart-stale-cdp` only when an explicitly requested browser restart is acceptable.
 
 Useful flags:
 
 - `--platform pinduoduo` runs one platform.
 - `--task pinduoduo_orders` runs one task.
-- `--batch-hour 23` writes into `23点下载` under the date folder. By default it uses the current hour.
-- `--flat-date-folder` writes to the old `docs\data\ShopOps\<MMDD>` layout.
+- `--hourly-batch --batch-hour 23` writes into `23点下载` under the date folder.
+- `--flat-date-folder` is the explicit date-folder layout and is the default.
 - `--auto-actions` reads click/fill/wait steps from `data_robot\actions\<task>.json`.
 - `--manual` disables smart export clicks and only waits for your manual download.
-- `--min-task-interval-seconds 480` is the default anti-risk cooldown. No export task will click again within 8 minutes.
-- `--retry-interval-seconds 480` waits 8 minutes before retrying a task that did not produce a download.
+- The default anti-risk cooldown is platform-aware: Tmall waits at least 300 seconds; Pinduoduo, WeChat Channels, and Douyin wait at least 120 seconds. `--min-task-interval-seconds` may only increase that floor.
+- The default retry interval uses the same platform-aware floor. `--retry-interval-seconds` may only increase it.
 - `--max-task-attempts 5` tries each task at most five times, then skips to the next task/platform.
 - `--force` bypasses the cooldown. Use it sparingly because frequent exports may trigger platform risk control.
 - `--run-import-check` optionally runs `scripts\import_daily_files_to_feishu.py --dry-run` after archiving. It is off by default because the robot's main job is only downloading source files.
@@ -205,7 +239,7 @@ Log in and wait until the page loads normally in that Chrome window. Then run:
 python -m data_robot.pinduoduo --task pinduoduo_orders --date-token 0611 --cdp-url http://127.0.0.1:9222
 ```
 
-The script attaches to that existing Chrome tab, waits for your export/download click, and copies the downloaded file into `docs\data\ShopOps\<MMDD>\拼多多`.
+The script attaches to that existing Chrome tab, waits for your export/download click, and copies the downloaded file into `docs\data\ShopOps_Order\<MMDD>\拼多多`.
 
 If the browser downloads into Chrome's default Downloads folder without emitting a Playwright download event, add a watch folder:
 
@@ -221,7 +255,7 @@ If a platform blocks automated download capture, download the Excel/CSV/zip manu
 python -m data_robot.archive_files pinduoduo_orders C:\Users\linyanhui\Downloads --date-token 0611
 ```
 
-You can pass one file or a folder. Only `.csv`, `.xls`, `.xlsx`, and `.zip` files are archived. By default this also uses the hourly archive folder; add `--flat-date-folder` only to place files into the older date-only folder.
+You can pass one file or a folder. Only `.csv`, `.xls`, `.xlsx`, and `.zip` files are archived. By default this uses the date archive folder; add `--hourly-batch --batch-hour 23` to isolate a repeated same-day archive.
 
 ## Verify A Daily Folder
 
@@ -243,5 +277,5 @@ python -m data_robot.verify_batch --date-token 0611\23点下载
 To verify that the collected batch can be parsed by the existing importer without writing to Feishu:
 
 ```powershell
-python scripts\import_daily_files_to_feishu.py --batch-dir D:\lyh\agent\agent-frame\ShopOps\docs\data\ShopOps\0611 --dry-run
+python scripts\import_daily_files_to_feishu.py --batch-dir D:\lyh\agent\agent-frame\ShopOps\docs\data\ShopOps_Order\0611 --dry-run
 ```

@@ -5,7 +5,7 @@ import json
 import os
 import sys
 import time
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -40,6 +40,7 @@ from shopops.services.product_breakdown import (
     product_rules_from_records,
     summary_product_formula_fields,
     total_product_formula_fields,
+    UNCLASSIFIED_PRODUCT_NAME,
 )
 from shopops.storage.feishu_bootstrap import (
     NUMBER_FIELD,
@@ -54,6 +55,7 @@ from scripts.run_dynamic_feishu_summary import DynamicSummaryFeishuClient, chunk
 
 FORMULA_FIELD = 20
 SINGLE_SELECT_FIELD = 3
+DATE_FIELD = 5
 ORDER_FORMULA_DATE_ALIASES = ("创建时间", "订单创建时间", "订单下单时间", "下单时间", "订单提交时间", "订单成交时间")
 FORMULA_SUMMARY_TABLE_NAME = "公式动态经营汇总表"
 FORMULA_TOTAL_SUMMARY_TABLE_NAME = "全周期平台总计表"
@@ -62,6 +64,8 @@ SHOP_NAME_FIELD = "店铺名称"
 PRODUCT_NAME_FIELD = "商品名称"
 ACCESSORY_FLAG_FIELD = "是否是配件"
 PLATFORMS = ("天猫", "抖音", "拼多多", "视频号", TOTAL_PLATFORM)
+ORDER_STATUS_FIELDS = ("交易状态", "订单状态", "履约/售后状态", "售后状态", "订单关闭原因")
+NON_SOLD_STATUS_KEYWORDS = ("\u9000\u6b3e", "\u4ea4\u6613\u5173\u95ed", "\u5df2\u5173\u95ed", "\u5df2\u53d6\u6d88", "\u8ba2\u5355\u5173\u95ed", "\u5f85\u4ed8\u6b3e", "\u7b49\u5f85\u4e70\u5bb6\u4ed8\u6b3e", "\u672a\u4ed8\u6b3e", "Cancelled", "cancelled", "CANCELLED")
 PLATFORM_ORDER_TABLE_ENVS = (
     "SHOPOPS_ORDER_TABLE_TMALL_ID",
     "SHOPOPS_ORDER_TABLE_DOUYIN_ID",
@@ -71,13 +75,23 @@ PLATFORM_ORDER_TABLE_ENVS = (
 
 
 class FormulaSummaryBootstrap:
-    def __init__(self, app_token: str, env_path: Path) -> None:
+    def __init__(
+        self,
+        app_token: str,
+        env_path: Path,
+        *,
+        force_formula_updates: bool = False,
+        force_summary_formula_updates: bool = False,
+    ) -> None:
         ensure_feishu_no_proxy()
         self.settings = load_settings()
         self.app_token = app_token
         self.env_path = env_path
         self.client = FeishuOpenApiClient(self.settings.feishu_app_id, self.settings.feishu_app_secret)
         self.helper = DynamicSummaryFeishuClient(app_token, env_path)
+        self._field_index_cache: dict[str, dict[str, dict[str, Any]]] = {}
+        self.force_formula_updates = force_formula_updates
+        self.force_summary_formula_updates = force_summary_formula_updates
 
     def run(
         self,
@@ -111,11 +125,11 @@ class FormulaSummaryBootstrap:
             summary_table_id = summary_table_id or self.ensure_formula_summary_table()
             self.ensure_summary_formula_fields(summary_table_id, source_names, product_rules)
             if not refresh_source_dates:
-                rows = self.dimension_rows_from_summary(summary_table_id, days_ahead)
+                rows = self.dimension_rows_from_summary(summary_table_id, days_ahead, product_rules)
                 if rows:
                     dimension_source = "existing_summary"
             if not rows:
-                rows = self.dimension_rows(order_table_ids, ad_table_id, commission_table_id, days_ahead)
+                rows = self.dimension_rows(order_table_ids, ad_table_id, commission_table_id, days_ahead, product_rules)
             saved = self.upsert_dimension_rows(summary_table_id, rows)
         total_summary_table_id = total_summary_table_id or self.ensure_formula_total_summary_table()
         if not summary_table_id:
@@ -125,8 +139,18 @@ class FormulaSummaryBootstrap:
         total_rows = self.total_dimension_rows_from_summary(summary_table_id) if summary_table_id else self.total_dimension_rows()
         total_saved = self.upsert_total_dimension_rows(total_summary_table_id, total_rows)
         time.sleep(5)
-        records = self.helper.list_records(summary_table_id) if summary_table_id and not total_only else []
-        total_records = self.helper.list_records(total_summary_table_id)
+        records = (
+            self.list_records(
+                summary_table_id,
+                ["统计日期", "平台", "订单数", "销售额", "投流消耗", "达人佣金"],
+            )
+            if summary_table_id and not total_only
+            else []
+        )
+        total_records = self.list_records(
+            total_summary_table_id,
+            ["平台", "订单数", "销售额", "投流消耗", "达人佣金"],
+        )
         readback = self.summarize_readback(records) if records else {}
         total_readback = self.summarize_total_readback(total_records)
         result = {
@@ -171,7 +195,18 @@ class FormulaSummaryBootstrap:
         return result
 
     def product_rules(self, product_table_id: str) -> list[ProductRule]:
-        return product_rules_from_records(self.helper.list_records(product_table_id))
+        return product_rules_from_records(self.list_records(product_table_id))
+
+    def list_records(self, table_id: str, field_names: list[str] | None = None) -> list[dict[str, Any]]:
+        """Wait through Feishu's brief formula-recalculation window."""
+        for attempt in range(1, 6):
+            try:
+                return self.helper.list_records(table_id, field_names)
+            except RuntimeError as exc:
+                if not is_retryable_feishu_read_error(exc) or attempt == 5:
+                    raise
+                time.sleep(attempt * 10)
+        raise AssertionError("unreachable")
 
     def ensure_source_helper_formulas(
         self,
@@ -192,11 +227,11 @@ class FormulaSummaryBootstrap:
         self.ensure_formula_field(order_table_id, "公式_统计日期", formula_date_expr(order_fields, ORDER_FORMULA_DATE_ALIASES), formatter="")
         self.ensure_formula_field(order_table_id, "公式_汇总平台", NORMALIZE_PLATFORM_EXPR, formatter="")
         self.ensure_formula_field(order_table_id, "公式_销售额", first_number_expr(order_fields, ORDER_SALES_FIELDS), formatter="0.00")
-        self.ensure_formula_field(order_table_id, "公式_退款金额", first_number_expr(order_fields, ORDER_REFUND_FIELDS), formatter="0.00")
+        self.ensure_formula_field(order_table_id, "公式_退款金额", refund_amount_expr(order_fields), formatter="0.00")
         self.ensure_formula_field(
             order_table_id,
             "公式_有效销售额",
-            first_number_expr(order_fields, ORDER_VALID_SALES_FIELDS, default="[公式_销售额]-[公式_退款金额]"),
+            effective_sales_expr(order_fields),
             formatter="0.00",
         )
         order_fields = self.field_index(order_table_id)
@@ -206,7 +241,12 @@ class FormulaSummaryBootstrap:
         self.ensure_formula_field(order_table_id, "公式_平台扣点", first_number_expr(order_fields, PLATFORM_FEE_FIELDS), formatter="0.00")
         self.ensure_formula_field(order_table_id, "公式_其他费用", first_number_expr(order_fields, OTHER_FEE_FIELDS), formatter="0.00")
         for name, config in order_product_formula_fields(product_rules or []).items():
-            self.ensure_formula_field(order_table_id, name, config["expression"], formatter=config["formatter"])
+            self.ensure_product_breakdown_field(
+                order_table_id,
+                name,
+                config["expression"],
+                formatter=config["formatter"],
+            )
 
     def ensure_ad_commission_helper_formulas(self, ad_table_id: str, commission_table_id: str) -> None:
         ad_fields = self.field_index(ad_table_id)
@@ -280,10 +320,16 @@ class FormulaSummaryBootstrap:
         product_rules: list[ProductRule] | None = None,
     ) -> None:
         self.ensure_plain_fields(table_id, [text_field("unique_key"), text_field("统计日期"), text_field("平台"), text_field(SHOP_NAME_FIELD), text_field(PRODUCT_NAME_FIELD)])
-        formulas = summary_formulas(source_names)
+        formulas = summary_formulas(source_names, product_rules)
         formulas.update(summary_product_formula_fields(source_names["orders"], product_rules or []))
         for name, config in formulas.items():
-            self.ensure_formula_field(table_id, name, config["expression"], formatter=config.get("formatter", "0.00"))
+            self.ensure_formula_field(
+                table_id,
+                name,
+                config["expression"],
+                formatter=config.get("formatter", "0.00"),
+                force=getattr(self, "force_summary_formula_updates", False),
+            )
 
     def ensure_total_summary_formula_fields(
         self,
@@ -303,6 +349,7 @@ class FormulaSummaryBootstrap:
             if field["field_name"] in existing:
                 continue
             self.helper.request("POST", f"/bitable/v1/apps/{self.app_token}/tables/{table_id}/fields", field)
+            self._field_index_cache.pop(table_id, None)
 
     def ensure_select_field(self, table_id: str, name: str, options: tuple[str, ...]) -> None:
         existing = self.field_index(table_id)
@@ -314,11 +361,20 @@ class FormulaSummaryBootstrap:
         current = existing.get(name)
         if not current:
             self.helper.request("POST", f"/bitable/v1/apps/{self.app_token}/tables/{table_id}/fields", payload)
+            self._field_index_cache.pop(table_id, None)
             return
         if int(current.get("type") or 0) != SINGLE_SELECT_FIELD:
             raise RuntimeError(f"Field {name} exists in {table_id} but is not a single select field")
 
-    def ensure_formula_field(self, table_id: str, name: str, expression: str, formatter: str) -> None:
+    def ensure_formula_field(
+        self,
+        table_id: str,
+        name: str,
+        expression: str,
+        formatter: str,
+        *,
+        force: bool = False,
+    ) -> None:
         existing = self.field_index(table_id)
         payload = {
             "field_name": name,
@@ -328,13 +384,28 @@ class FormulaSummaryBootstrap:
         current = existing.get(name)
         if not current:
             self.helper.request("POST", f"/bitable/v1/apps/{self.app_token}/tables/{table_id}/fields", payload)
+            self._field_index_cache.pop(table_id, None)
             return
         if int(current.get("type") or 0) != FORMULA_FIELD:
             raise RuntimeError(f"Field {name} exists in {table_id} but is not a formula field")
+        if not (force or getattr(self, "force_formula_updates", False)):
+            return
         field_id = current.get("field_id")
         self.helper.request("PUT", f"/bitable/v1/apps/{self.app_token}/tables/{table_id}/fields/{field_id}", payload)
+        self._field_index_cache.pop(table_id, None)
+
+    def ensure_product_breakdown_field(self, table_id: str, name: str, expression: str, formatter: str) -> None:
+        """Keep importer-owned numeric product fields compatible with formula bootstrap."""
+        existing = self.field_index(table_id)
+        current = existing.get(name)
+        if current and int(current.get("type") or 0) == NUMBER_FIELD:
+            return
+        self.ensure_formula_field(table_id, name, expression, formatter)
 
     def field_index(self, table_id: str) -> dict[str, dict[str, Any]]:
+        cached = getattr(self, "_field_index_cache", {}).get(table_id)
+        if cached is not None:
+            return cached
         fields: dict[str, dict[str, Any]] = {}
         page_token = None
         while True:
@@ -346,10 +417,18 @@ class FormulaSummaryBootstrap:
                 if item.get("field_name"):
                     fields[str(item["field_name"])] = item
             if not data.get("has_more"):
+                self._field_index_cache[table_id] = fields
                 return fields
             page_token = data.get("page_token")
 
-    def dimension_rows(self, order_table_ids: list[str], ad_table_id: str, commission_table_id: str, days_ahead: int) -> list[dict[str, Any]]:
+    def dimension_rows(
+        self,
+        order_table_ids: list[str],
+        ad_table_id: str,
+        commission_table_id: str,
+        days_ahead: int,
+        product_rules: list[ProductRule],
+    ) -> list[dict[str, Any]]:
         dates = set()
         sources = [
             (ad_table_id, ("采集时间",)),
@@ -357,7 +436,9 @@ class FormulaSummaryBootstrap:
         ]
         sources.extend((table_id, ("创建时间",)) for table_id in order_table_ids)
         for table_id, fields in sources:
-            for record in self.helper.list_records(table_id):
+            available = self.field_index(table_id)
+            requested_fields = [field for field in fields if field in available]
+            for record in self.list_records(table_id, requested_fields or None):
                 source = record.get("fields") or {}
                 parsed = None
                 for field in fields:
@@ -368,17 +449,18 @@ class FormulaSummaryBootstrap:
         today = date.today()
         for offset in range(days_ahead + 1):
             dates.add(today + timedelta(days=offset))
-        rows: list[dict[str, Any]] = []
-        for day in sorted(dates):
-            day_text = day.isoformat()
-            for platform in PLATFORMS:
-                rows.append(dimension_row(day_text, platform))
-        return rows
+        return dimension_rows_for_dates(dates, product_rules)
 
-    def dimension_rows_from_summary(self, table_id: str, days_ahead: int) -> list[dict[str, Any]]:
+    def dimension_rows_from_summary(
+        self,
+        table_id: str,
+        days_ahead: int,
+        product_rules: list[ProductRule] | None = None,
+    ) -> list[dict[str, Any]]:
         dates: set[date] = set()
         extra_platforms: set[str] = set()
-        for record in self.helper.list_records(table_id):
+        existing_products: set[str] = set()
+        for record in self.list_records(table_id, ["统计日期", "平台", PRODUCT_NAME_FIELD]):
             fields = record.get("fields") or {}
             parsed = parse_date(fields.get("统计日期"))
             if parsed:
@@ -386,22 +468,20 @@ class FormulaSummaryBootstrap:
             platform = str(fields.get("平台") or "").strip()
             if platform and platform not in PLATFORMS:
                 extra_platforms.add(platform)
+            product_name = clean_dimension_text(fields.get(PRODUCT_NAME_FIELD))
+            if product_name:
+                existing_products.add(product_name)
         if not dates:
             return []
         today = date.today()
         for offset in range(days_ahead + 1):
             dates.add(today + timedelta(days=offset))
         platforms = [*PLATFORMS, *sorted(extra_platforms)]
-        rows: list[dict[str, Any]] = []
-        for day in sorted(dates):
-            day_text = day.isoformat()
-            for platform in platforms:
-                rows.append(dimension_row(day_text, platform))
-        return rows
+        return dimension_rows_for_dates(dates, product_rules or [], platforms, existing_products)
 
     def total_dimension_rows_from_summary(self, summary_table_id: str) -> list[dict[str, Any]]:
         platforms: set[str] = set(PLATFORMS)
-        for record in self.helper.list_records(summary_table_id):
+        for record in self.list_records(summary_table_id, ["平台"]):
             fields = record.get("fields") or {}
             platform = str(fields.get("平台") or "").strip()
             if platform:
@@ -414,7 +494,11 @@ class FormulaSummaryBootstrap:
         return [total_dimension_row(platform) for platform in PLATFORMS]
 
     def upsert_dimension_rows(self, table_id: str, rows: list[dict[str, Any]]) -> int:
-        index = self.record_index(table_id)
+        rows = self.prepare_dimension_rows(table_id, rows)
+        index = self.record_index(
+            table_id,
+            ["unique_key", "统计日期", "平台", SHOP_NAME_FIELD, PRODUCT_NAME_FIELD],
+        )
         to_create: list[dict[str, Any]] = []
         to_update: list[dict[str, Any]] = []
         for row in rows:
@@ -436,8 +520,27 @@ class FormulaSummaryBootstrap:
                 saved += len(chunk)
         return saved
 
+    def prepare_dimension_rows(self, table_id: str, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        field_index = getattr(self, "field_index", None)
+        if not callable(field_index):
+            return rows
+        date_field = field_index(table_id).get("统计日期") or {}
+        if int(date_field.get("type") or 0) != DATE_FIELD:
+            return rows
+        prepared: list[dict[str, Any]] = []
+        for row in rows:
+            value = row.get("统计日期")
+            if isinstance(value, str):
+                parsed = datetime.strptime(value[:10], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                value = int(parsed.timestamp() * 1000)
+            prepared.append({**row, "统计日期": value})
+        return prepared
+
     def upsert_total_dimension_rows(self, table_id: str, rows: list[dict[str, Any]]) -> int:
-        index = self.record_index(table_id)
+        index = self.record_index(
+            table_id,
+            ["unique_key", "统计范围", "平台", SHOP_NAME_FIELD, PRODUCT_NAME_FIELD],
+        )
         to_create: list[dict[str, Any]] = []
         to_update: list[dict[str, Any]] = []
         for row in rows:
@@ -459,9 +562,9 @@ class FormulaSummaryBootstrap:
                 saved += len(chunk)
         return saved
 
-    def record_index(self, table_id: str) -> dict[str, dict[str, Any]]:
+    def record_index(self, table_id: str, field_names: list[str]) -> dict[str, dict[str, Any]]:
         result: dict[str, dict[str, Any]] = {}
-        for record in self.helper.list_records(table_id):
+        for record in self.list_records(table_id, field_names):
             key = (record.get("fields") or {}).get("unique_key")
             if key:
                 result[str(key)] = {"record_id": str(record.get("record_id")), "fields": record.get("fields") or {}}
@@ -476,7 +579,7 @@ class FormulaSummaryBootstrap:
         latest_rows = [
             fields
             for fields in formula_rows
-            if str(fields.get("统计日期") or "") >= date.today().isoformat()
+            if (stat_date := parse_date(fields.get("统计日期"))) and stat_date >= date.today()
         ][:5]
         nonzero_rows = [
             fields
@@ -581,7 +684,7 @@ FORMULA_TOTAL_SUMMARY_FORMULA_NAMES = (
 )
 
 
-def summary_formulas(source_names: dict[str, Any]) -> dict[str, dict[str, str]]:
+def summary_formulas(source_names: dict[str, Any], product_rules: list[ProductRule] | None = None) -> dict[str, dict[str, str]]:
     order_tables = source_names["orders"]
     if isinstance(order_tables, str):
         order_tables = [order_tables]
@@ -591,7 +694,7 @@ def summary_formulas(source_names: dict[str, Any]) -> dict[str, dict[str, str]]:
     ad_filter = filter_expr(ad_table)
     commission_filter = filter_expr(commission_table)
     return {
-        "汇总key": {"expression": '[统计日期]&"-"&[平台]', "formatter": ""},
+        "汇总key": {"expression": 'TEXT([统计日期],"YYYY-MM-DD")&"-"&[平台]', "formatter": ""},
         "订单数": {"expression": sum_order_expr(order_filters, "unique_key", "COUNTA"), "formatter": "0"},
         "实际卖出数量": {"expression": sum_order_expr(order_filters, "公式_实际卖出数量"), "formatter": "0"},
         "销售额": {"expression": sum_order_expr(order_filters, "公式_销售额"), "formatter": "0.00"},
@@ -629,6 +732,50 @@ def sum_order_expr(order_filters: list[str], field_name: str, op: str = "SUM") -
     return "+".join(parts)
 
 
+def product_aware_order_expr(
+    order_table_names: list[str],
+    field_name: str,
+    op: str,
+    product_rules: list[ProductRule] | None,
+) -> str:
+    base_filters = [filter_expr(table_name) for table_name in order_table_names]
+    overall = sum_order_expr(base_filters, field_name, op)
+    if not product_rules:
+        return overall
+    unclassified = sum_order_expr(
+        [filter_expr(table_name, source_condition='IFBLANK(CurrentValue.[商品名称],"")=""') for table_name in order_table_names],
+        field_name,
+        op,
+    )
+    expression = f'IF([商品名称]="{UNCLASSIFIED_PRODUCT_NAME}",{unclassified},0)'
+    for rule in reversed(product_rules):
+        source_field = product_source_field(field_name, rule)
+        condition = product_source_condition(field_name, rule)
+        product_sum = sum_order_expr(
+            [filter_expr(table_name, source_condition=condition) for table_name in order_table_names],
+            source_field,
+            op,
+        )
+        expression = f'IF([商品名称]="{rule.name}",{product_sum},{expression})'
+    return f'IF(IFBLANK([商品名称],"")="",{overall},{expression})'
+
+
+def product_source_field(field_name: str, rule: ProductRule) -> str:
+    if field_name == "公式_实际卖出数量":
+        return rule.quantity_field
+    return field_name
+
+
+def product_source_condition(field_name: str, rule: ProductRule) -> str:
+    """Use the importer-owned product fields as the sole category decision."""
+    return f"CurrentValue.[{rule.quantity_field}]>0||CurrentValue.[{rule.valid_sales_field}]>0"
+
+
+def is_retryable_feishu_read_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return "1254607" in message or "timed out" in message or "connectionerror" in type(exc).__name__.lower()
+
+
 def total_summary_formulas(summary_table_name: str) -> dict[str, dict[str, str]]:
     summary_filter = total_filter_expr(summary_table_name)
     return {
@@ -663,11 +810,22 @@ def total_summary_formulas(summary_table_name: str) -> dict[str, dict[str, str]]
     }
 
 
-def filter_expr(table_name: str) -> str:
+def filter_expr(
+    table_name: str,
+    *,
+    main_product_only: bool = False,
+    source_condition: str = "",
+) -> str:
+    product_clause = ""
+    if main_product_only:
+        product_clause = '&&IFBLANK([商品名称],"")=""'
+    if source_condition:
+        product_clause += f"&&({source_condition})"
     return (
         f"[{table_name}].FILTER("
-        'CurrentValue.[公式_统计日期]=[统计日期]&&'
+        'CurrentValue.[公式_统计日期]=TEXT([统计日期],"YYYY-MM-DD")&&'
         '([平台]="全平台总计"||CurrentValue.[平台]=[平台])'
+        f"{product_clause}"
         ")"
     )
 
@@ -675,7 +833,7 @@ def filter_expr(table_name: str) -> str:
 def total_filter_expr(table_name: str) -> str:
     return (
         f"[{table_name}].FILTER("
-        "CurrentValue.[平台]=[平台]"
+        'CurrentValue.[平台]=[平台]&&IFBLANK(CurrentValue.[商品名称],"")=""'
         ")"
     )
 
@@ -690,6 +848,49 @@ def first_number_expr(existing_fields: dict[str, dict[str, Any]], aliases: tuple
     return expr
 
 
+def order_status_text_expr(existing_fields: dict[str, dict[str, Any]]) -> str:
+    found = [name for name in ORDER_STATUS_FIELDS if name in existing_fields]
+    if not found:
+        return ""
+    return '&"/"&'.join(f'IFBLANK([{name}],"")' for name in found)
+
+
+def non_sold_status_expr(existing_fields: dict[str, dict[str, Any]]) -> str:
+    status_text = order_status_text_expr(existing_fields)
+    if not status_text:
+        return ""
+    return "||".join(f'({status_text}).CONTAIN("{keyword}")' for keyword in NON_SOLD_STATUS_KEYWORDS)
+
+
+def refund_success_status_expr(existing_fields: dict[str, dict[str, Any]]) -> str:
+    trade_field = "\u4ea4\u6613\u72b6\u6001"
+    fulfill_status_field = "\u5c65\u7ea6/\u552e\u540e\u72b6\u6001"
+    aftersale_status_field = "\u552e\u540e\u72b6\u6001"
+    refund_success = "\u9000\u6b3e\u6210\u529f"
+    trade = f'IFBLANK([{trade_field}],"")' if trade_field in existing_fields else '""'
+    fulfill_fields = [name for name in (fulfill_status_field, aftersale_status_field) if name in existing_fields]
+    fulfill = '&"/"&'.join(f'IFBLANK([{name}],"")' for name in fulfill_fields) if fulfill_fields else '""'
+    return f'(({trade}).CONTAIN("Cancelled")||({trade}).CONTAIN("cancelled")||({trade}).CONTAIN("CANCELLED"))&&({fulfill}).CONTAIN("{refund_success}")'
+
+
+def refund_amount_expr(existing_fields: dict[str, dict[str, Any]]) -> str:
+    explicit_refund = first_number_expr(existing_fields, ORDER_REFUND_FIELDS, default="0")
+    paid = first_number_expr(existing_fields, ORDER_SALES_FIELDS, default="0")
+    return f"IF(({explicit_refund})>0,{explicit_refund},IF({refund_success_status_expr(existing_fields)},{paid},0))"
+
+
+def effective_sales_expr(existing_fields: dict[str, dict[str, Any]]) -> str:
+    valid_sales = first_number_expr(existing_fields, ORDER_VALID_SALES_FIELDS, default="[公式_销售额]-[公式_退款金额]")
+    status_gate = non_sold_status_expr(existing_fields)
+    zero_gates = []
+    if status_gate:
+        zero_gates.append(status_gate)
+    if "公式_实际卖出数量" in existing_fields:
+        zero_gates.append("IFBLANK([公式_实际卖出数量],0)=0")
+    if not zero_gates:
+        return valid_sales
+    return f"IF({'||'.join(zero_gates)},0,{valid_sales})"
+
 def effective_sales_quantity_expr(existing_fields: dict[str, dict[str, Any]]) -> str:
     quantity = first_number_expr(existing_fields, ORDER_QUANTITY_FIELDS)
     valid_sales = first_number_expr(existing_fields, ("公式_有效销售额",), default="0")
@@ -697,7 +898,11 @@ def effective_sales_quantity_expr(existing_fields: dict[str, dict[str, Any]]) ->
         valid_sales = first_number_expr(existing_fields, ORDER_VALID_SALES_FIELDS, default="[公式_销售额]-[公式_退款金额]")
     if not valid_sales:
         valid_sales = "0"
-    return f"IF(({valid_sales})>0,{quantity},0)"
+    status_gate = non_sold_status_expr(existing_fields)
+    expression = f"IF(({valid_sales})>0,{quantity},0)"
+    if status_gate:
+        expression = f"IF({status_gate},0,{expression})"
+    return expression
 
 
 def actual_sold_quantity_expr(existing_fields: dict[str, dict[str, Any]], product_rules: list[ProductRule] | None = None) -> str:
@@ -707,7 +912,11 @@ def actual_sold_quantity_expr(existing_fields: dict[str, dict[str, Any]], produc
         if rule.name not in {"配件", "补差价"} and rule.quantity_field in existing_fields
     ]
     if product_quantity_fields:
-        return "+".join(f"IFBLANK([{field}],0)" for field in product_quantity_fields)
+        expression = "+".join(f"IFBLANK([{field}],0)" for field in product_quantity_fields)
+        status_gate = non_sold_status_expr(existing_fields)
+        if status_gate:
+            expression = f"IF({status_gate},0,{expression})"
+        return expression
     return effective_sales_quantity_expr(existing_fields)
 
 
@@ -746,6 +955,19 @@ def first_existing_text_expr(existing_fields: dict[str, dict[str, Any]], aliases
 def parse_date(value: Any) -> date | None:
     if value in (None, ""):
         return None
+    if isinstance(value, list):
+        text = "".join(str(item.get("text") or "") for item in value if isinstance(item, dict)).strip()
+        return parse_date(text)
+    if isinstance(value, dict):
+        return parse_date(value.get("text"))
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        timestamp = float(value)
+        if timestamp > 100_000_000_000:
+            timestamp /= 1000
+        try:
+            return datetime.fromtimestamp(timestamp).date()
+        except (OverflowError, OSError, ValueError):
+            return None
     text = str(value).strip()
     for candidate in (text, text[:19], text[:10]):
         for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
@@ -768,8 +990,10 @@ def dimension_row(stat_date: str, platform: str, shop_name: str = "", product_na
     shop_name = clean_dimension_text(shop_name)
     product_name = clean_dimension_text(product_name)
     key_parts = [stat_date, platform]
-    if shop_name or product_name:
-        key_parts.extend([shop_name, product_name])
+    if shop_name:
+        key_parts.append(shop_name)
+    if product_name:
+        key_parts.append(product_name)
     return {
         "unique_key": "-".join(key_parts),
         "统计日期": stat_date,
@@ -779,12 +1003,33 @@ def dimension_row(stat_date: str, platform: str, shop_name: str = "", product_na
     }
 
 
+def dimension_rows_for_dates(
+    dates: set[date],
+    product_rules: list[ProductRule],
+    platforms: list[str] | tuple[str, ...] = PLATFORMS,
+    existing_products: set[str] | None = None,
+) -> list[dict[str, Any]]:
+    product_names = [rule.name for rule in product_rules]
+    product_names.append(UNCLASSIFIED_PRODUCT_NAME)
+    product_names.extend(sorted(existing_products or set()))
+    product_names = unique_values(product_names)
+    rows: list[dict[str, Any]] = []
+    for day in sorted(dates):
+        day_text = day.isoformat()
+        for platform in platforms:
+            rows.append(dimension_row(day_text, platform))
+            rows.extend(dimension_row(day_text, platform, product_name=product_name) for product_name in product_names)
+    return rows
+
+
 def total_dimension_row(platform: str, shop_name: str = "", product_name: str = "") -> dict[str, Any]:
     shop_name = clean_dimension_text(shop_name)
     product_name = clean_dimension_text(product_name)
     key_parts = ["all-days", platform]
-    if shop_name or product_name:
-        key_parts.extend([shop_name, product_name])
+    if shop_name:
+        key_parts.append(shop_name)
+    if product_name:
+        key_parts.append(product_name)
     return {
         "unique_key": "-".join(key_parts),
         "统计范围": "所有天数",
@@ -853,6 +1098,16 @@ def main() -> int:
         action="store_true",
         help="Only create/update the all-days platform total formula table; do not refresh the daily formula summary table.",
     )
+    parser.add_argument(
+        "--force-formula-updates",
+        action="store_true",
+        help="Rewrite existing formula fields. Omit for the stable daily path that only creates missing formulas.",
+    )
+    parser.add_argument(
+        "--force-summary-formula-updates",
+        action="store_true",
+        help="Rewrite existing daily-summary formulas without rewriting source-table helper formulas.",
+    )
     args = parser.parse_args()
     order_table_ids = args.order_table_id or default_order_table_ids(os.getenv("SHOPOPS_ORDER_TABLE_ID") or os.getenv("FEISHU_TABLE_ORDERS_RAW"))
     required = {
@@ -864,7 +1119,12 @@ def main() -> int:
     missing = [name for name, value in required.items() if not value]
     if missing:
         raise RuntimeError("Missing required inputs: " + ", ".join(missing))
-    result = FormulaSummaryBootstrap(args.app_token, Path(args.env_path)).run(
+    result = FormulaSummaryBootstrap(
+        args.app_token,
+        Path(args.env_path),
+        force_formula_updates=args.force_formula_updates,
+        force_summary_formula_updates=args.force_summary_formula_updates,
+    ).run(
         order_table_id=order_table_ids[0],
         order_table_ids=order_table_ids,
         ad_table_id=args.ad_table_id,

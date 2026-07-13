@@ -122,11 +122,13 @@ class DynamicSummaryFeishuClient:
                 return names
             page_token = data.get("page_token")
 
-    def list_records(self, table_id: str) -> list[dict[str, Any]]:
+    def list_records(self, table_id: str, field_names: list[str] | None = None) -> list[dict[str, Any]]:
         records: list[dict[str, Any]] = []
         page_token = None
         while True:
             params: dict[str, Any] = {"page_size": 500}
+            if field_names:
+                params["field_names"] = json.dumps(field_names, ensure_ascii=False)
             if page_token:
                 params["page_token"] = page_token
             data = self.request("GET", f"/bitable/v1/apps/{self.app_token}/tables/{table_id}/records", params=params)

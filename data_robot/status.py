@@ -10,7 +10,9 @@ from data_robot.common import (
     DEFAULT_ARCHIVE_ROOT,
     DEFAULT_EVIDENCE_ROOT,
     GLOBAL_EXPORT_COOLDOWN_KEY,
+    add_batch_layout_args,
     cooldown_remaining,
+    effective_min_task_interval_seconds,
     evidence_token,
     hourly_batch_token,
     print_json,
@@ -40,14 +42,20 @@ def build_status(
     selected_tasks = selected_task_keys(platforms, task_keys)
     batch_dir = archive_root / date_token
     archive_status = verify_batch(batch_dir, selected_tasks)
-    global_cooldown = cooldown_remaining(GLOBAL_EXPORT_COOLDOWN_KEY, min_task_interval_seconds)
+    task_intervals = {
+        task_key: effective_min_task_interval_seconds(TASKS[task_key], min_task_interval_seconds)
+        for task_key in selected_tasks
+    }
     cooldowns = {
         task_key: {
             "platform": TASKS[task_key].platform,
             "kind": TASKS[task_key].kind,
-            "task_remaining_seconds": cooldown_remaining(task_key, min_task_interval_seconds),
-            "global_remaining_seconds": global_cooldown,
-            "remaining_seconds": max(cooldown_remaining(task_key, min_task_interval_seconds), global_cooldown),
+            "min_export_interval_seconds": task_intervals[task_key],
+            "task_remaining_seconds": cooldown_remaining(task_key, task_intervals[task_key]),
+            # Kept as a compatibility field for older evidence readers.  New
+            # runs intentionally do not let one platform block another.
+            "global_remaining_seconds": 0,
+            "remaining_seconds": cooldown_remaining(task_key, task_intervals[task_key]),
         }
         for task_key in selected_tasks
     }
@@ -67,7 +75,10 @@ def build_status(
         "task_keys": selected_tasks,
         "archive_status": archive_status,
         "cooldowns": cooldowns,
-        "global_cooldown_remaining_seconds": global_cooldown,
+        "global_cooldown_remaining_seconds": max(
+            (int(item["global_remaining_seconds"]) for item in cooldowns.values()),
+            default=0,
+        ),
         "blocked_by_cooldown": blocked_by_cooldown,
         "cdp_status": cdp_status,
     }
@@ -76,13 +87,12 @@ def build_status(
 def main() -> int:
     parser = argparse.ArgumentParser(description="Read-only ShopOps data robot status check.")
     parser.add_argument("--date-token", default="", help="Archive date directory, e.g. 0613. Defaults to today.")
-    parser.add_argument("--batch-hour", default="", help="Hourly archive subfolder, e.g. 23. Defaults to current hour.")
-    parser.add_argument("--flat-date-folder", action="store_true", help="Use the old docs/data/ShopOps/<MMDD> layout without an hourly subfolder.")
+    add_batch_layout_args(parser)
     parser.add_argument("--archive-root", default=str(DEFAULT_ARCHIVE_ROOT))
     parser.add_argument("--evidence-root", default=str(DEFAULT_EVIDENCE_ROOT))
     parser.add_argument("--platform", action="append", choices=PLATFORMS, help="Only check selected platform; repeatable.")
     parser.add_argument("--task", action="append", choices=sorted(TASKS), help="Only check selected task; repeatable.")
-    parser.add_argument("--min-task-interval-seconds", type=int, default=480)
+    parser.add_argument("--min-task-interval-seconds", type=int, default=0)
     parser.add_argument("--skip-cdp", action="store_true", help="Do not check Chrome CDP debug ports.")
     args = parser.parse_args()
 

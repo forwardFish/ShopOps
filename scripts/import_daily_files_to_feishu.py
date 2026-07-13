@@ -6,6 +6,7 @@ import json
 import os
 import re
 import sys
+import subprocess
 import threading
 import time
 import traceback
@@ -687,7 +688,7 @@ class FeishuDailyClient:
 
 
 def is_retryable_feishu_response(status_code: int, body: dict[str, Any]) -> bool:
-    return status_code in {429, 500, 502, 503, 504} or body.get("code") == 1254607
+    return status_code in {429, 500, 502, 503, 504} or body.get("code") in {1254607, 1255002}
 
 
 def discover_daily_files(batch_dir: Path) -> dict[str, dict[str, list[Path]]]:
@@ -1902,6 +1903,167 @@ def write_import_progress(
     write_import_evidence(evidence, summary)
 
 
+def decode_process_output(value: str | bytes | None) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value
+
+
+def run_formula_dynamic_summary(*, evidence_dir: Path, timeout_seconds: int) -> dict[str, Any]:
+    """Refresh the formula summary and its product-detail reconciliation."""
+    command = [
+        sys.executable,
+        str(ROOT / "scripts" / "bootstrap_formula_dynamic_summary.py"),
+        "--days-ahead",
+        "0",
+        "--evidence-dir",
+        str(evidence_dir),
+    ]
+    summary_table_id = os.getenv("SHOPOPS_FORMULA_SUMMARY_TABLE_ID", "").strip()
+    if summary_table_id:
+        command.extend(["--summary-table-id", summary_table_id])
+    total_summary_table_id = os.getenv("SHOPOPS_FORMULA_TOTAL_SUMMARY_TABLE_ID", "").strip()
+    if total_summary_table_id:
+        command.extend(["--total-summary-table-id", total_summary_table_id])
+
+    env = os.environ.copy()
+    env.setdefault("PYTHONIOENCODING", "utf-8")
+    env.setdefault("PYTHONUTF8", "1")
+    started = datetime.now()
+    stages: list[dict[str, Any]] = []
+
+    def run_stage(name: str, stage_command: list[str]) -> dict[str, Any]:
+        try:
+            completed = subprocess.run(
+                stage_command,
+                cwd=ROOT,
+                capture_output=True,
+                timeout=timeout_seconds,
+                env=env,
+            )
+        except subprocess.TimeoutExpired as exc:
+            return {
+                "name": name,
+                "status": "timed_out",
+                "command": stage_command,
+                "returncode": 124,
+                "timed_out": True,
+                "stdout_tail": decode_process_output(exc.stdout)[-12000:],
+                "stderr_tail": decode_process_output(exc.stderr)[-12000:],
+            }
+
+        stdout = decode_process_output(completed.stdout)
+        stderr = decode_process_output(completed.stderr)
+        parsed: dict[str, Any] | None = None
+        try:
+            parsed = json.loads(stdout)
+        except (TypeError, json.JSONDecodeError):
+            parsed = None
+        return {
+            "name": name,
+            "status": "success" if completed.returncode == 0 and parsed else "failed",
+            "command": stage_command,
+            "returncode": completed.returncode,
+            "timed_out": False,
+            "summary": parsed,
+            "stdout_tail": stdout[-12000:],
+            "stderr_tail": stderr[-12000:],
+        }
+
+    bootstrap_stage = run_stage("bootstrap", command)
+    stages.append(bootstrap_stage)
+    if bootstrap_stage["status"] != "success":
+        return {
+            "status": bootstrap_stage["status"],
+            "command": command,
+            "returncode": bootstrap_stage["returncode"],
+            "timed_out": bootstrap_stage["timed_out"],
+            "timeout_seconds": timeout_seconds,
+            "started_at": started.isoformat(timespec="seconds"),
+            "finished_at": datetime.now().isoformat(timespec="seconds"),
+            "summary": bootstrap_stage.get("summary"),
+            "stages": stages,
+            "stdout_tail": bootstrap_stage["stdout_tail"],
+            "stderr_tail": bootstrap_stage["stderr_tail"],
+        }
+
+    bootstrap_summary = bootstrap_stage["summary"] or {}
+    resolved_summary_table_id = summary_table_id or str(
+        ((bootstrap_summary.get("summary_table") or {}).get("table_id") or "")
+    ).strip()
+    reconciliation_commands = [
+        (
+            "product_detail_formulas",
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "repair_formula_summary_product_detail_formulas.py"),
+                "--target-table-id",
+                resolved_summary_table_id,
+                "--evidence-dir",
+                str(evidence_dir),
+            ],
+        ),
+        (
+            "product_order_sales",
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "repair_formula_summary_product_order_sales.py"),
+                "--target-table-id",
+                resolved_summary_table_id,
+                "--evidence-dir",
+                str(evidence_dir),
+            ],
+        ),
+    ]
+    for name, stage_command in reconciliation_commands:
+        if not resolved_summary_table_id:
+            return {
+                "status": "failed",
+                "command": command,
+                "returncode": 1,
+                "timed_out": False,
+                "timeout_seconds": timeout_seconds,
+                "started_at": started.isoformat(timespec="seconds"),
+                "finished_at": datetime.now().isoformat(timespec="seconds"),
+                "summary": bootstrap_summary,
+                "stages": stages,
+                "stdout_tail": "",
+                "stderr_tail": "Formula summary table id was not returned by bootstrap",
+            }
+        stage = run_stage(name, stage_command)
+        stages.append(stage)
+        if stage["status"] != "success":
+            return {
+                "status": stage["status"],
+                "command": command,
+                "returncode": stage["returncode"],
+                "timed_out": stage["timed_out"],
+                "timeout_seconds": timeout_seconds,
+                "started_at": started.isoformat(timespec="seconds"),
+                "finished_at": datetime.now().isoformat(timespec="seconds"),
+                "summary": bootstrap_summary,
+                "stages": stages,
+                "stdout_tail": stage["stdout_tail"],
+                "stderr_tail": stage["stderr_tail"],
+            }
+
+    return {
+        "status": "success",
+        "command": command,
+        "returncode": 0,
+        "timed_out": False,
+        "timeout_seconds": timeout_seconds,
+        "started_at": started.isoformat(timespec="seconds"),
+        "finished_at": datetime.now().isoformat(timespec="seconds"),
+        "summary": bootstrap_summary,
+        "stages": stages,
+        "stdout_tail": stages[-1]["stdout_tail"],
+        "stderr_tail": stages[-1]["stderr_tail"],
+    }
+
+
 def normalize_platform(value: Any) -> str:
     text = clean_text(value).lower()
     if "抖音" in text or "douyin" in text or "doudian" in text:
@@ -2160,6 +2322,12 @@ def main() -> int:
         default=ORDER_ROLLING_LOOKBACK_DAYS,
         help="Order date lookback around --date. Default keeps the daily historical 90-day update window; hourly jobs pass 0 for date-only incremental imports.",
     )
+    parser.add_argument(
+        "--formula-summary-timeout-seconds",
+        type=int,
+        default=1800,
+        help="Timeout for refreshing the formula dynamic summary after a successful source-table import.",
+    )
     args = parser.parse_args()
 
     batch_dir = Path(args.batch_dir)
@@ -2177,6 +2345,20 @@ def main() -> int:
             ensure_missing_ad_fields=args.ensure_missing_ad_fields,
             order_lookback_days=args.order_lookback_days,
         )
+        if args.dry_run:
+            summary["formula_summary"] = {
+                "status": "skipped",
+                "reason": "dry_run_does_not_write_feishu_source_or_summary_tables",
+            }
+        elif summary.get("status") == "success":
+            formula_summary = run_formula_dynamic_summary(
+                evidence_dir=Path("docs/live-evidence/formula-dynamic-summary"),
+                timeout_seconds=args.formula_summary_timeout_seconds,
+            )
+            summary["formula_summary"] = formula_summary
+            if formula_summary.get("status") != "success":
+                summary["status"] = "formula_summary_failed"
+        write_import_evidence(evidence, summary)
     except Exception as exc:
         summary = {
             "status": "failed",

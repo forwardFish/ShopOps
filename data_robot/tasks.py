@@ -23,7 +23,7 @@ TASKS: dict[str, RobotTask] = {
         profile="pinduoduo",
         kind="orders",
         slug="orders",
-        url="https://mms.pinduoduo.com/orders/list?tab=0",
+        url="https://mms.pinduoduo.com/orders/list",
     ),
     "pinduoduo_ads": RobotTask(
         key="pinduoduo_ads",

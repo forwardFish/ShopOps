@@ -100,8 +100,8 @@ def build_download_command(args: argparse.Namespace, date_token: str, batch_hour
         command.append("--no-cdp")
     if args.direct_cdp:
         command.append("--direct-cdp")
-    if not args.restart_stale_cdp:
-        command.append("--no-restart-stale-cdp")
+    if args.restart_stale_cdp:
+        command.append("--restart-stale-cdp")
     if args.manual:
         command.append("--manual")
     if args.auto_actions:

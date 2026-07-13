@@ -87,7 +87,7 @@ def test_download_command_copies_existing_tmall_order_download_program_shape():
     assert command[command.index("--task") + 1] == "tmall_orders"
     assert command[command.index("--min-task-interval-seconds") + 1] == "2400"
     assert "--direct-cdp" in command
-    assert "--no-restart-stale-cdp" in command
+    assert "--restart-stale-cdp" not in command
 
 
 def test_import_command_imports_tmall_and_douyin_orders_only():

@@ -7,6 +7,7 @@ from pathlib import Path
 from data_robot.common import (
     DEFAULT_ARCHIVE_ROOT,
     DEFAULT_EVIDENCE_ROOT,
+    add_batch_layout_args,
     archive_downloads,
     evidence_token,
     hourly_batch_token,
@@ -35,8 +36,7 @@ def main() -> int:
     parser.add_argument("task", choices=sorted(TASKS), help="Task that identifies platform and data kind.")
     parser.add_argument("paths", nargs="+", help="Downloaded files or folders containing csv/xls/xlsx/zip files.")
     parser.add_argument("--date-token", default="", help="Archive date directory, e.g. 0611. Defaults to today.")
-    parser.add_argument("--batch-hour", default="", help="Hourly archive subfolder, e.g. 23. Defaults to current hour.")
-    parser.add_argument("--flat-date-folder", action="store_true", help="Use the old docs/data/ShopOps/<MMDD> layout without an hourly subfolder.")
+    add_batch_layout_args(parser)
     parser.add_argument("--archive-root", default=str(DEFAULT_ARCHIVE_ROOT))
     parser.add_argument("--evidence-root", default=str(DEFAULT_EVIDENCE_ROOT))
     args = parser.parse_args()

@@ -1,20 +1,45 @@
 from __future__ import annotations
 
+import asyncio
+import time
+from pathlib import Path
+
+import data_robot.daily_download as daily_download_module
 from data_robot.tasks import PLATFORM_TASKS, TASKS
 from data_robot.common import (
+    PENDING_EXPORT_STATE_PATH,
+    PINDUODUO_ORDER_EXPORT_LIST_URL,
+    CollectOptions,
+    clear_pending_export,
+    DEFAULT_ARCHIVE_ROOT,
     compute_cooldown_remaining,
+    collect_task,
+    direct_cdp_click_existing_export_result,
     direct_cdp_duplicate_target_ids,
+    direct_cdp_initial_url,
     direct_cdp_page_family,
+    direct_cdp_preserves_current_page,
+    direct_cdp_recover_blank_business_page,
+    direct_cdp_business_page_ready,
+    direct_cdp_prepare_business_page,
     direct_cdp_reusable_target_id,
+    effective_min_task_interval_seconds,
+    platform_export_interval_floor_seconds,
+    pending_export_for,
+    record_pending_export,
     followup_export_labels,
     is_recoverable_cdp_error,
     is_recoverable_export_error,
+    matches_task_filename,
     page_match_score,
+    pinduoduo_export_list_is_empty,
     retry_wait_seconds,
     smart_export_labels,
+    should_preserve_current_page,
     should_retry_task_result,
     summarize_platform_results,
     summarize_task_results,
+    text_looks_like_login,
 )
 from data_robot.daily_download import (
     PLATFORM_ENTRY_TASK,
@@ -66,6 +91,10 @@ def test_task_urls_and_archive_metadata_are_present():
         assert task.slug
 
 
+def test_pinduoduo_order_url_uses_current_business_route():
+    assert TASKS["pinduoduo_orders"].url == "https://mms.pinduoduo.com/orders/list"
+
+
 def test_every_task_has_smart_export_labels():
     for task in TASKS.values():
         labels = smart_export_labels(task)
@@ -83,6 +112,184 @@ def test_wechat_order_followup_clicks_export_confirmation():
 def test_pinduoduo_orders_uses_specific_primary_export_label():
     assert smart_export_labels(TASKS["pinduoduo_orders"]) == ["批量导出"]
     assert "下载数据" in followup_export_labels(TASKS["pinduoduo_orders"])
+
+
+def test_pinduoduo_ads_prefers_daily_data_download_over_summary_download():
+    assert smart_export_labels(TASKS["pinduoduo_ads"])[0] == "下载分天数据"
+
+
+def test_pinduoduo_pending_export_resumes_from_export_list(tmp_path, monkeypatch):
+    state_path = tmp_path / "pending_exports.json"
+    monkeypatch.setattr("data_robot.common.PENDING_EXPORT_STATE_PATH", state_path)
+
+    record_pending_export("pinduoduo_orders", "0711")
+
+    assert pending_export_for("pinduoduo_orders", "0711")
+    assert direct_cdp_initial_url(TASKS["pinduoduo_orders"], resume_pending_export=True) == PINDUODUO_ORDER_EXPORT_LIST_URL
+    assert direct_cdp_initial_url(TASKS["pinduoduo_orders"]) == TASKS["pinduoduo_orders"].url
+
+    clear_pending_export("pinduoduo_orders")
+
+    assert not pending_export_for("pinduoduo_orders", "0711")
+
+
+def test_pinduoduo_empty_export_list_can_replace_only_a_stale_pending_request():
+    assert pinduoduo_export_list_is_empty("\u8ba2\u5355\u67e5\u8be2 / \u5df2\u751f\u6210\u62a5\u8868 \u6682\u65e0\u6570\u636e \u5171\u6709 0 \u6761")
+    assert not pinduoduo_export_list_is_empty("\u8ba2\u5355\u67e5\u8be2 / \u5df2\u751f\u6210\u62a5\u8868 \u4e0b\u8f7d\u62a5\u8868 \u5171\u6709 1 \u6761")
+
+
+def test_account_menu_text_does_not_trigger_a_login_prompt():
+    assert not text_looks_like_login("\u5e97\u94fa\u4e8c\u7ef4\u7801 \u8d26\u53f7\u4fe1\u606f \u767b\u5f55\u5176\u4ed6\u8d26\u53f7")
+    assert text_looks_like_login("\u8bf7\u626b\u7801\u767b\u5f55")
+
+
+def test_direct_cdp_keeps_an_already_open_target_without_navigation():
+    export_list = PINDUODUO_ORDER_EXPORT_LIST_URL
+
+    assert direct_cdp_preserves_current_page(export_list, export_list)
+    assert not direct_cdp_preserves_current_page(export_list, TASKS["pinduoduo_orders"].url)
+
+
+def test_direct_cdp_recovers_blank_business_view_in_same_tab():
+    class Page:
+        def __init__(self, blank: bool) -> None:
+            self.blank = blank
+            self.reloaded = False
+
+        async def evaluate(self, expression: str, *, timeout_seconds: int):
+            assert "elementFromPoint" in expression
+            return self.blank
+
+        async def reload(self):
+            self.reloaded = True
+
+    blank_page = Page(True)
+    assert asyncio.run(direct_cdp_recover_blank_business_page(blank_page, TASKS["pinduoduo_orders"]))
+    assert blank_page.reloaded
+
+    ready_page = Page(False)
+    assert not asyncio.run(direct_cdp_recover_blank_business_page(ready_page, TASKS["pinduoduo_orders"]))
+    assert not ready_page.reloaded
+
+
+def test_business_page_readiness_rejects_stale_pinduoduo_shell():
+    task = TASKS["pinduoduo_orders"]
+    assert not direct_cdp_business_page_ready(
+        task,
+        page_url=task.url,
+        body_text="订单查询 首页 消息 设置",
+    )
+    assert direct_cdp_business_page_ready(
+        task,
+        page_url=task.url,
+        body_text="订单编号 商品名称 共有 5016 条",
+    )
+    assert not direct_cdp_business_page_ready(
+        task,
+        page_url="https://mms.pinduoduo.com/login/?redirectUrl=%2Forders%2Flist",
+        body_text="订单编号 商品名称 共有 5016 条",
+    )
+    assert not direct_cdp_business_page_ready(
+        task,
+        page_url=task.url,
+        body_text="订单编号 商品名称 网络链接关闭，请检查您的网络连接",
+    )
+
+
+def test_business_page_readiness_requires_real_tmall_ads_view():
+    task = TASKS["tmall_ads"]
+    assert not direct_cdp_business_page_ready(task, page_url=task.url, body_text="下载报表")
+    assert direct_cdp_business_page_ready(
+        task,
+        page_url=task.url,
+        body_text="营销场景报表 下载报表 数据范围",
+    )
+
+
+def test_prepare_business_page_uses_bounded_reload_then_navigation():
+    class Page:
+        def __init__(self) -> None:
+            self.reloads = 0
+            self.navigations: list[str] = []
+
+        async def evaluate(self, expression: str, *, timeout_seconds: int):
+            if self.reloads == 0 and not self.navigations:
+                return {
+                    "url": TASKS["pinduoduo_orders"].url,
+                    "title": "",
+                    "readyState": "complete",
+                    "bodyText": "订单查询 首页 消息",
+                    "hasQianchuanDownloadButton": False,
+                }
+            return {
+                "url": TASKS["pinduoduo_orders"].url,
+                "title": "订单查询",
+                "readyState": "complete",
+                "bodyText": "订单编号 商品名称 共有 2 条",
+                "hasQianchuanDownloadButton": False,
+            }
+
+        async def reload(self):
+            self.reloads += 1
+
+        async def navigate(self, url: str):
+            self.navigations.append(url)
+
+    page = Page()
+    result = asyncio.run(
+        direct_cdp_prepare_business_page(
+            page,
+            TASKS["pinduoduo_orders"],
+            requested_url=TASKS["pinduoduo_orders"].url,
+        )
+    )
+
+    assert result["status"] == "ready"
+    assert page.reloads == 1
+    assert page.navigations == []
+
+
+def test_pinduoduo_direct_cdp_resume_clicks_existing_report_once():
+    class Page:
+        def __init__(self) -> None:
+            self.labels: list[str] = []
+
+        async def evaluate(self, expression: str, *, timeout_seconds: int):
+            assert expression == "location.href"
+            return PINDUODUO_ORDER_EXPORT_LIST_URL
+
+        async def click_label(self, label: str, *, exact: bool):
+            assert exact
+            self.labels.append(label)
+            return "direct-cdp button"
+
+    page = Page()
+    clicked = asyncio.run(
+        direct_cdp_click_existing_export_result(
+            page,
+            TASKS["pinduoduo_orders"],
+            deadline=time.monotonic() + 1,
+            watch_dirs=[],
+            started_at=0,
+        )
+    )
+
+    assert clicked
+    assert page.labels == ["\u4e0b\u8f7d\u62a5\u8868"]
+
+
+def test_tmall_pending_report_is_not_replaced_with_another_export():
+    class Page:
+        async def evaluate(self, expression: str, *, timeout_seconds: int):
+            return {"clicked": False, "pending": True}
+
+    from data_robot.common import direct_cdp_click_tmall_report_covering_today
+
+    assert asyncio.run(
+        direct_cdp_click_tmall_report_covering_today(
+            Page(), deadline=time.monotonic() + 1, watch_dirs=[], started_at=time.time()
+        )
+    )
 
 
 def test_cdp_page_matching_prefers_same_task_host_and_path():
@@ -204,17 +411,79 @@ def test_daily_download_does_not_restart_after_partial_success():
     assert not platform_result_failed_on_cdp_connect(result)
 
 
-def test_common_parser_defaults_to_eight_minute_cooldown_and_five_attempts():
+def test_downloaded_unmatched_summarizes_as_unmatched_failure():
+    assert summarize_task_results([
+        {"status": "downloaded"},
+        {"status": "downloaded_unmatched"},
+    ]) == "finished_with_unmatched_downloads"
+
+
+def test_shared_download_folder_filters_other_task_files_before_watching():
+    task = TASKS["wechat_channels_orders"]
+
+    assert not matches_task_filename(task, "商品推广_账户_汇总数据_商品_20260703至20260709.xls")
+    assert matches_task_filename(task, "微信小店订单_2026年07月10日.xlsx")
+    assert summarize_platform_results([
+        {"status": "downloaded"},
+        {"status": "finished_with_unmatched_downloads"},
+    ]) == "finished_with_unmatched_downloads"
+
+
+def test_common_parser_defaults_to_platform_aware_cooldowns_and_five_attempts():
     from data_robot.common import options_from_args, parse_common_args
 
     parser = parse_common_args("test")
     args = parser.parse_args([])
     options = options_from_args(args)
 
-    assert options.min_task_interval_seconds == 480
-    assert options.retry_interval_seconds == 480
+    assert options.min_task_interval_seconds == 0
+    assert options.retry_interval_seconds == 0
+    assert effective_min_task_interval_seconds(TASKS["tmall_orders"], options.min_task_interval_seconds) == 300
+    assert effective_min_task_interval_seconds(TASKS["pinduoduo_orders"], options.min_task_interval_seconds) == 120
     assert options.max_task_attempts == 5
     assert not options.force
+
+
+def test_standard_download_defaults_to_stable_archive_and_flat_batch_layout():
+    from data_robot.common import parse_common_args
+
+    parser = parse_common_args("test")
+    args = parser.parse_args([])
+    assert Path(args.archive_root) == DEFAULT_ARCHIVE_ROOT
+    assert args.flat_date_folder
+
+    hourly = parser.parse_args(["--hourly-batch", "--batch-hour", "23"])
+    assert not hourly.flat_date_folder
+    assert hourly.batch_hour == "23"
+
+
+def test_missing_cdp_browser_is_started_automatically(monkeypatch):
+    readiness_calls = []
+    started = []
+
+    def fake_wait(port, *, timeout_seconds):
+        readiness_calls.append((port, timeout_seconds))
+        return len(readiness_calls) > 1
+
+    class Process:
+        pid = 12345
+
+    monkeypatch.setattr(daily_download_module, "wait_for_cdp", fake_wait)
+    monkeypatch.setattr(
+        daily_download_module,
+        "start_chrome_for_task",
+        lambda task_key, **kwargs: started.append((task_key, kwargs)) or Process(),
+    )
+
+    result = daily_download_module.ensure_platform_cdp(
+        "tmall",
+        profile_suffix="cdp-test",
+        profile_root="D:\\profiles",
+    )
+
+    assert result == {"status": "ready", "started": True, "port": 9225, "pid": 12345}
+    assert readiness_calls == [(9225, 2), (9225, 30)]
+    assert started == [("tmall_orders", {"port": 9225, "profile_suffix": "cdp-test", "profile_root": "D:\\profiles"})]
 
 
 def test_common_parser_allows_force_cooldown_bypass():
@@ -238,6 +507,14 @@ def test_common_parser_allows_force_cooldown_bypass():
     assert options.force
 
 
+def test_platform_export_interval_floors_are_enforced():
+    assert platform_export_interval_floor_seconds(TASKS["tmall_orders"]) == 300
+    assert platform_export_interval_floor_seconds(TASKS["pinduoduo_orders"]) == 120
+    assert effective_min_task_interval_seconds(TASKS["tmall_orders"], 0) == 300
+    assert effective_min_task_interval_seconds(TASKS["douyin_ads"], 30) == 120
+    assert effective_min_task_interval_seconds(TASKS["wechat_channels_orders"], 600) == 600
+
+
 def test_cooldown_remaining_counts_down_without_going_negative():
     assert compute_cooldown_remaining(1000, 300, now=1100) == 200
     assert compute_cooldown_remaining(1000, 300, now=1400) == 0
@@ -252,8 +529,6 @@ def test_task_result_summary_distinguishes_run_outcomes():
 
 
 def test_retry_policy_retries_no_download_and_recoverable_cdp_errors():
-    from data_robot.common import CollectOptions
-
     assert should_retry_task_result({"status": "no_download"})
     assert should_retry_task_result({"status": "skipped_cooldown"})
     assert retry_wait_seconds({"status": "skipped_cooldown", "cooldown_remaining_seconds": 37}, CollectOptions(retry_interval_seconds=480)) == 37
@@ -262,13 +537,54 @@ def test_retry_policy_retries_no_download_and_recoverable_cdp_errors():
 
     assert should_retry_task_result(cdp_error)
     assert is_recoverable_cdp_error(cdp_error)
-    assert retry_wait_seconds(cdp_error, CollectOptions(retry_interval_seconds=480)) == 60
+    assert retry_wait_seconds(cdp_error, CollectOptions(retry_interval_seconds=480)) == 480
+    navigation_error = {"status": "error", "task": "pinduoduo_orders", "error": "Page.goto: net::ERR_CONNECTION_CLOSED"}
+    assert should_retry_task_result(navigation_error)
+    assert retry_wait_seconds(navigation_error, CollectOptions(retry_interval_seconds=5)) == 120
     assert should_retry_task_result({"status": "error", "error": "ConnectionClosedError: no close frame received or sent"})
     export_error = {"status": "error", "error": "HTTPError: HTTP Error 502: Bad Gateway"}
 
     assert should_retry_task_result(export_error)
     assert is_recoverable_export_error(export_error)
-    assert retry_wait_seconds(export_error, CollectOptions(retry_interval_seconds=20)) == 20
+    assert retry_wait_seconds(export_error, CollectOptions(retry_interval_seconds=20)) == 120
+    assert retry_wait_seconds({"status": "no_download", "task": "tmall_orders"}, CollectOptions(retry_interval_seconds=5)) == 300
+    assert retry_wait_seconds({"status": "no_download", "task": "douyin_ads"}, CollectOptions(retry_interval_seconds=5)) == 120
+    assert retry_wait_seconds(
+        {"status": "skipped_cooldown", "task": "tmall_orders", "cooldown_remaining_seconds": 240},
+        CollectOptions(retry_interval_seconds=5),
+    ) == 240
+
+
+def test_login_redirect_page_is_preserved_for_manual_login():
+    assert should_preserve_current_page(
+        TASKS["pinduoduo_orders"],
+        "https://mms.pinduoduo.com/login/?redirectUrl=https%3A%2F%2Fmms.pinduoduo.com%2Forders%2Flist%3Ftab%3D0",
+    )
+    assert not should_preserve_current_page(
+        TASKS["pinduoduo_orders"],
+        "https://mms.pinduoduo.com/orders/list?tab=0",
+    )
+
+
+def test_cooldown_skip_does_not_create_local_capture_dir(tmp_path, monkeypatch):
+    import asyncio
+    import data_robot.common as common_module
+
+    monkeypatch.setattr(common_module, "DOWNLOAD_ROOT", tmp_path / "downloads")
+    monkeypatch.setattr(common_module, "cooldown_remaining", lambda task_key, seconds: 180)
+
+    result = asyncio.run(
+        collect_task(
+            TASKS["tmall_orders"],
+            CollectOptions(min_task_interval_seconds=0, retry_interval_seconds=5),
+            date_token="0613",
+        )
+    )
+
+    assert result["status"] == "skipped_cooldown"
+    assert result["diagnostics"]["local_capture_dir"] == ""
+    assert result["diagnostics"]["min_export_interval_seconds"] == 300
+    assert not (tmp_path / "downloads").exists()
 
 
 def test_retry_policy_does_not_retry_non_cdp_errors():
@@ -320,6 +636,7 @@ def test_full_flow_download_command_keeps_anti_risk_defaults():
     assert command[command.index("--max-task-attempts") + 1] == "5"
     assert command[command.index("--browser-profile-suffix") + 1] == "cdp"
     assert command[command.index("--browser-profile-root") + 1] == "D:\\tmp\\profiles"
+    assert "--hourly-batch" in command
     assert "--direct-cdp" not in command
 
 
@@ -329,6 +646,7 @@ def test_full_flow_doctor_command_uses_runtime_gate_profile():
         evidence_root = "D:\\evidence"
         doctor_profile_suffix = "doctor"
         browser_profile_root = "D:\\tmp\\profiles"
+        flat_date_folder = False
 
     command = build_doctor_command(Args, "0614", "11")
 
@@ -337,6 +655,7 @@ def test_full_flow_doctor_command_uses_runtime_gate_profile():
     assert command[command.index("--batch-hour") + 1] == "11"
     assert command[command.index("--browser-profile-suffix") + 1] == "doctor"
     assert command[command.index("--browser-profile-root") + 1] == "D:\\tmp\\profiles"
+    assert "--hourly-batch" in command
 
 
 def test_full_flow_download_command_can_use_direct_cdp():
