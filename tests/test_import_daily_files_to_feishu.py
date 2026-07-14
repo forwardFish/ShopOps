@@ -81,6 +81,43 @@ def test_run_formula_dynamic_summary_refreshes_today_without_scanning_history(mo
     assert "repair_formula_summary_product_order_sales.py" in captured["commands"][2][1]
 
 
+def test_run_formula_dynamic_summary_reconciles_and_verifies_each_impact_date(monkeypatch, tmp_path: Path):
+    captured: list[list[str]] = []
+
+    class Completed:
+        returncode = 0
+        stderr = b""
+
+        def __init__(self, command):
+            self.stdout = (
+                b'{"summary_table": {"table_id": "tblepMIg19Ov1kSw"}, "status": "success"}'
+                if "bootstrap_formula_dynamic_summary.py" in command[1]
+                else b'{"status": "success"}'
+            )
+
+    def fake_run(command, **kwargs):
+        captured.append(command)
+        return Completed(command)
+
+    monkeypatch.setattr(daily_import.subprocess, "run", fake_run)
+    monkeypatch.setenv("SHOPOPS_FORMULA_SUMMARY_TABLE_ID", "tblepMIg19Ov1kSw")
+
+    result = run_formula_dynamic_summary(
+        evidence_dir=tmp_path,
+        timeout_seconds=17,
+        impact_dates={"2026-07-13"},
+    )
+
+    assert result["status"] == "success"
+    assert "--refresh-source-dates" not in captured[0]
+    assert captured[0].count("--impact-date") == 1
+    assert "2026-07-13" in captured[0]
+    product_order_command = next(command for command in captured if "repair_formula_summary_product_order_sales.py" in command[1])
+    assert product_order_command.count("--impact-date") == 1
+    assert "2026-07-13" in product_order_command
+    assert any("verify_formula_dynamic_summary.py" in command[1] for command in captured)
+
+
 def test_main_marks_summary_refresh_failure_as_import_failure(monkeypatch, tmp_path: Path):
     evidence = tmp_path / "import.json"
     monkeypatch.setattr(

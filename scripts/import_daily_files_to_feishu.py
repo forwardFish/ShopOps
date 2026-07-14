@@ -1673,6 +1673,19 @@ def run_import(
             platform_info.setdefault("ads", []).append({"file": str(ad_file), "rows": len(rows)})
         files[platform] = platform_info
 
+    impact_dates = set(selected_dates)
+    impact_dates.update(
+        normalize_date(row.get(F_CREATED_AT))
+        for rows in order_rows_by_platform.values()
+        for row in rows
+    )
+    impact_dates.update(normalize_date(row.get(F_DATE)) for row in ad_rows)
+    impact_dates.update(
+        normalize_date(row.get(I_PAY_AT) or row.get(I_CREATED_AT))
+        for row in influencer_rows
+    )
+    impact_dates.discard("")
+
     summary: dict[str, Any] = {
         "status": "dry_run" if dry_run else "started",
         "batch_dir": str(batch_dir),
@@ -1685,6 +1698,7 @@ def run_import(
         "platform_filter": sorted(selected_platforms),
         "kind_filter": sorted(selected_kinds),
         "date_filter": sorted(selected_dates),
+        "impact_dates": sorted(impact_dates),
         "order_date_window": order_date_window,
         "influencer_date_window": influencer_date_window,
         "ad_date_filter_applied": bool(selected_dates and filter_ad_dates),
@@ -1911,8 +1925,14 @@ def decode_process_output(value: str | bytes | None) -> str:
     return value
 
 
-def run_formula_dynamic_summary(*, evidence_dir: Path, timeout_seconds: int) -> dict[str, Any]:
-    """Refresh the formula summary and its product-detail reconciliation."""
+def run_formula_dynamic_summary(
+    *,
+    evidence_dir: Path,
+    timeout_seconds: int,
+    impact_dates: set[str] | None = None,
+) -> dict[str, Any]:
+    """Reconcile formula dimensions and verify every date touched by this import."""
+    normalized_impact_dates = sorted({normalize_date(value) for value in impact_dates or set()} - {""})
     command = [
         sys.executable,
         str(ROOT / "scripts" / "bootstrap_formula_dynamic_summary.py"),
@@ -1921,6 +1941,9 @@ def run_formula_dynamic_summary(*, evidence_dir: Path, timeout_seconds: int) -> 
         "--evidence-dir",
         str(evidence_dir),
     ]
+    if normalized_impact_dates:
+        for impact_date in normalized_impact_dates:
+            command.extend(["--impact-date", impact_date])
     summary_table_id = os.getenv("SHOPOPS_FORMULA_SUMMARY_TABLE_ID", "").strip()
     if summary_table_id:
         command.extend(["--summary-table-id", summary_table_id])
@@ -2014,40 +2037,114 @@ def run_formula_dynamic_summary(*, evidence_dir: Path, timeout_seconds: int) -> 
                 resolved_summary_table_id,
                 "--evidence-dir",
                 str(evidence_dir),
+                *[
+                    value
+                    for impact_date in normalized_impact_dates
+                    for value in ("--impact-date", impact_date)
+                ],
             ],
         ),
     ]
-    for name, stage_command in reconciliation_commands:
-        if not resolved_summary_table_id:
+    def run_reconciliation_stages(prefix: str = "") -> dict[str, Any] | None:
+        for name, stage_command in reconciliation_commands:
+            if not resolved_summary_table_id:
+                return {
+                    "status": "failed",
+                    "command": command,
+                    "returncode": 1,
+                    "timed_out": False,
+                    "timeout_seconds": timeout_seconds,
+                    "started_at": started.isoformat(timespec="seconds"),
+                    "finished_at": datetime.now().isoformat(timespec="seconds"),
+                    "summary": bootstrap_summary,
+                    "stages": stages,
+                    "stdout_tail": "",
+                    "stderr_tail": "Formula summary table id was not returned by bootstrap",
+                }
+            stage = run_stage(f"{prefix}{name}", stage_command)
+            stages.append(stage)
+            if stage["status"] != "success":
+                return {
+                    "status": stage["status"],
+                    "command": command,
+                    "returncode": stage["returncode"],
+                    "timed_out": stage["timed_out"],
+                    "timeout_seconds": timeout_seconds,
+                    "started_at": started.isoformat(timespec="seconds"),
+                    "finished_at": datetime.now().isoformat(timespec="seconds"),
+                    "summary": bootstrap_summary,
+                    "stages": stages,
+                    "stdout_tail": stage["stdout_tail"],
+                    "stderr_tail": stage["stderr_tail"],
+                }
+        return None
+
+    reconciliation_failure = run_reconciliation_stages()
+    if reconciliation_failure:
+        return reconciliation_failure
+
+    def run_verifiers(attempt: int) -> list[dict[str, Any]]:
+        verifier_stages: list[dict[str, Any]] = []
+        for impact_date in normalized_impact_dates:
+            evidence_path = evidence_dir / f"source-summary-verification-{impact_date.replace('-', '')}-attempt-{attempt}.json"
+            stage = run_stage(
+                f"verify_{impact_date}_attempt_{attempt}",
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "verify_formula_dynamic_summary.py"),
+                    "--start-date",
+                    impact_date,
+                    "--end-date",
+                    impact_date,
+                    "--evidence",
+                    str(evidence_path),
+                ],
+            )
+            stages.append(stage)
+            verifier_stages.append(stage)
+        return verifier_stages
+
+    verifier_stages = run_verifiers(attempt=1) if normalized_impact_dates else []
+    if verifier_stages and any(stage["status"] != "success" for stage in verifier_stages):
+        # A verifier is read-only.  One idempotent bootstrap retry repairs only
+        # structural rows, then the existing product repairs and verifier decide
+        # whether the mismatch was genuinely resolved.
+        retry_bootstrap = run_stage("bootstrap_dimension_retry", command)
+        stages.append(retry_bootstrap)
+        if retry_bootstrap["status"] != "success":
             return {
-                "status": "failed",
+                "status": retry_bootstrap["status"],
                 "command": command,
-                "returncode": 1,
-                "timed_out": False,
+                "returncode": retry_bootstrap["returncode"],
+                "timed_out": retry_bootstrap["timed_out"],
                 "timeout_seconds": timeout_seconds,
                 "started_at": started.isoformat(timespec="seconds"),
                 "finished_at": datetime.now().isoformat(timespec="seconds"),
-                "summary": bootstrap_summary,
+                "summary": retry_bootstrap.get("summary") or bootstrap_summary,
                 "stages": stages,
-                "stdout_tail": "",
-                "stderr_tail": "Formula summary table id was not returned by bootstrap",
+                "stdout_tail": retry_bootstrap["stdout_tail"],
+                "stderr_tail": retry_bootstrap["stderr_tail"],
             }
-        stage = run_stage(name, stage_command)
-        stages.append(stage)
-        if stage["status"] != "success":
-            return {
-                "status": stage["status"],
-                "command": command,
-                "returncode": stage["returncode"],
-                "timed_out": stage["timed_out"],
-                "timeout_seconds": timeout_seconds,
-                "started_at": started.isoformat(timespec="seconds"),
-                "finished_at": datetime.now().isoformat(timespec="seconds"),
-                "summary": bootstrap_summary,
-                "stages": stages,
-                "stdout_tail": stage["stdout_tail"],
-                "stderr_tail": stage["stderr_tail"],
-            }
+        reconciliation_failure = run_reconciliation_stages(prefix="retry_")
+        if reconciliation_failure:
+            return reconciliation_failure
+        verifier_stages = run_verifiers(attempt=2)
+    if verifier_stages and any(stage["status"] != "success" for stage in verifier_stages):
+        failed_verifiers = [stage for stage in verifier_stages if stage["status"] != "success"]
+        return {
+            "status": "verification_failed",
+            "command": command,
+            "returncode": 4,
+            "timed_out": any(stage["timed_out"] for stage in failed_verifiers),
+            "timeout_seconds": timeout_seconds,
+            "started_at": started.isoformat(timespec="seconds"),
+            "finished_at": datetime.now().isoformat(timespec="seconds"),
+            "summary": bootstrap_summary,
+            "impact_dates": normalized_impact_dates,
+            "stages": stages,
+            "stdout_tail": failed_verifiers[-1]["stdout_tail"],
+            "stderr_tail": failed_verifiers[-1]["stderr_tail"],
+        }
 
     return {
         "status": "success",
@@ -2058,11 +2155,11 @@ def run_formula_dynamic_summary(*, evidence_dir: Path, timeout_seconds: int) -> 
         "started_at": started.isoformat(timespec="seconds"),
         "finished_at": datetime.now().isoformat(timespec="seconds"),
         "summary": bootstrap_summary,
+        "impact_dates": normalized_impact_dates,
         "stages": stages,
         "stdout_tail": stages[-1]["stdout_tail"],
         "stderr_tail": stages[-1]["stderr_tail"],
     }
-
 
 def normalize_platform(value: Any) -> str:
     text = clean_text(value).lower()
@@ -2354,6 +2451,7 @@ def main() -> int:
             formula_summary = run_formula_dynamic_summary(
                 evidence_dir=Path("docs/live-evidence/formula-dynamic-summary"),
                 timeout_seconds=args.formula_summary_timeout_seconds,
+                impact_dates=set(summary.get("impact_dates") or summary.get("date_filter") or []),
             )
             summary["formula_summary"] = formula_summary
             if formula_summary.get("status") != "success":

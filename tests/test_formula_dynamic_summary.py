@@ -107,6 +107,21 @@ def test_summary_list_records_retries_feishu_connection_timeout(monkeypatch):
     assert calls == 2
 
 
+def test_dimension_readback_keeps_expected_count_after_confirming_rows():
+    bootstrap = object.__new__(FormulaSummaryBootstrap)
+    bootstrap.record_index_for_unique_keys = lambda table_id, field_names, keys: {
+        key: {"record_id": f"rec-{key}", "fields": {"unique_key": key}}
+        for key in keys
+    }
+
+    result = bootstrap.wait_for_dimension_rows(
+        "summary_table",
+        [{"unique_key": "2026-07-13-天猫"}, {"unique_key": "2026-07-13-全平台总计"}],
+    )
+
+    assert result == {"expected": 2, "missing_unique_keys": [], "attempts": 1}
+
+
 def test_summary_formulas_sum_all_platform_order_tables():
     formulas = summary_formulas(
         {
@@ -189,6 +204,9 @@ def test_source_summary_verification_normalizes_formula_rich_text():
     expected = expected_rows(source_records, date(2026, 7, 5), date(2026, 7, 5))
     summary_records = [
         {"fields": {"unique_key": "2026-07-05-天猫", "订单数": 1, "实际卖出数量": 2, "销售额": 30, "退款金额": 5, "有效销售额": 25}},
+        {"fields": {"unique_key": "2026-07-05-抖音", "订单数": 0, "实际卖出数量": 0, "销售额": 0, "退款金额": 0, "有效销售额": 0}},
+        {"fields": {"unique_key": "2026-07-05-拼多多", "订单数": 0, "实际卖出数量": 0, "销售额": 0, "退款金额": 0, "有效销售额": 0}},
+        {"fields": {"unique_key": "2026-07-05-视频号", "订单数": 0, "实际卖出数量": 0, "销售额": 0, "退款金额": 0, "有效销售额": 0}},
         {"fields": {"unique_key": "2026-07-05-全平台总计", "订单数": 1, "实际卖出数量": 2, "销售额": 30, "退款金额": 5, "有效销售额": 25}},
     ]
 
@@ -210,11 +228,62 @@ def test_source_summary_product_verification_uses_importer_owned_product_fields(
         {"fields": {"unique_key": "2026-07-05-天猫-无商品信息订单", "订单数": 0, "实际卖出数量": 0, "销售额": 0, "退款金额": 0, "有效销售额": 0}},
         {"fields": {"unique_key": "2026-07-05-全平台总计-无商品信息订单", "订单数": 0, "实际卖出数量": 0, "销售额": 0, "退款金额": 0, "有效销售额": 0}},
     ]
+    for platform in ("抖音", "拼多多", "视频号"):
+        for product in ("洗面奶", "无商品信息订单"):
+            summary_records.append(
+                {"fields": {"unique_key": f"2026-07-05-{platform}-{product}", "订单数": 0, "实际卖出数量": 0, "销售额": 0, "退款金额": 0, "有效销售额": 0}}
+            )
 
     comparison = compare_product_rows(expected, summary_records)
 
-    assert len(comparison) == 4
+    assert len(comparison) == 10
     assert all(row["matches"] for row in comparison)
+
+
+def test_source_summary_verification_requires_zero_value_platform_rows_for_impact_date():
+    source_records = [[
+        {"fields": {"unique_key": "one", "公式_统计日期": "2026-07-05", "公式_汇总平台": "天猫"}},
+    ]]
+    expected = expected_rows(
+        source_records,
+        date(2026, 7, 5),
+        date(2026, 7, 5),
+        target_dates={date(2026, 7, 5)},
+    )
+    comparison = compare_rows(
+        expected,
+        [
+            {"fields": {"unique_key": "2026-07-05-天猫", "订单数": 1}},
+            {"fields": {"unique_key": "2026-07-05-全平台总计", "订单数": 1}},
+        ],
+    )
+
+    assert len(comparison) == 5
+    assert {row["platform"] for row in comparison if not row["exists"]} == {"抖音", "拼多多", "视频号"}
+    assert all("dimension_row" in row["mismatches"] for row in comparison if not row["exists"])
+
+
+def test_source_summary_verification_aggregates_ad_and_commission_metrics():
+    ad_records = [
+        {"fields": {"unique_key": "ad_1", "公式_统计日期": "2026-07-05", "公式_汇总平台": "抖音", "公式_投流消耗": 12.5, "公式_展现": 100, "公式_点击": 8}},
+    ]
+    commission_records = [
+        {"fields": {"unique_key": "commission_1", "公式_统计日期": "2026-07-05", "公式_汇总平台": "抖音", "公式_达人费用": 3, "公式_预估佣金支出": 4, "公式_实际佣金支出": 2}},
+    ]
+
+    expected = expected_rows(
+        [],
+        date(2026, 7, 5),
+        date(2026, 7, 5),
+        target_dates={date(2026, 7, 5)},
+        ad_records=ad_records,
+        commission_records=commission_records,
+    )
+
+    assert expected[("2026-07-05", "抖音")]["投流记录数"] == 1
+    assert expected[("2026-07-05", "抖音")]["投流消耗"] == 12.5
+    assert expected[("2026-07-05", "抖音")]["达人佣金"] == 3
+    assert expected[("2026-07-05", "全平台总计")]["实际佣金支出"] == 2
 
 
 def test_prepare_dimension_rows_converts_date_fields_to_unix_milliseconds():
@@ -370,7 +439,7 @@ def test_upsert_dimension_rows_skips_unchanged_existing_rows():
     bootstrap.app_token = "app_token"
     bootstrap.helper = Helper()
     bootstrap.field_index = lambda table_id: {"统计日期": {"type": 1}}
-    bootstrap.record_index = lambda table_id, field_names=None: {
+    bootstrap.record_index_for_unique_keys = lambda table_id, field_names, unique_keys: {
         "2026-06-07-淘宝": {
             "record_id": "rec_1",
             "fields": {"unique_key": "2026-06-07-淘宝", "统计日期": "2026-06-07", "平台": "淘宝"},
@@ -414,7 +483,7 @@ def test_upsert_total_dimension_rows_skips_unchanged_existing_rows():
     bootstrap.app_token = "app_token"
     bootstrap.helper = Helper()
     bootstrap.field_index = lambda table_id: {"统计日期": {"type": 1}}
-    bootstrap.record_index = lambda table_id, field_names=None: {
+    bootstrap.record_index_for_unique_keys = lambda table_id, field_names, unique_keys: {
         "all-days-淘宝": {
             "record_id": "rec_1",
             "fields": {"unique_key": "all-days-淘宝", "统计范围": "所有天数", "平台": "淘宝"},

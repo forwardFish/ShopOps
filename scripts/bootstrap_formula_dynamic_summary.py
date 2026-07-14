@@ -7,7 +7,7 @@ import sys
 import time
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -64,6 +64,8 @@ SHOP_NAME_FIELD = "店铺名称"
 PRODUCT_NAME_FIELD = "商品名称"
 ACCESSORY_FLAG_FIELD = "是否是配件"
 PLATFORMS = ("天猫", "抖音", "拼多多", "视频号", TOTAL_PLATFORM)
+FORMULA_DATE_FIELD = "公式_统计日期"
+FORMULA_PLATFORM_FIELD = "公式_汇总平台"
 ORDER_STATUS_FIELDS = ("交易状态", "订单状态", "履约/售后状态", "售后状态", "订单关闭原因")
 NON_SOLD_STATUS_KEYWORDS = ("\u9000\u6b3e", "\u4ea4\u6613\u5173\u95ed", "\u5df2\u5173\u95ed", "\u5df2\u53d6\u6d88", "\u8ba2\u5355\u5173\u95ed", "\u5f85\u4ed8\u6b3e", "\u7b49\u5f85\u4e70\u5bb6\u4ed8\u6b3e", "\u672a\u4ed8\u6b3e", "Cancelled", "cancelled", "CANCELLED")
 PLATFORM_ORDER_TABLE_ENVS = (
@@ -104,6 +106,7 @@ class FormulaSummaryBootstrap:
         days_ahead: int,
         evidence_dir: Path,
         refresh_source_dates: bool,
+        impact_dates: set[date] | None = None,
         total_only: bool = False,
     ) -> dict[str, Any]:
         evidence_dir.mkdir(parents=True, exist_ok=True)
@@ -117,43 +120,64 @@ class FormulaSummaryBootstrap:
         }
         product_table_id = os.getenv("SHOPOPS_PRODUCT_CATALOG_TABLE_ID", DEFAULT_PRODUCT_CATALOG_TABLE_ID).strip()
         product_rules = self.product_rules(product_table_id)
-        dimension_source = "source_tables"
+        impact_dates = set(impact_dates or set())
+        dimension_source = "summary+source_tables+impact_dates"
         rows: list[dict[str, Any]] = []
         saved = 0
+        source_inventory: dict[str, Any] = {"dates": [], "tables": [], "unknown_platforms": [], "blank_dimension_rows": 0}
+        dimension_readback: dict[str, Any] = {"expected": 0, "missing_unique_keys": [], "attempts": 0}
         if not total_only:
             self.ensure_source_helper_formulas(order_table_ids, ad_table_id, commission_table_id, product_rules)
             summary_table_id = summary_table_id or self.ensure_formula_summary_table()
             self.ensure_summary_formula_fields(summary_table_id, source_names, product_rules)
-            if not refresh_source_dates:
-                rows = self.dimension_rows_from_summary(summary_table_id, days_ahead, product_rules)
-                if rows:
-                    dimension_source = "existing_summary"
-            if not rows:
-                rows = self.dimension_rows(order_table_ids, ad_table_id, commission_table_id, days_ahead, product_rules)
+            # A normal import is bounded to its parsed source dates.  An explicit
+            # historical refresh is available for repairing legacy gaps, but must
+            # not turn every daily import into a full-table scan.
+            existing_rows = (
+                self.dimension_rows_from_summary(summary_table_id, days_ahead, product_rules)
+                if refresh_source_dates
+                else []
+            )
+            source_inventory = self.source_dimension_inventory(
+                order_table_ids,
+                ad_table_id,
+                commission_table_id,
+                target_dates=None if refresh_source_dates else impact_dates,
+            )
+            source_rows = self.dimension_rows_for_inventory(source_inventory, days_ahead, product_rules, impact_dates)
+            rows = unique_dimension_rows([*existing_rows, *source_rows])
             saved = self.upsert_dimension_rows(summary_table_id, rows)
+            dimension_readback = self.wait_for_dimension_rows(summary_table_id, rows)
         total_summary_table_id = total_summary_table_id or self.ensure_formula_total_summary_table()
         if not summary_table_id:
             summary_table_id = self.ensure_formula_summary_table()
         summary_table_name = table_names.get(summary_table_id, FORMULA_SUMMARY_TABLE_NAME)
         self.ensure_total_summary_formula_fields(total_summary_table_id, summary_table_name, product_rules)
-        total_rows = self.total_dimension_rows_from_summary(summary_table_id) if summary_table_id else self.total_dimension_rows()
+        total_rows = (
+            self.total_dimension_rows_from_summary(summary_table_id)
+            if summary_table_id and refresh_source_dates
+            else self.total_dimension_rows()
+        )
         total_saved = self.upsert_total_dimension_rows(total_summary_table_id, total_rows)
         time.sleep(5)
         records = (
-            self.list_records(
+            self.records_for_unique_keys(
                 summary_table_id,
                 ["统计日期", "平台", "订单数", "销售额", "投流消耗", "达人佣金"],
+                [str(row["unique_key"]) for row in rows],
             )
             if summary_table_id and not total_only
             else []
         )
-        total_records = self.list_records(
+        total_records = self.records_for_unique_keys(
             total_summary_table_id,
             ["平台", "订单数", "销售额", "投流消耗", "达人佣金"],
+            [str(row["unique_key"]) for row in total_rows],
         )
         readback = self.summarize_readback(records) if records else {}
         total_readback = self.summarize_total_readback(total_records)
         result = {
+            "status": "success" if not dimension_readback["missing_unique_keys"] else "dimension_reconciliation_failed",
             "mode": "feishu_formula",
             "app_token": self.app_token,
             "app_url": feishu_base_url(self.app_token),
@@ -167,11 +191,15 @@ class FormulaSummaryBootstrap:
             "source_table_names": source_names,
             "dimension_rows": len(rows),
             "saved_dimension_rows": saved,
+            "impact_dates": sorted(value.isoformat() for value in impact_dates),
+            "source_dimension_inventory": source_inventory,
+            "dimension_readback": dimension_readback,
             "total_dimension_rows": len(total_rows),
             "saved_total_dimension_rows": total_saved,
             "readback": readback,
             "total_readback": total_readback,
             "days_ahead": days_ahead,
+            "refresh_source_dates_requested": refresh_source_dates,
             "dimension_source": dimension_source,
             "formula_fields": FORMULA_SUMMARY_FORMULA_NAMES,
             "total_formula_fields": FORMULA_TOTAL_SUMMARY_FORMULA_NAMES,
@@ -197,11 +225,18 @@ class FormulaSummaryBootstrap:
     def product_rules(self, product_table_id: str) -> list[ProductRule]:
         return product_rules_from_records(self.list_records(product_table_id))
 
-    def list_records(self, table_id: str, field_names: list[str] | None = None) -> list[dict[str, Any]]:
+    def list_records(
+        self,
+        table_id: str,
+        field_names: list[str] | None = None,
+        filter_formula: str | None = None,
+    ) -> list[dict[str, Any]]:
         """Wait through Feishu's brief formula-recalculation window."""
         for attempt in range(1, 6):
             try:
-                return self.helper.list_records(table_id, field_names)
+                if filter_formula is None:
+                    return self.helper.list_records(table_id, field_names)
+                return self.helper.list_records(table_id, field_names, filter_formula)
             except RuntimeError as exc:
                 if not is_retryable_feishu_read_error(exc) or attempt == 5:
                     raise
@@ -421,31 +456,77 @@ class FormulaSummaryBootstrap:
                 return fields
             page_token = data.get("page_token")
 
-    def dimension_rows(
+    def source_dimension_inventory(
         self,
         order_table_ids: list[str],
         ad_table_id: str,
         commission_table_id: str,
+        target_dates: set[date] | None,
+    ) -> dict[str, Any]:
+        """Read the same helper dimensions that the summary formulas filter on.
+
+        Reading raw date aliases here caused historical rows to disappear whenever
+        the helper formula chose a different valid source field.  The formula
+        dimensions are the only authoritative grain for both bootstrap and verify.
+        """
+        dates: set[date] = set()
+        unknown_platforms: set[str] = set()
+        blank_dimension_rows = 0
+        table_inventory: list[dict[str, Any]] = []
+        sources = [
+            *( (table_id, "orders") for table_id in order_table_ids ),
+            (ad_table_id, "ads"),
+            (commission_table_id, "commissions"),
+        ]
+        source_filter = date_filter_formula(FORMULA_DATE_FIELD, target_dates) if target_dates else None
+        for table_id, source_kind in sources:
+            records = self.list_records(
+                table_id,
+                [FORMULA_DATE_FIELD, FORMULA_PLATFORM_FIELD],
+                source_filter,
+            )
+            table_dates: set[str] = set()
+            table_platforms: set[str] = set()
+            blank_rows = 0
+            for record in records:
+                fields = record.get("fields") or {}
+                stat_date = parse_date(fields.get(FORMULA_DATE_FIELD))
+                platform = normalize_platform_value(fields.get(FORMULA_PLATFORM_FIELD))
+                if not stat_date or not platform or platform == "未知平台":
+                    blank_rows += 1
+                    continue
+                dates.add(stat_date)
+                table_dates.add(stat_date.isoformat())
+                table_platforms.add(platform)
+                if platform not in PLATFORMS:
+                    unknown_platforms.add(platform)
+            blank_dimension_rows += blank_rows
+            table_inventory.append(
+                {
+                    "table_id": table_id,
+                    "source_kind": source_kind,
+                    "record_count": len(records),
+                    "dates": sorted(table_dates),
+                    "platforms": sorted(table_platforms),
+                    "blank_dimension_rows": blank_rows,
+                }
+            )
+        return {
+            "dates": sorted(value.isoformat() for value in dates),
+            "tables": table_inventory,
+            "unknown_platforms": sorted(unknown_platforms),
+            "blank_dimension_rows": blank_dimension_rows,
+        }
+
+    def dimension_rows_for_inventory(
+        self,
+        inventory: dict[str, Any],
         days_ahead: int,
         product_rules: list[ProductRule],
+        impact_dates: set[date],
     ) -> list[dict[str, Any]]:
-        dates = set()
-        sources = [
-            (ad_table_id, ("采集时间",)),
-            (commission_table_id, ("支付时间", "订单下单时间", "采集时间")),
-        ]
-        sources.extend((table_id, ("创建时间",)) for table_id in order_table_ids)
-        for table_id, fields in sources:
-            available = self.field_index(table_id)
-            requested_fields = [field for field in fields if field in available]
-            for record in self.list_records(table_id, requested_fields or None):
-                source = record.get("fields") or {}
-                parsed = None
-                for field in fields:
-                    parsed = parse_date(source.get(field))
-                    if parsed:
-                        dates.add(parsed)
-                        break
+        dates = {date.fromisoformat(value) for value in inventory.get("dates", [])}
+        dates.update(impact_dates)
         today = date.today()
         for offset in range(days_ahead + 1):
             dates.add(today + timedelta(days=offset))
@@ -495,9 +576,10 @@ class FormulaSummaryBootstrap:
 
     def upsert_dimension_rows(self, table_id: str, rows: list[dict[str, Any]]) -> int:
         rows = self.prepare_dimension_rows(table_id, rows)
-        index = self.record_index(
+        index = self.record_index_for_unique_keys(
             table_id,
             ["unique_key", "统计日期", "平台", SHOP_NAME_FIELD, PRODUCT_NAME_FIELD],
+            [str(row["unique_key"]) for row in rows],
         )
         to_create: list[dict[str, Any]] = []
         to_update: list[dict[str, Any]] = []
@@ -520,6 +602,24 @@ class FormulaSummaryBootstrap:
                 saved += len(chunk)
         return saved
 
+    def wait_for_dimension_rows(self, table_id: str, rows: list[dict[str, Any]], attempts: int = 5) -> dict[str, Any]:
+        expected = {str(row["unique_key"]) for row in rows}
+        missing = set(expected)
+        for attempt in range(1, attempts + 1):
+            # Only re-read still-invisible rows after the first pass.  Formula
+            # calculation can lag writes, and repeatedly reading confirmed rows
+            # wastes the daily import's reconciliation budget.
+            actual = set(self.record_index_for_unique_keys(table_id, ["unique_key"], missing))
+            missing -= actual
+            if not missing:
+                return {"expected": len(expected), "missing_unique_keys": [], "attempts": attempt}
+            time.sleep(min(15, attempt * 3))
+        return {
+            "expected": len(expected),
+            "missing_unique_keys": sorted(missing)[:100],
+            "attempts": attempts,
+        }
+
     def prepare_dimension_rows(self, table_id: str, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         field_index = getattr(self, "field_index", None)
         if not callable(field_index):
@@ -537,9 +637,10 @@ class FormulaSummaryBootstrap:
         return prepared
 
     def upsert_total_dimension_rows(self, table_id: str, rows: list[dict[str, Any]]) -> int:
-        index = self.record_index(
+        index = self.record_index_for_unique_keys(
             table_id,
             ["unique_key", "统计范围", "平台", SHOP_NAME_FIELD, PRODUCT_NAME_FIELD],
+            [str(row["unique_key"]) for row in rows],
         )
         to_create: list[dict[str, Any]] = []
         to_update: list[dict[str, Any]] = []
@@ -565,6 +666,32 @@ class FormulaSummaryBootstrap:
     def record_index(self, table_id: str, field_names: list[str]) -> dict[str, dict[str, Any]]:
         result: dict[str, dict[str, Any]] = {}
         for record in self.list_records(table_id, field_names):
+            key = (record.get("fields") or {}).get("unique_key")
+            if key:
+                result[str(key)] = {"record_id": str(record.get("record_id")), "fields": record.get("fields") or {}}
+        return result
+
+    def records_for_unique_keys(
+        self,
+        table_id: str,
+        field_names: list[str],
+        unique_keys: Iterable[str],
+    ) -> list[dict[str, Any]]:
+        records: list[dict[str, Any]] = []
+        # Bitable rejects long Chinese unique-key OR expressions.  Eight keys
+        # leaves headroom for product names while still avoiding any full scan.
+        for keys in chunks(sorted({key for key in unique_keys if key}), 8):
+            records.extend(self.list_records(table_id, field_names, unique_key_filter_formula(keys)))
+        return records
+
+    def record_index_for_unique_keys(
+        self,
+        table_id: str,
+        field_names: list[str],
+        unique_keys: Iterable[str],
+    ) -> dict[str, dict[str, Any]]:
+        result: dict[str, dict[str, Any]] = {}
+        for record in self.records_for_unique_keys(table_id, field_names, unique_keys):
             key = (record.get("fields") or {}).get("unique_key")
             if key:
                 result[str(key)] = {"record_id": str(record.get("record_id")), "fields": record.get("fields") or {}}
@@ -952,6 +1079,25 @@ def first_existing_text_expr(existing_fields: dict[str, dict[str, Any]], aliases
     return expr
 
 
+def filter_formula_for_values(field_name: str, values: Iterable[str]) -> str:
+    """Build a Bitable equality filter without widening a bounded read."""
+    clauses = [
+        f'CurrentValue.[{field_name}]="{str(value).replace(chr(34), chr(92) + chr(34))}"'
+        for value in sorted({str(value) for value in values if str(value)})
+    ]
+    if not clauses:
+        raise ValueError(f"At least one value is required to filter {field_name}")
+    return clauses[0] if len(clauses) == 1 else "(" + "||".join(clauses) + ")"
+
+
+def date_filter_formula(field_name: str, values: Iterable[date]) -> str:
+    return filter_formula_for_values(field_name, (value.isoformat() for value in values))
+
+
+def unique_key_filter_formula(values: Iterable[str]) -> str:
+    return filter_formula_for_values("unique_key", values)
+
+
 def parse_date(value: Any) -> date | None:
     if value in (None, ""):
         return None
@@ -1022,6 +1168,15 @@ def dimension_rows_for_dates(
     return rows
 
 
+def unique_dimension_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    result: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        key = str(row.get("unique_key") or "")
+        if key:
+            result[key] = row
+    return [result[key] for key in sorted(result)]
+
+
 def total_dimension_row(platform: str, shop_name: str = "", product_name: str = "") -> dict[str, Any]:
     shop_name = clean_dimension_text(shop_name)
     product_name = clean_dimension_text(product_name)
@@ -1046,6 +1201,10 @@ def clean_dimension_text(value: Any) -> str:
 
 
 def normalize_platform_value(value: Any) -> str:
+    if isinstance(value, list):
+        value = "".join(str(item.get("text") or "") for item in value if isinstance(item, dict))
+    elif isinstance(value, dict):
+        value = value.get("text") or ""
     text = clean_dimension_text(value)
     if text in ("千牛淘宝", "淘宝"):
         return "天猫"
@@ -1094,6 +1253,12 @@ def main() -> int:
         help="Scan source tables again to add historical dates that are not yet present in the formula summary table.",
     )
     parser.add_argument(
+        "--impact-date",
+        action="append",
+        default=[],
+        help="Explicit daily-import date to reconcile. Repeat for every affected date.",
+    )
+    parser.add_argument(
         "--total-only",
         action="store_true",
         help="Only create/update the all-days platform total formula table; do not refresh the daily formula summary table.",
@@ -1134,10 +1299,11 @@ def main() -> int:
         days_ahead=args.days_ahead,
         evidence_dir=Path(args.evidence_dir),
         refresh_source_dates=args.refresh_source_dates,
+        impact_dates={date.fromisoformat(value) for value in args.impact_date},
         total_only=args.total_only,
     )
     print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
-    return 0
+    return 0 if result["status"] == "success" else 4
 
 
 if __name__ == "__main__":
