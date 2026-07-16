@@ -19,7 +19,15 @@ from scripts.bootstrap_formula_dynamic_summary import (
     total_dimension_row_matches,
     total_summary_formulas,
 )
-from scripts.verify_formula_dynamic_summary import compare_product_rows, compare_rows, expected_product_rows, expected_rows, text_value
+from scripts.verify_formula_dynamic_summary import (
+    compare_product_rows,
+    compare_rows,
+    expected_product_rows,
+    expected_rows,
+    list_records_for_base_dates,
+    list_summary_records_for_dates,
+    text_value,
+)
 from scripts.repair_formula_summary_product_order_sales import (
     F_GRAIN,
     F_PLATFORM,
@@ -105,6 +113,123 @@ def test_summary_list_records_retries_feishu_connection_timeout(monkeypatch):
 
     assert bootstrap.list_records("table") == []
     assert calls == 2
+
+
+def test_source_dimension_inventory_splits_dates_only_after_feishu_filter_length_rejection():
+    calls: list[tuple[str, int]] = []
+
+    def list_records(table_id, field_names, filter_formula=None):
+        clause_count = (filter_formula or "").count("CurrentValue.")
+        calls.append((table_id, clause_count))
+        if clause_count > 1:
+            raise RuntimeError("Feishu API failed HTTP 200: {'code': 1254107, 'msg': 'FilterLengthExceedLimit'}")
+        date_value = (filter_formula or "").split('"')[1]
+        return [{"record_id": f"{table_id}-{date_value}", "fields": {"公式_统计日期": date_value, "公式_汇总平台": "天猫"}}]
+
+    bootstrap = FormulaSummaryBootstrap.__new__(FormulaSummaryBootstrap)
+    bootstrap.list_records = list_records
+
+    inventory = bootstrap.source_dimension_inventory(
+        ["orders"],
+        "ads",
+        "commissions",
+        {date(2026, 7, 14), date(2026, 7, 15)},
+    )
+
+    assert inventory["dates"] == ["2026-07-14", "2026-07-15"]
+    assert [item["record_count"] for item in inventory["tables"]] == [2, 2, 2]
+    assert calls.count(("orders", 2)) == 1
+    assert calls.count(("orders", 1)) == 2
+
+
+def test_source_inventory_uses_standard_import_impact_dates_without_re_scanning_source_tables():
+    bootstrap = FormulaSummaryBootstrap.__new__(FormulaSummaryBootstrap)
+    bootstrap.source_dimension_inventory = lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("source scan must be skipped"))
+
+    inventory = bootstrap.source_dimension_inventory_for_run(
+        ["orders"],
+        "ads",
+        "commissions",
+        refresh_source_dates=False,
+        impact_dates={date(2026, 7, 14), date(2026, 7, 15)},
+    )
+
+    assert inventory == {
+        "dates": ["2026-07-14", "2026-07-15"],
+        "tables": [],
+        "unknown_platforms": [],
+        "blank_dimension_rows": 0,
+        "source": "standard_import_impact_dates",
+    }
+
+
+def test_dimension_readback_uses_one_paged_read_for_large_key_sets():
+    calls: list[object] = []
+
+    def list_records(table_id, field_names, filter_formula=None):
+        calls.append(filter_formula)
+        return [
+            {"fields": {"unique_key": "wanted-1"}},
+            {"fields": {"unique_key": "not-wanted"}},
+            {"fields": {"unique_key": "wanted-201"}},
+        ]
+
+    bootstrap = FormulaSummaryBootstrap.__new__(FormulaSummaryBootstrap)
+    bootstrap.list_records = list_records
+
+    result = bootstrap.records_for_unique_keys("summary", ["unique_key"], [f"wanted-{index}" for index in range(202)])
+
+    assert calls == [None]
+    assert [item["fields"]["unique_key"] for item in result] == ["wanted-1", "wanted-201"]
+
+
+def test_product_repair_splits_date_filter_only_after_feishu_filter_length_rejection():
+    calls: list[int] = []
+
+    def list_records(table_id, field_names, filter_formula=None):
+        clause_count = (filter_formula or "").count("CurrentValue.")
+        calls.append(clause_count)
+        if clause_count > 1:
+            raise RuntimeError("Feishu API failed HTTP 200: {'code': 1254107, 'msg': 'FilterLengthExceedLimit'}")
+        return [{"record_id": f"row-{clause_count}"}]
+
+    repair = ProductOrderSalesRepair.__new__(ProductOrderSalesRepair)
+    repair.list_records = list_records
+
+    rows = repair.list_records_for_date_batches(
+        "summary",
+        ["unique_key"],
+        {"2026-07-14", "2026-07-15"},
+        lambda values: "||".join(f'CurrentValue.[date]="{value}"' for value in sorted(values)),
+    )
+
+    assert len(rows) == 2
+    assert calls == [2, 1, 1]
+
+
+def test_source_verifier_batches_base_dates_and_reads_summary_one_day_at_a_time(monkeypatch):
+    calls: list[tuple[str, str]] = []
+
+    def fake_list_records(client, table_id, field_names, filter_formula=None):
+        calls.append((table_id, filter_formula or ""))
+        return [{"record_id": f"{table_id}-{len(calls)}"}]
+
+    monkeypatch.setattr(
+        "scripts.verify_formula_dynamic_summary.list_records_with_retry",
+        fake_list_records,
+    )
+    dates = {date(2026, 7, day) for day in range(1, 10)}
+
+    source_rows = list_records_for_base_dates(object(), "orders", ["unique_key"], "created_at", dates)
+    summary_rows = list_summary_records_for_dates(object(), "summary", ["unique_key"], dates)
+
+    source_calls = [formula for table_id, formula in calls if table_id == "orders"]
+    summary_calls = [formula for table_id, formula in calls if table_id == "summary"]
+    assert len(source_rows) == 2
+    assert [formula.count("CurrentValue.") for formula in source_calls] == [7, 2]
+    assert len(summary_rows) == 9
+    assert len(summary_calls) == 9
+    assert all(formula.count("CurrentValue.") == 5 for formula in summary_calls)
 
 
 def test_dimension_readback_keeps_expected_count_after_confirming_rows():
@@ -197,9 +322,9 @@ def test_parse_date_accepts_feishu_formula_rich_text():
     assert parse_date([{"text": "2026-07-05", "type": "text"}]).isoformat() == "2026-07-05"
 
 
-def test_source_summary_verification_normalizes_formula_rich_text():
+def test_source_summary_verification_uses_base_fields_even_when_formula_fields_are_wrong():
     source_records = [[
-        {"fields": {"unique_key": "one", "公式_统计日期": [{"text": "2026-07-05"}], "公式_汇总平台": [{"text": "天猫"}], "公式_实际卖出数量": 2, "公式_销售额": 30, "公式_退款金额": 5, "公式_有效销售额": 25}},
+        {"fields": {"unique_key": "one", "创建时间": "2026-07-05 12:00:00", "平台": "天猫", "数量": 2, "实收款": 30, "退款金额": 5, "公式_实际卖出数量": 999, "公式_销售额": 999, "公式_退款金额": 999, "公式_有效销售额": 999}},
     ]]
     expected = expected_rows(source_records, date(2026, 7, 5), date(2026, 7, 5))
     summary_records = [
@@ -216,10 +341,10 @@ def test_source_summary_verification_normalizes_formula_rich_text():
     assert all(row["matches"] for row in comparison)
 
 
-def test_source_summary_product_verification_uses_importer_owned_product_fields():
+def test_source_summary_product_verification_uses_base_metrics_and_catalog_match():
     rules = [ProductRule("洗面奶", ("洗面奶",))]
     source_records = [[
-        {"fields": {"unique_key": "one", "公式_统计日期": "2026-07-05", "公式_汇总平台": "天猫", "商品名称": "洁面产品", "洗面奶数量": 2, "洗面奶有效销售额": 30, "公式_实际卖出数量": 2, "公式_销售额": 30, "公式_退款金额": 5, "公式_有效销售额": 25}},
+        {"fields": {"unique_key": "one", "创建时间": "2026-07-05 12:00:00", "平台": "天猫", "商品名称": "洗面奶", "数量": 2, "实收款": 30, "退款金额": 5, "洗面奶数量": 999, "洗面奶有效销售额": 999}},
     ]]
     expected = expected_product_rows(source_records, date(2026, 7, 5), date(2026, 7, 5), rules)
     summary_records = [
@@ -265,10 +390,10 @@ def test_source_summary_verification_requires_zero_value_platform_rows_for_impac
 
 def test_source_summary_verification_aggregates_ad_and_commission_metrics():
     ad_records = [
-        {"fields": {"unique_key": "ad_1", "公式_统计日期": "2026-07-05", "公式_汇总平台": "抖音", "公式_投流消耗": 12.5, "公式_展现": 100, "公式_点击": 8}},
+        {"fields": {"unique_key": "ad_1", "投放日期": "2026-07-05", "平台": "抖音", "花费": 12.5, "展现量": 100, "点击量": 8}},
     ]
     commission_records = [
-        {"fields": {"unique_key": "commission_1", "公式_统计日期": "2026-07-05", "公式_汇总平台": "抖音", "公式_达人费用": 3, "公式_预估佣金支出": 4, "公式_实际佣金支出": 2}},
+        {"fields": {"unique_key": "commission_1", "下单时间": "2026-07-05 12:00:00", "平台": "抖音", "带货费用": 3, "预估佣金支出": 4, "实际佣金支出": 2}},
     ]
 
     expected = expected_rows(
@@ -282,7 +407,7 @@ def test_source_summary_verification_aggregates_ad_and_commission_metrics():
 
     assert expected[("2026-07-05", "抖音")]["投流记录数"] == 1
     assert expected[("2026-07-05", "抖音")]["投流消耗"] == 12.5
-    assert expected[("2026-07-05", "抖音")]["达人佣金"] == 3
+    assert expected[("2026-07-05", "抖音")]["达人佣金"] == 2
     assert expected[("2026-07-05", "全平台总计")]["实际佣金支出"] == 2
 
 
@@ -389,7 +514,7 @@ def test_actual_quantity_formula_zeros_non_sold_status_before_quantity_gate():
     assert '.CONTAIN("待付款")' in expression
     assert expression.endswith(",0,IF((IFBLANK([公式_有效销售额],0))>0,IFBLANK([数量],0),0))")
 
-def test_actual_sold_quantity_formula_uses_main_product_quantities_when_available():
+def test_actual_sold_quantity_formula_uses_importer_owned_normalized_quantity():
     rules = [
         ProductRule("洗面奶", ("洗面奶",)),
         ProductRule("皂液器", ("皂液器",)),
@@ -409,8 +534,19 @@ def test_actual_sold_quantity_formula_uses_main_product_quantities_when_availabl
         rules,
     )
 
-    assert ' .CONTAIN("已关闭")'.strip() in expression
-    assert expression.endswith(",0,IFBLANK([洗面奶数量],0)+IFBLANK([皂液器数量],0))")
+    assert expression == "IFBLANK([数量],0)"
+
+
+def test_actual_sold_quantity_formula_falls_back_to_status_gate_without_imported_quantity():
+    rules = [ProductRule("洗面奶", ("洗面奶",))]
+
+    expression = actual_sold_quantity_expr(
+        {"交易状态": {}, "洗面奶数量": {}},
+        rules,
+    )
+
+    assert '.CONTAIN("待付款")' in expression
+    assert expression.endswith(",0,IFBLANK([洗面奶数量],0))")
 
 
 def test_product_breakdown_bootstrap_preserves_importer_owned_numeric_fields():
@@ -576,10 +712,9 @@ def test_product_source_verification_uses_product_code_when_name_is_blank():
                 "公式_汇总平台": "天猫",
                 "商品名称": "",
                 "商品编码": "QBPH004",
-                "公式_实际卖出数量": 2,
-                "公式_销售额": 338,
-                "公式_退款金额": 0,
-                "公式_有效销售额": 338,
+                "数量": 2,
+                "实收款": 338,
+                "退款金额": 0,
             }
         }
     ]]

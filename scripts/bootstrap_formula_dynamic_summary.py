@@ -138,12 +138,15 @@ class FormulaSummaryBootstrap:
                 if refresh_source_dates
                 else []
             )
-            source_inventory = self.source_dimension_inventory(
+            source_inventory = self.source_dimension_inventory_for_run(
                 order_table_ids,
                 ad_table_id,
                 commission_table_id,
-                target_dates=None if refresh_source_dates else impact_dates,
+                refresh_source_dates=refresh_source_dates,
+                impact_dates=impact_dates,
             )
+            if impact_dates and not refresh_source_dates:
+                dimension_source = "standard_import_impact_dates"
             source_rows = self.dimension_rows_for_inventory(source_inventory, days_ahead, product_rules, impact_dates)
             rows = unique_dimension_rows([*existing_rows, *source_rows])
             saved = self.upsert_dimension_rows(summary_table_id, rows)
@@ -242,6 +245,33 @@ class FormulaSummaryBootstrap:
                     raise
                 time.sleep(attempt * 10)
         raise AssertionError("unreachable")
+
+    def list_records_for_dates(
+        self,
+        table_id: str,
+        field_names: list[str],
+        target_dates: set[date],
+    ) -> list[dict[str, Any]]:
+        """Read a bounded date set without exceeding Feishu's filter-size limit.
+
+        The platform does not publish a stable maximum filter length.  Start with
+        one bounded request, then split only when Feishu explicitly rejects the
+        expression as too long.  This preserves complete date coverage without
+        imposing a guessed batch size on normal daily imports.
+        """
+        dates = sorted(target_dates)
+        if not dates:
+            return self.list_records(table_id, field_names)
+        try:
+            return self.list_records(table_id, field_names, date_filter_formula(FORMULA_DATE_FIELD, dates))
+        except RuntimeError as exc:
+            if not is_filter_length_exceed_error(exc) or len(dates) == 1:
+                raise
+            midpoint = len(dates) // 2
+            return [
+                *self.list_records_for_dates(table_id, field_names, set(dates[:midpoint])),
+                *self.list_records_for_dates(table_id, field_names, set(dates[midpoint:])),
+            ]
 
     def ensure_source_helper_formulas(
         self,
@@ -478,12 +508,11 @@ class FormulaSummaryBootstrap:
             (ad_table_id, "ads"),
             (commission_table_id, "commissions"),
         ]
-        source_filter = date_filter_formula(FORMULA_DATE_FIELD, target_dates) if target_dates else None
         for table_id, source_kind in sources:
-            records = self.list_records(
-                table_id,
-                [FORMULA_DATE_FIELD, FORMULA_PLATFORM_FIELD],
-                source_filter,
+            records = (
+                self.list_records_for_dates(table_id, [FORMULA_DATE_FIELD, FORMULA_PLATFORM_FIELD], target_dates)
+                if target_dates
+                else self.list_records(table_id, [FORMULA_DATE_FIELD, FORMULA_PLATFORM_FIELD])
             )
             table_dates: set[str] = set()
             table_platforms: set[str] = set()
@@ -517,6 +546,38 @@ class FormulaSummaryBootstrap:
             "unknown_platforms": sorted(unknown_platforms),
             "blank_dimension_rows": blank_dimension_rows,
         }
+
+    def source_dimension_inventory_for_run(
+        self,
+        order_table_ids: list[str],
+        ad_table_id: str,
+        commission_table_id: str,
+        *,
+        refresh_source_dates: bool,
+        impact_dates: set[date],
+    ) -> dict[str, Any]:
+        """Use importer-derived dates directly; reserve source scans for repair mode.
+
+        `import_daily_files_to_feishu.py` calculates impact dates from every
+        parsed order, ad, and commission row before invoking this bootstrap.  A
+        second scan of those same high-volume source tables only repeats that
+        work and can exceed the formula stage timeout.  Standalone bootstrap and
+        explicit history refreshes still discover dates from the source tables.
+        """
+        if impact_dates and not refresh_source_dates:
+            return {
+                "dates": sorted(value.isoformat() for value in impact_dates),
+                "tables": [],
+                "unknown_platforms": [],
+                "blank_dimension_rows": 0,
+                "source": "standard_import_impact_dates",
+            }
+        return self.source_dimension_inventory(
+            order_table_ids,
+            ad_table_id,
+            commission_table_id,
+            target_dates=None,
+        )
 
     def dimension_rows_for_inventory(
         self,
@@ -677,10 +738,22 @@ class FormulaSummaryBootstrap:
         field_names: list[str],
         unique_keys: Iterable[str],
     ) -> list[dict[str, Any]]:
+        keys_to_read = sorted({key for key in unique_keys if key})
+        if len(keys_to_read) > 200:
+            # A daily import can reconcile thousands of dimensions.  The normal
+            # eight-key filter chunks would turn one table read into hundreds of
+            # serial requests; the summary table is small enough to page once and
+            # filter locally instead.
+            expected = set(keys_to_read)
+            return [
+                record
+                for record in self.list_records(table_id, field_names)
+                if str((record.get("fields") or {}).get("unique_key") or "") in expected
+            ]
         records: list[dict[str, Any]] = []
         # Bitable rejects long Chinese unique-key OR expressions.  Eight keys
         # leaves headroom for product names while still avoiding any full scan.
-        for keys in chunks(sorted({key for key in unique_keys if key}), 8):
+        for keys in chunks(keys_to_read, 8):
             records.extend(self.list_records(table_id, field_names, unique_key_filter_formula(keys)))
         return records
 
@@ -1033,6 +1106,12 @@ def effective_sales_quantity_expr(existing_fields: dict[str, dict[str, Any]]) ->
 
 
 def actual_sold_quantity_expr(existing_fields: dict[str, dict[str, Any]], product_rules: list[ProductRule] | None = None) -> str:
+    if any(field in existing_fields for field in ORDER_QUANTITY_FIELDS):
+        # Standard import owns this field and has already normalized unpaid,
+        # cancelled, refunded, accessory, and price-adjustment rows to zero.
+        # Platform totals must not depend on whether product classification
+        # fields happened to match or finish recalculating.
+        return first_number_expr(existing_fields, ORDER_QUANTITY_FIELDS)
     product_quantity_fields = [
         rule.quantity_field
         for rule in product_rules or []
@@ -1040,6 +1119,10 @@ def actual_sold_quantity_expr(existing_fields: dict[str, dict[str, Any]], produc
     ]
     if product_quantity_fields:
         expression = "+".join(f"IFBLANK([{field}],0)" for field in product_quantity_fields)
+        # The importer-owned quantity field is already normalized to zero for
+        # unpaid, cancelled, refunded, accessory, and price-adjustment rows.
+        # Use that numeric value as the primary gate because Feishu has returned
+        # stale/non-matching results for CONTAIN() checks on text status fields.
         status_gate = non_sold_status_expr(existing_fields)
         if status_gate:
             expression = f"IF({status_gate},0,{expression})"
@@ -1092,6 +1175,11 @@ def filter_formula_for_values(field_name: str, values: Iterable[str]) -> str:
 
 def date_filter_formula(field_name: str, values: Iterable[date]) -> str:
     return filter_formula_for_values(field_name, (value.isoformat() for value in values))
+
+
+def is_filter_length_exceed_error(error: BaseException) -> bool:
+    message = str(error)
+    return "FilterLengthExceedLimit" in message or "1254107" in message
 
 
 def unique_key_filter_formula(values: Iterable[str]) -> str:

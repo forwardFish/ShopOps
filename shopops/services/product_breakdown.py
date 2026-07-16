@@ -16,7 +16,18 @@ ORDER_PRODUCT_NAME_FIELD = "\u5546\u54c1\u540d\u79f0"
 ORDER_PRODUCT_CODE_FIELD = "\u5546\u54c1\u7f16\u7801"
 ORDER_RAW_FIELD = "\u539f\u59cb\u6570\u636e"
 ORDER_PRODUCT_CODE_FIELDS = ("\u5546\u54c1\u7f16\u7801", "\u5546\u54c1\u7f16\u7801(\u5e73\u53f0)", "\u5546\u54c1ID", "\u5546\u5bb6\u7f16\u7801")
-RAW_PRODUCT_CODE_FIELDS = ("\u5546\u54c1\u7f16\u7801", "\u5546\u54c1\u7f16\u7801(\u5e73\u53f0)", "\u5546\u54c1ID", "\u5546\u5bb6\u7f16\u7801")
+RAW_PRODUCT_CODE_FIELDS = (
+    "\u5546\u54c1\u7f16\u7801",
+    "\u5546\u54c1\u7f16\u7801(\u5e73\u53f0)",
+    "\u5546\u54c1ID",
+    "\u5546\u5bb6\u7f16\u7801",
+    "i_id",
+    "sku_id",
+    "outer_i_id",
+    "outer_sku_id",
+    "item_id",
+    "product_id",
+)
 ORDER_QUANTITY_FIELD = "\u6570\u91cf"
 ORDER_ACTUAL_QUANTITY_FORMULA_FIELD = "\u516c\u5f0f_\u5b9e\u9645\u5356\u51fa\u6570\u91cf"
 ORDER_VALID_SALES_FORMULA_FIELD = "\u516c\u5f0f_\u6709\u6548\u9500\u552e\u989d"
@@ -191,9 +202,9 @@ def normalize_product_code(value: Any) -> str:
 
 def extract_order_product_code(fields: dict[str, Any], *, raw_field: str = ORDER_RAW_FIELD) -> str:
     for field_name in ORDER_PRODUCT_CODE_FIELDS:
-        code = normalize_product_code(fields.get(field_name))
-        if code:
-            return code
+        codes = split_product_codes(fields.get(field_name))
+        if codes:
+            return "; ".join(codes)
     return extract_product_code_from_raw(fields.get(raw_field))
 
 
@@ -208,19 +219,46 @@ def extract_product_code_from_raw(raw_value: Any) -> str:
             raw = json.loads(raw_text)
         except (TypeError, ValueError):
             return ""
-    row = raw.get("row") if isinstance(raw, dict) else raw
-    if not isinstance(row, dict):
-        return ""
-    for field_name in RAW_PRODUCT_CODE_FIELDS:
-        code = normalize_product_code(row.get(field_name))
-        if code:
-            return code
-    return ""
+    codes: list[str] = []
+
+    def collect(value: Any) -> None:
+        if isinstance(value, dict):
+            for field_name in RAW_PRODUCT_CODE_FIELDS:
+                for code in split_product_codes(value.get(field_name)):
+                    if code not in codes:
+                        codes.append(code)
+            for nested in value.values():
+                if isinstance(nested, (dict, list)):
+                    collect(nested)
+        elif isinstance(value, list):
+            for item in value:
+                collect(item)
+
+    collect(raw)
+    return "; ".join(codes)
 
 
 def effective_sales_amount(paid_amount: Any, refund_amount: Any) -> float:
     value = (number_value(paid_amount) or 0) - (number_value(refund_amount) or 0)
     return round(max(value, 0), 6)
+
+
+def independent_order_metrics(fields: dict[str, Any]) -> dict[str, float]:
+    """Calculate summary metrics only from importer-owned base fields."""
+    quantity = number_value(fields.get(ORDER_QUANTITY_FIELD)) or 0
+    paid = number_value(fields.get("\u5b9e\u6536\u6b3e")) or 0
+    refund = number_value(fields.get("\u9000\u6b3e\u91d1\u989d")) or 0
+    trade_status = scalar_text(fields.get("\u4ea4\u6613\u72b6\u6001"))
+    fulfill_status = scalar_text(fields.get("\u5c65\u7ea6/\u552e\u540e\u72b6\u6001"))
+    if refund <= 0 and "cancelled" in trade_status.casefold() and "\u9000\u6b3e\u6210\u529f" in fulfill_status:
+        refund = paid
+    valid_sales = effective_sales_amount(paid, refund) if quantity > 0 else 0
+    return {
+        "quantity": round(quantity, 6),
+        "sales": round(paid, 6),
+        "refund": round(refund, 6),
+        "valid_sales": round(valid_sales, 6),
+    }
 
 
 def summary_product_formula_fields(order_table_names: list[str], rules: list[ProductRule]) -> dict[str, dict[str, str]]:

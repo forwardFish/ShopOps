@@ -9,7 +9,7 @@ import time
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -18,13 +18,15 @@ from shopops.config import _load_dotenv
 from shopops.services.product_breakdown import (
     DEFAULT_PRODUCT_CATALOG_TABLE_ID,
     LEGACY_UNCLASSIFIED_PRODUCT_NAMES,
-    best_product_rule_from_order_fields,
+    best_product_rule_for_order,
     extract_order_product_code,
+    independent_order_metrics,
     ORDER_RAW_FIELD,
     ORDER_PRODUCT_CODE_FIELD,
     UNCLASSIFIED_PRODUCT_NAME,
     product_rules_from_records,
 )
+from scripts.bootstrap_formula_dynamic_summary import parse_date
 from shopops.storage.feishu_bootstrap import NUMBER_FIELD
 from scripts.reshape_formula_summary_by_product import (
     F_DATE,
@@ -55,13 +57,13 @@ F_PRODUCT_REFUND_AMOUNT = "\u4ea7\u54c1\u9000\u6b3e\u91d1\u989d"
 F_PRODUCT_VALID_SALES = "\u4ea7\u54c1\u6709\u6548\u9500\u552e\u989d"
 F_DATE_TEXT = "\u7edf\u8ba1\u65e5\u671f\u6587\u672c"
 
-ORDER_DATE_FIELD = "\u516c\u5f0f_\u7edf\u8ba1\u65e5\u671f"
+ORDER_DATE_FIELD = "\u521b\u5efa\u65f6\u95f4"
 ORDER_PLATFORM_FIELD = "\u5e73\u53f0"
 ORDER_PRODUCT_NAME_FIELD = "\u5546\u54c1\u540d\u79f0"
-ORDER_GROSS_SALES_FIELD = "\u516c\u5f0f_\u9500\u552e\u989d"
-ORDER_REFUND_AMOUNT_FIELD = "\u516c\u5f0f_\u9000\u6b3e\u91d1\u989d"
-ORDER_ACTUAL_QUANTITY_FIELD = "\u516c\u5f0f_\u5b9e\u9645\u5356\u51fa\u6570\u91cf"
-ORDER_VALID_SALES_FIELD = "\u516c\u5f0f_\u6709\u6548\u9500\u552e\u989d"
+ORDER_GROSS_SALES_FIELD = "\u5b9e\u6536\u6b3e"
+ORDER_REFUND_AMOUNT_FIELD = "\u9000\u6b3e\u91d1\u989d"
+ORDER_ACTUAL_QUANTITY_FIELD = "\u6570\u91cf"
+ORDER_STATUS_FIELDS = ("\u4ea4\u6613\u72b6\u6001", "\u5c65\u7ea6/\u552e\u540e\u72b6\u6001")
 
 
 def canonical_product_name(value: Any) -> str:
@@ -80,7 +82,7 @@ def formula_string(value: str) -> str:
 
 
 def source_date_filter(dates: set[str]) -> str:
-    clauses = [f'CurrentValue.[{ORDER_DATE_FIELD}]={formula_string(value)}' for value in sorted(dates)]
+    clauses = [f'LEFT(CurrentValue.[{ORDER_DATE_FIELD}],10)={formula_string(value)}' for value in sorted(dates)]
     return clauses[0] if len(clauses) == 1 else "(" + "||".join(clauses) + ")"
 
 
@@ -191,10 +193,11 @@ class ProductOrderSalesRepair:
                 F_VALID_SALES,
             ]
         existing_target_fields = [name for name in requested_target_fields if name in fields]
-        target_rows = self.list_records(
+        target_rows = self.list_records_for_date_batches(
             self.target_table_id,
             existing_target_fields,
-            summary_date_filter(normalized_impact_dates) if normalized_impact_dates else None,
+            normalized_impact_dates,
+            summary_date_filter,
         )
         known_product_names = {rule.name for rule in rules}
         known_product_names.add(UNCLASSIFIED_PRODUCT_NAME)
@@ -240,10 +243,11 @@ class ProductOrderSalesRepair:
         if not dry_run:
             for attempt in range(1, poll_attempts + 1):
                 time.sleep(min(20, attempt * 3))
-                current_rows = self.list_records(
+                current_rows = self.list_records_for_date_batches(
                     self.target_table_id,
                     requested_target_fields,
-                    summary_date_filter(normalized_impact_dates) if normalized_impact_dates else None,
+                    normalized_impact_dates,
+                    summary_date_filter,
                 )
                 after_audit = self.audit_rows(current_rows, aggregates)
                 if after_audit["status"] == "PASS":
@@ -332,7 +336,6 @@ class ProductOrderSalesRepair:
                 ORDER_GROSS_SALES_FIELD,
                 ORDER_REFUND_AMOUNT_FIELD,
                 ORDER_ACTUAL_QUANTITY_FIELD,
-                ORDER_VALID_SALES_FIELD,
             ]
             missing = [name for name in required if name not in table_fields]
             if missing:
@@ -342,40 +345,42 @@ class ProductOrderSalesRepair:
                 for name in (
                     ORDER_PRODUCT_CODE_FIELD,
                     ORDER_RAW_FIELD,
-                    *(field for rule in rules for field in (rule.quantity_field, rule.valid_sales_field)),
+                    *ORDER_STATUS_FIELDS,
                 )
                 if name in table_fields and name not in required
             ]
-            records = self.list_records(
+            records = self.list_records_for_date_batches(
                 table_id,
                 [*required, *optional],
-                source_date_filter(impact_dates) if impact_dates else None,
+                impact_dates or set(),
+                source_date_filter,
             )
             matched_rows = 0
             for record in records:
                 fields = record.get("fields") or {}
-                date_text = scalar(fields.get(ORDER_DATE_FIELD))
+                parsed_date = parse_date(fields.get(ORDER_DATE_FIELD))
+                date_text = parsed_date.isoformat() if parsed_date else ""
                 platform = scalar(fields.get(ORDER_PLATFORM_FIELD))
                 product_name = scalar(fields.get(ORDER_PRODUCT_NAME_FIELD))
                 product_code = extract_order_product_code(fields)
-                rule = best_product_rule_from_order_fields(
+                rule = best_product_rule_for_order(
                     rules,
-                    fields,
                     product_name=product_name,
                     product_code=product_code,
                 )
-                if not date_text or not platform:
+                if not date_text or not platform or (impact_dates and date_text not in impact_dates):
                     continue
+                metrics = independent_order_metrics(fields)
                 product_name_for_summary = rule.name if rule else UNCLASSIFIED_PRODUCT_NAME
                 key = (date_text, platform, product_name_for_summary)
                 order_key = scalar(fields.get(F_UNIQUE_KEY)) or str(record.get("record_id") or "")
                 if order_key:
                     aggregates[key]["order_keys"].add(order_key)
-                aggregates[key]["sales"] += number_value(fields.get(ORDER_GROSS_SALES_FIELD)) or 0
-                aggregates[key]["refund"] += number_value(fields.get(ORDER_REFUND_AMOUNT_FIELD)) or 0
+                aggregates[key]["sales"] += metrics["sales"]
+                aggregates[key]["refund"] += metrics["refund"]
                 aggregates[key]["source_rows"] += 1
-                aggregates[key]["quantity"] += number_value(fields.get(ORDER_ACTUAL_QUANTITY_FIELD)) or 0
-                aggregates[key]["valid_sales"] += number_value(fields.get(ORDER_VALID_SALES_FIELD)) or 0
+                aggregates[key]["quantity"] += metrics["quantity"]
+                aggregates[key]["valid_sales"] += metrics["valid_sales"]
                 matched_rows += 1
             source_stats.append({"table_id": table_id, "records": len(records), "matched_rows": matched_rows})
         self.add_total_platform_aggregates(aggregates)
@@ -666,11 +671,38 @@ class ProductOrderSalesRepair:
                 return records
             page_token = data.get("page_token")
 
+    def list_records_for_date_batches(
+        self,
+        table_id: str,
+        field_names: list[str],
+        impact_dates: set[str],
+        filter_builder: Callable[[set[str]], str],
+    ) -> list[dict[str, Any]]:
+        """Keep bounded repairs complete when Feishu rejects a long date filter."""
+        dates = sorted(impact_dates)
+        if not dates:
+            return self.list_records(table_id, field_names)
+        try:
+            return self.list_records(table_id, field_names, filter_builder(set(dates)))
+        except RuntimeError as exc:
+            if not is_filter_length_exceed_error(exc) or len(dates) == 1:
+                raise
+            midpoint = len(dates) // 2
+            return [
+                *self.list_records_for_date_batches(table_id, field_names, set(dates[:midpoint]), filter_builder),
+                *self.list_records_for_date_batches(table_id, field_names, set(dates[midpoint:]), filter_builder),
+            ]
+
+
+def is_filter_length_exceed_error(error: BaseException) -> bool:
+    message = str(error)
+    return "FilterLengthExceedLimit" in message or "1254107" in message
+
 
 def main() -> int:
     _load_dotenv()
     parser = argparse.ArgumentParser(description="Backfill product order count, quantity, gross sales, and valid sales into formula summary product rows.")
-    parser.add_argument("--app-token", default=os.getenv("SHOPOPS_DATA_CENTER_APP_TOKEN") or os.getenv("FEISHU_APP_TOKEN") or "KhbEbksLbauw0fssL6EcKAnlnOe")
+    parser.add_argument("--app-token", default=os.getenv("SHOPOPS_DATA_CENTER_APP_TOKEN") or os.getenv("FEISHU_APP_TOKEN"))
     parser.add_argument("--target-table-id", default=os.getenv("SHOPOPS_FORMULA_SUMMARY_TABLE_ID") or "tblepMIg19Ov1kSw")
     parser.add_argument("--product-table-id", default=os.getenv("SHOPOPS_PRODUCT_CATALOG_TABLE_ID") or DEFAULT_PRODUCT_CATALOG_TABLE_ID)
     parser.add_argument("--env-path", default=".env")

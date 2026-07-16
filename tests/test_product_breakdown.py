@@ -92,7 +92,26 @@ def test_product_code_takes_priority_when_title_is_blank_or_ambiguous():
     assert values["洗面奶有效销售额"] == 338
     assert values["皂液器数量"] == 0
     assert extract_product_code_from_raw({"row": {"商家编码": "qbph004"}}) == "QBPH004"
+    assert extract_product_code_from_raw({"items": [{"i_id": "qbph004", "sku_id": "QBPH004"}]}) == "QBPH004"
     assert '[商品编码]="QBPH004"' in formulas["洗面奶数量"]["expression"]
+
+
+def test_jushuitan_code_overrides_conflicting_foaming_device_title():
+    rules = product_rules_from_records(
+        [
+            {"fields": {"商品名称": "洗面奶", "商品编码": "QBPH004", "搜索关键词": "洗面奶"}},
+            {"fields": {"商品名称": "皂液器", "商品编码": "QB006", "搜索关键词": "皂液器"}},
+        ]
+    )
+
+    matched = best_product_rule_for_order(
+        rules,
+        product_name="趣白洁面起泡器【达人专属】全自动感应打泡沫机",
+        product_code=extract_product_code_from_raw({"items": [{"i_id": "QBPH004"}]}),
+    )
+
+    assert matched is not None
+    assert matched.name == "洗面奶"
 
 
 def test_importer_owned_product_fields_take_priority_over_title_fallback():

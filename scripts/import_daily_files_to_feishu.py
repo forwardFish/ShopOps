@@ -13,6 +13,7 @@ import traceback
 import warnings
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import contextmanager
 from dataclasses import replace
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -38,6 +39,7 @@ from shopops.collectors.jushuitan_order_api import (
 from shopops.services.product_breakdown import (
     DEFAULT_PRODUCT_CATALOG_TABLE_ID,
     effective_sales_amount,
+    extract_product_code_from_raw,
     product_breakdown_values,
     product_field_names,
     product_rules_from_records,
@@ -77,6 +79,7 @@ F_ORDER_NO = "订单号"
 F_CREATED_AT = "创建时间"
 F_BUYER_NICK = "买家昵称"
 F_PRODUCT_NAME = "商品名称"
+F_PRODUCT_CODE = "商品编码"
 F_ACCESSORY_FLAG = "是否是配件"
 F_UNIT_PRICE = "单价"
 F_QUANTITY = "数量"
@@ -154,6 +157,7 @@ ORDER_FIELDS = [
     F_CREATED_AT,
     F_BUYER_NICK,
     F_PRODUCT_NAME,
+    F_PRODUCT_CODE,
     F_ACCESSORY_FLAG,
     F_UNIT_PRICE,
     F_QUANTITY,
@@ -426,15 +430,38 @@ class FeishuDailyClient:
         fallback_match_fields: tuple[str, ...],
         allow_partial_fields: bool = True,
         update_existing_fields: set[str] | None = None,
+        clear_empty_fields: set[str] | None = None,
     ) -> dict[str, Any]:
         fields = self.field_names(table_id)
         missing_required = [field for field in required_fields if field not in fields]
         if missing_required:
             raise RuntimeError(f"Target table {table_id} is missing required existing fields: {missing_required}")
 
-        unique_index: dict[str, str] = {}
-        fallback_index: dict[tuple[str, ...], str] = {}
-        index_fields = sorted(({F_UNIQUE_KEY, *fallback_match_fields, *(update_existing_fields or set())}) & fields)
+        incoming_by_identity: dict[tuple[str, ...], dict[str, Any]] = {}
+        deduplicated_incoming_rows = 0
+        for row in rows:
+            unique_key = scalar_text(row.get(F_UNIQUE_KEY))
+            fallback_key = tuple(scalar_text(row.get(field)) for field in fallback_match_fields)
+            if all(fallback_key):
+                identity = ("fallback", *fallback_key)
+            elif unique_key:
+                identity = ("unique", unique_key)
+            else:
+                raise RuntimeError(
+                    f"Incoming row for {table_id} has neither unique_key nor complete fallback identity {fallback_match_fields}"
+                )
+            previous = incoming_by_identity.get(identity)
+            if previous is None:
+                incoming_by_identity[identity] = row
+                continue
+            if previous != row:
+                raise RuntimeError(f"Conflicting incoming rows share identity {'|'.join(identity)}")
+            deduplicated_incoming_rows += 1
+        rows = list(incoming_by_identity.values())
+
+        unique_index: dict[str, list[str]] = defaultdict(list)
+        fallback_index: dict[tuple[str, ...], list[str]] = defaultdict(list)
+        index_fields = sorted(fields)
         existing_by_record_id: dict[str, dict[str, Any]] = {}
         for record in self.iter_records(table_id, index_fields):
             record_id = str(record.get("record_id") or "")
@@ -442,39 +469,109 @@ class FeishuDailyClient:
             if record_id:
                 existing_by_record_id[record_id] = record_fields
             unique_key = scalar_text(record_fields.get(F_UNIQUE_KEY))
-            if unique_key:
-                unique_index[unique_key] = record_id
+            if unique_key and record_id:
+                unique_index[unique_key].append(record_id)
             fallback_key = tuple(scalar_text(record_fields.get(field)) for field in fallback_match_fields)
-            if all(fallback_key):
-                fallback_index[fallback_key] = record_id
+            if all(fallback_key) and record_id:
+                fallback_index[fallback_key].append(record_id)
 
         dropped_fields: Counter[str] = Counter()
         changed_fields: Counter[str] = Counter()
         to_create: list[dict[str, Any]] = []
         to_update: list[dict[str, Any]] = []
+        duplicate_record_ids: set[str] = set()
+        duplicate_keys: set[str] = set()
+        duplicate_conflicts: list[dict[str, Any]] = []
+        preserved_duplicate_fields: Counter[str] = Counter()
+        field_metadata: dict[str, dict[str, Any]] | None = None
         for row in rows:
             clean: dict[str, Any] = {}
             for key, value in row.items():
-                if value in (None, ""):
-                    continue
                 if key in fields:
-                    clean[key] = value
+                    if value in (None, ""):
+                        if key in (clear_empty_fields or set()):
+                            clean[key] = None
+                    else:
+                        clean[key] = value
                 else:
-                    dropped_fields[key] += 1
+                    if value not in (None, ""):
+                        dropped_fields[key] += 1
             if not allow_partial_fields:
                 missing = [key for key in row if row.get(key) not in (None, "") and key not in fields]
                 if missing:
                     raise RuntimeError(f"Target table {table_id} does not contain fields used by import: {sorted(set(missing))}")
 
             unique_key = scalar_text(row.get(F_UNIQUE_KEY))
-            record_id = unique_index.get(unique_key)
-            if not record_id:
-                fallback_key = tuple(scalar_text(row.get(field)) for field in fallback_match_fields)
-                if all(fallback_key):
-                    record_id = fallback_index.get(fallback_key)
+            fallback_key = tuple(scalar_text(row.get(field)) for field in fallback_match_fields)
+            exact_matches = list(unique_index.get(unique_key) or [])
+            fallback_matches = list(fallback_index.get(fallback_key) or []) if all(fallback_key) else []
+            candidate_record_ids = list(dict.fromkeys([*exact_matches, *fallback_matches]))
+            record_id = ""
+            preserved_field_names_for_row: set[str] = set()
+            if candidate_record_ids:
+                def survivor_score(candidate_id: str) -> tuple[int, int, int, str]:
+                    candidate_fields = existing_by_record_id.get(candidate_id, {})
+                    source_matches = sum(
+                        1
+                        for field, value in clean.items()
+                        if field_value_equal(candidate_fields.get(field), value)
+                    )
+                    populated_fields = sum(value not in (None, "", []) for value in candidate_fields.values())
+                    exact_unique_key = int(scalar_text(candidate_fields.get(F_UNIQUE_KEY)) == unique_key)
+                    return source_matches, populated_fields, exact_unique_key, candidate_id
+
+                record_id = max(candidate_record_ids, key=survivor_score)
             if record_id:
+                extras = set(candidate_record_ids) - {record_id}
+                if extras:
+                    if field_metadata is None:
+                        field_metadata = self.field_index(table_id)
+                    managed_fields = set(row)
+                    survivor_fields = dict(existing_by_record_id.get(record_id, {}))
+                    fields_to_preserve: dict[str, Any] = {}
+                    conflicting_fields: dict[str, list[Any]] = {}
+                    for field in sorted(fields - managed_fields):
+                        field_type = int((field_metadata.get(field) or {}).get("type") or 0)
+                        if field_type == FORMULA_FIELD or field_type >= 1000:
+                            continue
+                        distinct_values: list[Any] = []
+                        for candidate_id in candidate_record_ids:
+                            value = existing_by_record_id.get(candidate_id, {}).get(field)
+                            if value in (None, "", []):
+                                continue
+                            if not any(field_value_equal(value, current) for current in distinct_values):
+                                distinct_values.append(value)
+                        if len(distinct_values) > 1:
+                            conflicting_fields[field] = distinct_values[:5]
+                            continue
+                        if not distinct_values or survivor_fields.get(field) not in (None, "", []):
+                            continue
+                        if field_type in {TEXT_FIELD, NUMBER_FIELD}:
+                            fields_to_preserve[field] = distinct_values[0]
+                        else:
+                            conflicting_fields[field] = distinct_values
+                    if conflicting_fields:
+                        if len(duplicate_conflicts) < 20:
+                            duplicate_conflicts.append(
+                                {
+                                    F_UNIQUE_KEY: unique_key,
+                                    "fallback_key": list(fallback_key),
+                                    "record_ids": candidate_record_ids,
+                                    "conflicting_fields": conflicting_fields,
+                                }
+                            )
+                    else:
+                        clean.update(fields_to_preserve)
+                        preserved_field_names_for_row.update(fields_to_preserve)
+                        preserved_duplicate_fields.update(fields_to_preserve.keys())
+                        duplicate_record_ids.update(extras)
+                        duplicate_keys.add(unique_key or "|".join(fallback_key))
                 if update_existing_fields is not None:
-                    clean = {key: value for key, value in clean.items() if key in update_existing_fields}
+                    clean = {
+                        key: value
+                        for key, value in clean.items()
+                        if key in update_existing_fields or key in preserved_field_names_for_row
+                    }
                 changed = {
                     key: value
                     for key, value in clean.items()
@@ -484,16 +581,28 @@ class FeishuDailyClient:
                     changed_fields.update(changed.keys())
                     to_update.append({"record_id": record_id, "fields": changed})
             else:
-                to_create.append({"fields": clean})
+                to_create.append({"fields": {key: value for key, value in clean.items() if value is not None}})
 
         for chunk in chunks(to_create, 500):
             self.request("POST", f"/bitable/v1/apps/{self.app_token}/tables/{table_id}/records/batch_create", {"records": chunk})
         for chunk in chunks(to_update, 500):
             self.request("POST", f"/bitable/v1/apps/{self.app_token}/tables/{table_id}/records/batch_update", {"records": chunk})
+        for chunk in chunks([{"record_id": record_id} for record_id in sorted(duplicate_record_ids)], 500):
+            self.request(
+                "POST",
+                f"/bitable/v1/apps/{self.app_token}/tables/{table_id}/records/batch_delete",
+                {"records": [item["record_id"] for item in chunk]},
+            )
         return {
             "created": len(to_create),
             "updated": len(to_update),
             "saved": len(to_create) + len(to_update),
+            "deduplicated_incoming_rows": deduplicated_incoming_rows,
+            "deleted_duplicate_records": len(duplicate_record_ids),
+            "repaired_duplicate_keys": len(duplicate_keys),
+            "sample_repaired_duplicate_keys": sorted(duplicate_keys)[:20],
+            "duplicate_conflicts": duplicate_conflicts,
+            "preserved_duplicate_fields": dict(preserved_duplicate_fields),
             "changed_fields": dict(changed_fields),
             "dropped_nonexistent_fields": dict(dropped_fields),
         }
@@ -626,6 +735,218 @@ class FeishuDailyClient:
                 found[unique_key] = fields
         return found
 
+    def verify_rows_by_unique_key(
+        self,
+        table_id: str,
+        rows: list[dict[str, Any]],
+        compare_fields: set[str] | None = None,
+        fallback_match_fields: tuple[str, ...] = (),
+        compare_empty_fields: bool = False,
+    ) -> dict[str, Any]:
+        expected_by_key: dict[str, dict[str, Any]] = {}
+        expected_key_by_fallback: dict[tuple[str, ...], str] = {}
+        for row in rows:
+            unique_key = scalar_text(row.get(F_UNIQUE_KEY))
+            if not unique_key:
+                raise RuntimeError(f"Cannot verify row without {F_UNIQUE_KEY} in {table_id}")
+            if unique_key in expected_by_key:
+                raise RuntimeError(f"Cannot verify duplicate incoming unique_key {unique_key} in {table_id}")
+            expected_by_key[unique_key] = row
+            fallback_key = tuple(scalar_text(row.get(field)) for field in fallback_match_fields)
+            if fallback_match_fields and all(fallback_key):
+                previous = expected_key_by_fallback.get(fallback_key)
+                if previous and previous != unique_key:
+                    raise RuntimeError(f"Cannot verify duplicate incoming fallback identity {fallback_key} in {table_id}")
+                expected_key_by_fallback[fallback_key] = unique_key
+        if not expected_by_key:
+            return {
+                "status": "success",
+                "checked_rows": 0,
+                "matched_rows": 0,
+                "readback_count": 0,
+                "missing_unique_keys": [],
+                "duplicate_unique_keys": {},
+                "mismatched_row_count": 0,
+                "mismatched_rows": [],
+            }
+
+        table_fields = self.field_names(table_id)
+        fields_to_compare = {
+            field
+            for row in rows
+            for field, value in row.items()
+            if field in table_fields and (compare_empty_fields or value not in (None, ""))
+        }
+        if compare_fields is not None:
+            fields_to_compare &= compare_fields
+        requested_fields = sorted({F_UNIQUE_KEY, *fallback_match_fields, *fields_to_compare})
+        found_by_key: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        for record in self.iter_records(table_id, requested_fields):
+            record_fields = record.get("fields") or {}
+            unique_key = scalar_text(record_fields.get(F_UNIQUE_KEY))
+            fallback_key = tuple(scalar_text(record_fields.get(field)) for field in fallback_match_fields)
+            expected_key = expected_key_by_fallback.get(fallback_key) if all(fallback_key) else None
+            if not expected_key and unique_key in expected_by_key:
+                expected_key = unique_key
+            if expected_key:
+                found_by_key[expected_key].append(record_fields)
+
+        missing_unique_keys = sorted(set(expected_by_key) - set(found_by_key))
+        duplicate_unique_keys = {
+            unique_key: len(records)
+            for unique_key, records in sorted(found_by_key.items())
+            if len(records) != 1
+        }
+        mismatched_rows: list[dict[str, Any]] = []
+        mismatched_row_count = 0
+        for unique_key, expected in expected_by_key.items():
+            records = found_by_key.get(unique_key) or []
+            if len(records) != 1:
+                continue
+            actual = records[0]
+            mismatched_fields = {
+                field: {"expected": expected.get(field), "actual": actual.get(field)}
+                for field in sorted(fields_to_compare)
+                if not field_value_equal(actual.get(field), expected.get(field))
+            }
+            if mismatched_fields:
+                mismatched_row_count += 1
+                if len(mismatched_rows) < 20:
+                    mismatched_rows.append({F_UNIQUE_KEY: unique_key, "fields": mismatched_fields})
+
+        checked_rows = len(expected_by_key)
+        matched_rows = checked_rows - len(missing_unique_keys) - len(duplicate_unique_keys) - mismatched_row_count
+        return {
+            "status": "success" if matched_rows == checked_rows else "mismatch",
+            "checked_rows": checked_rows,
+            "matched_rows": matched_rows,
+            "readback_count": sum(len(records) for records in found_by_key.values()),
+            "missing_unique_keys": missing_unique_keys[:50],
+            "duplicate_unique_keys": duplicate_unique_keys,
+            "mismatched_row_count": mismatched_row_count,
+            "mismatched_rows": mismatched_rows,
+        }
+
+    def verify_unique_identities(
+        self,
+        table_id: str,
+        *,
+        key_fields: tuple[str, ...],
+    ) -> dict[str, Any]:
+        identities: dict[tuple[str, ...], list[dict[str, str]]] = defaultdict(list)
+        empty_identity_records: list[dict[str, Any]] = []
+        total_records = 0
+        requested_fields = list(dict.fromkeys([*key_fields, F_UNIQUE_KEY, F_DATA_SOURCE]))
+        for record in self.iter_records(table_id, requested_fields):
+            total_records += 1
+            record_id = str(record.get("record_id") or "")
+            record_fields = record.get("fields") or {}
+            identity = tuple(scalar_text(record_fields.get(field)) for field in key_fields)
+            evidence = {
+                "record_id": record_id,
+                F_UNIQUE_KEY: scalar_text(record_fields.get(F_UNIQUE_KEY)),
+                F_DATA_SOURCE: scalar_text(record_fields.get(F_DATA_SOURCE)),
+            }
+            if not all(identity):
+                if len(empty_identity_records) < 20:
+                    empty_identity_records.append(
+                        {
+                            **evidence,
+                            "identity": list(identity),
+                        }
+                    )
+                continue
+            identities[identity].append(evidence)
+
+        duplicates = {
+            identity: records
+            for identity, records in identities.items()
+            if len(records) > 1
+        }
+        duplicate_samples = [
+            {
+                "identity": list(identity),
+                "count": len(records),
+                "records": records[:10],
+            }
+            for identity, records in list(sorted(duplicates.items()))[:20]
+        ]
+        duplicate_extra_rows = sum(len(records) - 1 for records in duplicates.values())
+        keyed_records = sum(len(records) for records in identities.values())
+        empty_identity_record_count = total_records - keyed_records
+        return {
+            "status": "success" if not duplicates and empty_identity_record_count == 0 else "mismatch",
+            "key_fields": list(key_fields),
+            "total_records": total_records,
+            "keyed_records": keyed_records,
+            "unique_identities": len(identities),
+            "empty_identity_record_count": empty_identity_record_count,
+            "empty_identity_records": empty_identity_records,
+            "duplicate_identities": len(duplicates),
+            "duplicate_extra_rows": duplicate_extra_rows,
+            "duplicate_samples": duplicate_samples,
+        }
+
+    def delete_blank_identity_records(
+        self,
+        table_id: str,
+        *,
+        key_fields: tuple[str, ...],
+        content_fields: Iterable[str],
+    ) -> dict[str, Any]:
+        available_fields = self.field_names(table_id)
+        requested_fields = [
+            field
+            for field in dict.fromkeys([*key_fields, F_UNIQUE_KEY, F_DATA_SOURCE, *content_fields])
+            if field in available_fields
+        ]
+        blank_record_ids: list[str] = []
+        unresolved_records: list[dict[str, Any]] = []
+
+        def has_value(value: Any) -> bool:
+            if value is None:
+                return False
+            if isinstance(value, str):
+                return bool(value.strip())
+            if isinstance(value, (list, tuple, set, dict)):
+                return bool(value)
+            return True
+
+        for record in self.iter_records(table_id, requested_fields):
+            record_id = str(record.get("record_id") or "")
+            fields = record.get("fields") or {}
+            identity = tuple(scalar_text(fields.get(field)) for field in key_fields)
+            if not record_id or all(identity):
+                continue
+            meaningful_fields = {
+                field: fields.get(field)
+                for field in requested_fields
+                if has_value(fields.get(field))
+            }
+            if meaningful_fields:
+                if len(unresolved_records) < 20:
+                    unresolved_records.append(
+                        {
+                            "record_id": record_id,
+                            "identity": list(identity),
+                            "meaningful_fields": meaningful_fields,
+                        }
+                    )
+                continue
+            blank_record_ids.append(record_id)
+
+        for chunk in chunks(blank_record_ids, 500):
+            self.request(
+                "POST",
+                f"/bitable/v1/apps/{self.app_token}/tables/{table_id}/records/batch_delete",
+                {"records": chunk},
+            )
+        return {
+            "deleted_blank_records": len(blank_record_ids),
+            "sample_deleted_record_ids": blank_record_ids[:20],
+            "unresolved_empty_identity_records": unresolved_records,
+        }
+
     def prune_order_records_for_dates(
         self,
         table_id: str,
@@ -686,6 +1007,93 @@ class FeishuDailyClient:
             "sample_deleted_records": stale_samples,
         }
 
+    def prune_records_to_snapshot(
+        self,
+        table_id: str,
+        *,
+        source_rows: list[dict[str, Any]],
+        fallback_match_fields: tuple[str, ...],
+        date_field: str,
+        start_date: str,
+        end_date: str,
+    ) -> dict[str, Any]:
+        start_date = normalize_date(start_date)
+        end_date = normalize_date(end_date)
+        if not source_rows:
+            raise RuntimeError(f"Refusing to prune {table_id} against an empty source snapshot")
+        if not start_date or not end_date or start_date > end_date:
+            raise RuntimeError(f"Invalid snapshot date range for {table_id}: {start_date!r} to {end_date!r}")
+        source_unique_keys = {scalar_text(row.get(F_UNIQUE_KEY)) for row in source_rows}
+        source_unique_keys.discard("")
+        source_fallback_keys = {
+            tuple(scalar_text(row.get(field)) for field in fallback_match_fields)
+            for row in source_rows
+        }
+        source_fallback_keys = {key for key in source_fallback_keys if all(key)}
+        stale_record_ids: list[str] = []
+        stale_samples: list[dict[str, Any]] = []
+        scanned_records = 0
+        preserved_outside_scope = 0
+        fields = [F_UNIQUE_KEY, *fallback_match_fields, date_field]
+        for record in self.iter_records(table_id, fields):
+            record_id = str(record.get("record_id") or "")
+            record_fields = record.get("fields") or {}
+            if not record_id:
+                continue
+            record_date = normalize_date(record_fields.get(date_field))
+            if not record_date or record_date < start_date or record_date > end_date:
+                preserved_outside_scope += 1
+                continue
+            scanned_records += 1
+            unique_key = scalar_text(record_fields.get(F_UNIQUE_KEY))
+            fallback_key = tuple(scalar_text(record_fields.get(field)) for field in fallback_match_fields)
+            if unique_key in source_unique_keys or (all(fallback_key) and fallback_key in source_fallback_keys):
+                continue
+            stale_record_ids.append(record_id)
+            if len(stale_samples) < 20:
+                stale_samples.append(
+                    {
+                        "record_id": record_id,
+                        F_UNIQUE_KEY: unique_key,
+                        "fallback_key": list(fallback_key),
+                    }
+                )
+
+        for chunk in chunks([{"record_id": record_id} for record_id in stale_record_ids], 500):
+            self.request(
+                "POST",
+                f"/bitable/v1/apps/{self.app_token}/tables/{table_id}/records/batch_delete",
+                {"records": [item["record_id"] for item in chunk]},
+            )
+        return {
+            "status": "complete",
+            "source_rows": len(source_rows),
+            "start_date": start_date,
+            "end_date": end_date,
+            "scanned_records": scanned_records,
+            "preserved_outside_scope": preserved_outside_scope,
+            "deleted_records": len(stale_record_ids),
+            "sample_deleted_records": stale_samples,
+        }
+
+    def count_records_in_date_range(
+        self,
+        table_id: str,
+        *,
+        date_field: str,
+        start_date: str,
+        end_date: str,
+    ) -> dict[str, int]:
+        in_scope = 0
+        outside_scope = 0
+        for record in self.iter_records(table_id, [date_field]):
+            record_date = normalize_date((record.get("fields") or {}).get(date_field))
+            if record_date and start_date <= record_date <= end_date:
+                in_scope += 1
+            else:
+                outside_scope += 1
+        return {"in_scope": in_scope, "outside_scope": outside_scope, "total": in_scope + outside_scope}
+
 
 def is_retryable_feishu_response(status_code: int, body: dict[str, Any]) -> bool:
     return status_code in {429, 500, 502, 503, 504} or body.get("code") in {1254607, 1255002}
@@ -711,7 +1119,10 @@ def discover_daily_files(batch_dir: Path) -> dict[str, dict[str, list[Path]]]:
                 result[platform][kind].append(path)
     for platform in result:
         for kind in result[platform]:
-            result[platform][kind].sort(key=lambda item: item.stat().st_mtime, reverse=True)
+            result[platform][kind].sort(
+                key=lambda item: (item.stat().st_mtime_ns, str(item.resolve()).casefold()),
+                reverse=True,
+            )
     return result
 
 
@@ -758,7 +1169,7 @@ def peek_headers(path: Path) -> set[str]:
             rows = [tuple(row) for row in frame.itertuples(index=False, name=None)]
         else:
             workbook = load_workbook(path, data_only=True, read_only=True)
-            sheet = workbook.active
+            sheet = preferred_worksheet(workbook)
             reset_worksheet_dimensions(sheet)
             rows = [tuple(row) for row in sheet.iter_rows(values_only=True, max_row=20)]
         if not rows:
@@ -849,7 +1260,7 @@ def load_csv(path: Path) -> list[dict[str, Any]]:
 
 def load_xlsx(path: Path) -> list[dict[str, Any]]:
     workbook = load_workbook(path, data_only=True, read_only=True)
-    sheet = workbook.active
+    sheet = preferred_worksheet(workbook)
     reset_worksheet_dimensions(sheet)
     rows = list(sheet.iter_rows(values_only=True))
     if not rows:
@@ -862,6 +1273,13 @@ def load_xlsx(path: Path) -> list[dict[str, Any]]:
         if any(value not in (None, "") for value in row.values()):
             result.append(row)
     return result
+
+
+def preferred_worksheet(workbook: Any) -> Any:
+    for sheet_name in workbook.sheetnames:
+        if clean_text(sheet_name).casefold() == "export":
+            return workbook[sheet_name]
+    return workbook.active
 
 
 def reset_worksheet_dimensions(sheet: Any) -> None:
@@ -910,12 +1328,15 @@ def add_product_breakdown_to_orders(rows: list[dict[str, Any]], rules: list[Any]
     if not rules:
         return rows
     for row in rows:
+        actual_quantity = number_value(row.get(F_QUANTITY)) or 0
+        valid_sales = effective_sales_amount(row.get(F_PAID_AMOUNT), row.get(F_REFUND_AMOUNT)) if actual_quantity > 0 else 0
         row.update(
             product_breakdown_values(
                 rules,
                 product_name=row.get(F_PRODUCT_NAME),
-                actual_quantity=row.get(INTERNAL_PRODUCT_BREAKDOWN_QUANTITY, row.get(F_QUANTITY)),
-                valid_sales=effective_sales_amount(row.get(F_PAID_AMOUNT), row.get(F_REFUND_AMOUNT)),
+                product_code=row.get(F_PRODUCT_CODE) or extract_product_code_from_raw(row.get(F_RAW)),
+                actual_quantity=actual_quantity,
+                valid_sales=valid_sales,
             )
         )
         row.pop(INTERNAL_PRODUCT_BREAKDOWN_QUANTITY, None)
@@ -938,6 +1359,7 @@ def tmall_order_row(row: dict[str, Any], path: Path) -> dict[str, Any] | None:
         order_no=order_no,
         created_at=order_created_at("天猫", row, order_no),
         product=clean_text(first_present(row, "商品标题", "商品名称")),
+        product_code=clean_text(first_present(row, "商品编码", "商家编码", "商品编号", "商品ID")),
         quantity=quantity,
         unit_price=unit_price,
         paid_amount=paid,
@@ -969,6 +1391,7 @@ def douyin_order_row(row: dict[str, Any], path: Path) -> dict[str, Any] | None:
         order_no=order_no,
         created_at=order_created_at("抖音", row, order_no),
         product=clean_text(first_present(row, "选购商品", "商品名称")),
+        product_code=clean_text(first_present(row, "商品编码", "商品编码(平台)", "商家编码", "商品ID")),
         quantity=quantity,
         unit_price=number_value(first_present(row, "商品单价", "单价")),
         paid_amount=paid,
@@ -1152,6 +1575,7 @@ def jushuitan_douyin_order_row(raw: dict[str, Any], fetched_at: datetime) -> dic
         order_no=order_no,
         created_at=created_at,
         product=product,
+        product_code=extract_product_code_from_raw(raw),
         quantity=quantity,
         unit_price=ratio(paid, quantity),
         paid_amount=paid,
@@ -1206,6 +1630,7 @@ def pdd_order_row(row: dict[str, Any], path: Path) -> dict[str, Any] | None:
         order_no=order_no,
         created_at=order_created_at("拼多多", row, order_no),
         product=clean_text(first_present(row, "商品", "商品名称")),
+        product_code=clean_text(first_present(row, "商品编码", "商品编码(平台)", "商家编码", "商品ID")),
         quantity=quantity,
         unit_price=ratio(paid, quantity),
         paid_amount=paid,
@@ -1232,6 +1657,7 @@ def wechat_order_row(row: dict[str, Any], path: Path) -> dict[str, Any] | None:
         order_no=order_no,
         created_at=order_created_at("视频号", row, order_no),
         product=clean_text(first_present(row, "商品名称")),
+        product_code=clean_text(first_present(row, "商品编码(平台)", "商品编码", "商家编码", "商品ID")),
         quantity=number_value(first_present(row, "商品数量")),
         unit_price=number_value(first_present(row, "商品实际价格(单件)", "商品价格(单件)")),
         paid_amount=paid,
@@ -1266,6 +1692,7 @@ def order_base(
     operation: str,
     source_file: Path,
     raw: dict[str, Any],
+    product_code: str = "",
     product_cost: float | None = 0,
     other_fee: float | None = 0,
     shop_id: str = "",
@@ -1291,6 +1718,7 @@ def order_base(
         F_CREATED_AT: created_at,
         F_BUYER_NICK: "",
         F_PRODUCT_NAME: product,
+        F_PRODUCT_CODE: product_code,
         F_ACCESSORY_FLAG: "是" if is_accessory_product(product) else "否",
         INTERNAL_PRODUCT_BREAKDOWN_QUANTITY: product_breakdown_quantity,
         F_UNIT_PRICE: unit_price,
@@ -1317,6 +1745,7 @@ def collapse_order_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             merged[key] = dict(row)
             continue
         current[F_PRODUCT_NAME] = join_unique(current.get(F_PRODUCT_NAME), row.get(F_PRODUCT_NAME))
+        current[F_PRODUCT_CODE] = join_unique(current.get(F_PRODUCT_CODE), row.get(F_PRODUCT_CODE))
         current[F_ACCESSORY_FLAG] = "是" if current.get(F_ACCESSORY_FLAG) == "是" and row.get(F_ACCESSORY_FLAG) == "是" else "否"
         current[INTERNAL_PRODUCT_BREAKDOWN_QUANTITY] = round(
             (number_value(current.get(INTERNAL_PRODUCT_BREAKDOWN_QUANTITY)) or 0)
@@ -1471,7 +1900,7 @@ def parse_influencer_rows(platform: str, path: Path) -> list[dict[str, Any]]:
             row.setdefault(I_COMMISSION_RATE, clean_text(row.get(I_COMMISSION_RATE_NUM)))
             row.setdefault(I_COMMISSION, commission)
             row.setdefault(I_COMMISSION_BASIS, "实际佣金支出" if actual_commission and actual_commission > 0 else "预估佣金支出")
-        return rows
+        return collapse_influencer_rows(rows)
     rows = []
     for source in load_tabular(path):
         row = douyin_influencer_row(source, path) if platform == "抖音" else wechat_influencer_row(source, path)
@@ -1614,7 +2043,129 @@ def collapse_influencer_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]
     return list(merged.values())
 
 
+def reconcile_source_snapshots(
+    snapshots: list[tuple[Path | str, list[dict[str, Any]]]],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Union newest-first snapshots while enforcing one source row per unique key."""
+    reconciled: dict[str, dict[str, Any]] = {}
+    kept_source_by_key: dict[str, str] = {}
+    overlapping_rows_ignored = 0
+    conflicting_overlaps = 0
+    conflict_samples: list[dict[str, Any]] = []
+    volatile_fields = {F_FETCHED_AT, F_RAW, I_SOURCE_FILE}
+    for source, rows in snapshots:
+        source_name = str(source)
+        for row in rows:
+            unique_key = scalar_text(row.get(F_UNIQUE_KEY))
+            if not unique_key:
+                raise RuntimeError(f"Source row from {source} is missing {F_UNIQUE_KEY}")
+            if unique_key in reconciled:
+                overlapping_rows_ignored += 1
+                kept = reconciled[unique_key]
+                differing_fields = [
+                    field
+                    for field in sorted((set(kept) | set(row)) - volatile_fields)
+                    if not field_value_equal(kept.get(field), row.get(field))
+                ]
+                if differing_fields:
+                    conflicting_overlaps += 1
+                    if len(conflict_samples) < 20:
+                        conflict_samples.append(
+                            {
+                                F_UNIQUE_KEY: unique_key,
+                                "kept_source": kept_source_by_key[unique_key],
+                                "ignored_source": source_name,
+                                "differing_fields": differing_fields,
+                            }
+                        )
+                continue
+            reconciled[unique_key] = row
+            kept_source_by_key[unique_key] = source_name
+    return list(reconciled.values()), {
+        "snapshot_count": len(snapshots),
+        "source_precedence": [str(source) for source, _rows in snapshots],
+        "input_rows": sum(len(rows) for _source, rows in snapshots),
+        "output_rows": len(reconciled),
+        "overlapping_rows_ignored": overlapping_rows_ignored,
+        "conflicting_overlaps": conflicting_overlaps,
+        "conflict_samples": conflict_samples,
+        "precedence": "mtime_ns_then_absolute_path_descending; newest_snapshot_wins",
+    }
+
+
+@contextmanager
+def standard_import_lock() -> Iterable[None]:
+    lock_path = Path(os.getenv("SHOPOPS_STANDARD_IMPORT_LOCK_PATH", "").strip() or ROOT / ".shopops-standard-import.lock")
+    timeout_seconds = max(0, int(os.getenv("SHOPOPS_STANDARD_IMPORT_LOCK_TIMEOUT_SECONDS", "1800")))
+    stale_seconds = max(timeout_seconds, int(os.getenv("SHOPOPS_STANDARD_IMPORT_LOCK_STALE_SECONDS", "7200")))
+    token = f"{os.getpid()}:{time.time_ns()}"
+    deadline = time.monotonic() + timeout_seconds
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    while True:
+        try:
+            descriptor = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+                handle.write(token)
+            break
+        except FileExistsError:
+            try:
+                age_seconds = time.time() - lock_path.stat().st_mtime
+                if age_seconds > stale_seconds:
+                    lock_path.unlink(missing_ok=True)
+                    continue
+            except FileNotFoundError:
+                continue
+            if time.monotonic() >= deadline:
+                raise RuntimeError(f"Another standard import still owns lock {lock_path}")
+            time.sleep(1)
+    try:
+        yield
+    finally:
+        try:
+            if lock_path.read_text(encoding="utf-8") == token:
+                lock_path.unlink(missing_ok=True)
+        except FileNotFoundError:
+            pass
+
+
 def run_import(
+    batch_dir: Path,
+    dry_run: bool,
+    evidence: Path,
+    platforms: set[str] | None = None,
+    kinds: set[str] | None = None,
+    dates: set[str] | None = None,
+    filter_ad_dates: bool = False,
+    ensure_missing_ad_fields: bool = False,
+    order_lookback_days: int = ORDER_ROLLING_LOOKBACK_DAYS,
+) -> dict[str, Any]:
+    if dry_run:
+        return _run_import_unlocked(
+            batch_dir=batch_dir,
+            dry_run=True,
+            evidence=evidence,
+            platforms=platforms,
+            kinds=kinds,
+            dates=dates,
+            filter_ad_dates=filter_ad_dates,
+            ensure_missing_ad_fields=ensure_missing_ad_fields,
+            order_lookback_days=order_lookback_days,
+        )
+    with standard_import_lock():
+        return _run_import_unlocked(
+            batch_dir=batch_dir,
+            dry_run=False,
+            evidence=evidence,
+            platforms=platforms,
+            kinds=kinds,
+            dates=dates,
+            filter_ad_dates=filter_ad_dates,
+            ensure_missing_ad_fields=ensure_missing_ad_fields,
+            order_lookback_days=order_lookback_days,
+        )
+
+
+def _run_import_unlocked(
     batch_dir: Path,
     dry_run: bool,
     evidence: Path,
@@ -1638,23 +2189,37 @@ def run_import(
     ad_rows: list[dict[str, Any]] = []
     influencer_rows: list[dict[str, Any]] = []
     files: dict[str, Any] = {}
+    source_reconciliation: dict[str, dict[str, Any]] = {"orders": {}, "ads": {}, "influencer": {}}
 
-    for platform, kinds in discovered.items():
+    for platform, platform_files in discovered.items():
         if platform not in selected_platforms:
             continue
         platform_info: dict[str, Any] = {}
-        for order_file in kinds["orders"] if "orders" in selected_kinds else []:
+        order_snapshots: list[tuple[Path | str, list[dict[str, Any]]]] = []
+        for order_file in platform_files["orders"] if "orders" in selected_kinds else []:
             rows = parse_order_rows(platform, order_file)
             if order_date_window:
                 rows = [row for row in rows if date_in_window(row.get(F_CREATED_AT), order_date_window)]
-            order_rows_by_platform[platform].extend(rows)
+            order_snapshots.append((order_file, rows))
             platform_info.setdefault("orders", []).append({"file": str(order_file), "rows": len(rows)})
-        if platform == "抖音" and "orders" in selected_kinds and not platform_info.get("orders"):
+        if order_snapshots:
+            order_rows_by_platform[platform], source_reconciliation["orders"][platform] = reconcile_source_snapshots(order_snapshots)
+            source_reconciliation["orders"][platform]["source_type"] = "file_snapshot"
+            source_reconciliation["orders"][platform]["scope_policy"] = "source_date_range"
+        elif platform == "抖音" and "orders" in selected_kinds:
             fallback_dates = selected_dates if selected_dates and order_lookback_days == 0 else None
             rows, fallback_info = fetch_jushuitan_douyin_order_rows(settings, fallback_dates)
-            order_rows_by_platform[platform].extend(rows)
+            order_rows_by_platform[platform], source_reconciliation["orders"][platform] = reconcile_source_snapshots(
+                [(fallback_info.get("source") or "jushuitan", rows)]
+            )
+            source_reconciliation["orders"][platform]["source_type"] = "jushuitan_api"
+            source_reconciliation["orders"][platform]["scope_policy"] = (
+                "selected_dates" if fallback_dates else "upsert_and_verify_returned_rows_only"
+            )
             platform_info.setdefault("orders", []).append(fallback_info)
-        for influencer_file in kinds["influencer"] if "influencer" in selected_kinds else []:
+
+        influencer_snapshots: list[tuple[Path | str, list[dict[str, Any]]]] = []
+        for influencer_file in platform_files["influencer"] if "influencer" in selected_kinds else []:
             rows = parse_influencer_rows(platform, influencer_file)
             if influencer_date_window:
                 rows = [
@@ -1663,14 +2228,22 @@ def run_import(
                     if date_in_window(row.get(I_CREATED_AT), influencer_date_window)
                     or date_in_window(row.get(I_PAY_AT), influencer_date_window)
                 ]
-            influencer_rows.extend(rows)
+            influencer_snapshots.append((influencer_file, rows))
             platform_info.setdefault("influencer", []).append({"file": str(influencer_file), "rows": len(rows)})
-        for ad_file in kinds["ads"] if "ads" in selected_kinds else []:
+        if influencer_snapshots:
+            platform_influencer_rows, source_reconciliation["influencer"][platform] = reconcile_source_snapshots(influencer_snapshots)
+            influencer_rows.extend(platform_influencer_rows)
+
+        ad_snapshots: list[tuple[Path | str, list[dict[str, Any]]]] = []
+        for ad_file in platform_files["ads"] if "ads" in selected_kinds else []:
             rows = parse_ad_rows(platform, ad_file)
             if selected_dates and filter_ad_dates:
                 rows = [row for row in rows if row.get(F_DATE) in selected_dates]
-            ad_rows.extend(rows)
+            ad_snapshots.append((ad_file, rows))
             platform_info.setdefault("ads", []).append({"file": str(ad_file), "rows": len(rows)})
+        if ad_snapshots:
+            platform_ad_rows, source_reconciliation["ads"][platform] = reconcile_source_snapshots(ad_snapshots)
+            ad_rows.extend(platform_ad_rows)
         files[platform] = platform_info
 
     impact_dates = set(selected_dates)
@@ -1691,9 +2264,9 @@ def run_import(
         "batch_dir": str(batch_dir),
         "feishu_base_url": f"https://my.feishu.cn/base/{settings.shopops_data_center_app_token or settings.feishu_app_token}",
         "field_policy": (
-            f"create missing ad fields only when explicitly requested; existing records update changed cells only; exact-date order imports prune stale order records for selected dates; orders use a rolling {max(0, order_lookback_days)}-day update window for this run; influencer commissions default to a rolling 90-day update window; orders may update order/import fields and product breakdown fields"
+            f"create missing ad fields only when explicitly requested; existing records update changed cells only; file-based order snapshots reconcile exactly inside their source date range while preserving all records outside that range; exact-date Jushuitan imports prune only selected dates; orders use a rolling {max(0, order_lookback_days)}-day update window for this run; influencer commissions default to a rolling 90-day update window; orders may update order/import fields and product breakdown fields"
             if ensure_missing_ad_fields
-            else f"existing Feishu fields only; never create or update table fields during daily import; existing records update changed cells only; exact-date order imports prune stale order records for selected dates; orders use a rolling {max(0, order_lookback_days)}-day update window for this run; influencer commissions default to a rolling 90-day update window; orders may update order/import fields and product breakdown fields"
+            else f"existing Feishu fields only; never create or update table fields during daily import; existing records update changed cells only; file-based order snapshots reconcile exactly inside their source date range while preserving all records outside that range; exact-date Jushuitan imports prune only selected dates; orders use a rolling {max(0, order_lookback_days)}-day update window for this run; influencer commissions default to a rolling 90-day update window; orders may update order/import fields and product breakdown fields"
         ),
         "platform_filter": sorted(selected_platforms),
         "kind_filter": sorted(selected_kinds),
@@ -1709,6 +2282,7 @@ def run_import(
         },
         "douyin_order_source_rule": f"Douyin order Excel/CSV is accepted only when its headers include 支付方式; otherwise orders fall back to Jushuitan API. File-based order imports use the configured {max(0, order_lookback_days)}-day order window; the Jushuitan fallback applies the selected date filter when the order window is 0 days.",
         "files": files,
+        "source_reconciliation": source_reconciliation,
         "order_counts": {platform: len(rows) for platform, rows in order_rows_by_platform.items()},
         "ad_count": len(ad_rows),
         "influencer_count": len(influencer_rows),
@@ -1797,12 +2371,53 @@ def run_import(
             fallback_match_fields=(F_ORDER_NO,),
             allow_partial_fields=False,
             update_existing_fields={*ORDER_UPDATE_FIELDS, *product_fields},
+            clear_empty_fields={*ORDER_UPDATE_FIELDS, *product_fields},
         )
         result["product_field_actions"] = {
             field: "validated_existing_no_field_changes" for field in product_fields
         }
         progress("upsert_orders_done", {"platform": platform, **result})
-        if selected_dates and order_lookback_days == 0:
+        source_info = source_reconciliation["orders"].get(platform) or {}
+        source_type = source_info.get("source_type")
+        if source_type == "file_snapshot":
+            source_dates = [normalize_date(row.get(F_CREATED_AT)) for row in rows]
+            missing_date_rows = sum(not value for value in source_dates)
+            if missing_date_rows:
+                raise RuntimeError(
+                    f"Cannot safely reconcile {platform} file snapshot: {missing_date_rows} source rows have no {F_CREATED_AT}"
+                )
+            snapshot_start_date = min(source_dates)
+            snapshot_end_date = max(source_dates)
+            result["snapshot_scope"] = {
+                "source_type": source_type,
+                "date_field": F_CREATED_AT,
+                "start_date": snapshot_start_date,
+                "end_date": snapshot_end_date,
+                "source_rows": len(rows),
+                "outside_scope_policy": "preserve",
+            }
+            progress(
+                "prune_stale_orders_started",
+                {
+                    "platform": platform,
+                    "start_date": snapshot_start_date,
+                    "end_date": snapshot_end_date,
+                    "outside_scope_policy": "preserve",
+                },
+            )
+            result["prune_stale_records"] = worker_client.prune_records_to_snapshot(
+                table_id,
+                source_rows=rows,
+                fallback_match_fields=(F_ORDER_NO,),
+                date_field=F_CREATED_AT,
+                start_date=snapshot_start_date,
+                end_date=snapshot_end_date,
+            )
+            progress(
+                "prune_stale_orders_done",
+                {"platform": platform, **result["prune_stale_records"]},
+            )
+        elif source_type == "jushuitan_api" and selected_dates and order_lookback_days == 0:
             progress("prune_stale_orders_started", {"platform": platform, "dates": sorted(selected_dates)})
             result["prune_stale_records"] = worker_client.prune_order_records_for_dates(
                 table_id,
@@ -1814,10 +2429,73 @@ def run_import(
                 {"platform": platform, **result["prune_stale_records"]},
             )
         progress("readback_orders_started", {"platform": platform})
-        readback = worker_client.readback_by_unique_key(table_id, {row[F_UNIQUE_KEY] for row in rows})
-        result["readback_count"] = len(readback)
-        result["missing_unique_keys"] = sorted(set(row[F_UNIQUE_KEY] for row in rows) - set(readback))[:50]
-        progress("readback_orders_done", {"platform": platform, "readback_count": len(readback)})
+        verification = worker_client.verify_rows_by_unique_key(
+            table_id,
+            rows,
+            compare_fields={*ORDER_UPDATE_FIELDS, *product_fields},
+            fallback_match_fields=(F_ORDER_NO,),
+            compare_empty_fields=True,
+        )
+        if verification["status"] != "success":
+            progress("repair_orders_started", {"platform": platform, "verification": verification})
+            result["repair_retry"] = worker_client.upsert_rows(
+                table_id=table_id,
+                rows=rows,
+                required_fields=[F_UNIQUE_KEY, F_ORDER_NO, F_ACCESSORY_FLAG, *product_fields],
+                fallback_match_fields=(F_ORDER_NO,),
+                allow_partial_fields=False,
+                update_existing_fields={*ORDER_UPDATE_FIELDS, *product_fields},
+                clear_empty_fields={*ORDER_UPDATE_FIELDS, *product_fields},
+            )
+            verification = worker_client.verify_rows_by_unique_key(
+                table_id,
+                rows,
+                compare_fields={*ORDER_UPDATE_FIELDS, *product_fields},
+                fallback_match_fields=(F_ORDER_NO,),
+                compare_empty_fields=True,
+            )
+            progress("repair_orders_done", {"platform": platform, "verification": verification})
+        if source_type == "file_snapshot":
+            scope = result["snapshot_scope"]
+            scoped_count = worker_client.count_records_in_date_range(
+                table_id,
+                date_field=F_CREATED_AT,
+                start_date=scope["start_date"],
+                end_date=scope["end_date"],
+            )
+            result["snapshot_count_verification"] = {
+                **scoped_count,
+                "expected_in_scope": len(rows),
+                "status": "success" if scoped_count["in_scope"] == len(rows) else "mismatch",
+                "outside_scope_policy": "preserve",
+            }
+            if result["snapshot_count_verification"]["status"] != "success":
+                verification = {
+                    **verification,
+                    "status": "mismatch",
+                    "snapshot_count_verification": result["snapshot_count_verification"],
+                }
+        result["blank_identity_cleanup"] = worker_client.delete_blank_identity_records(
+            table_id,
+            key_fields=(F_ORDER_NO,),
+            content_fields=(F_PLATFORM, F_DATA_SOURCE, F_CREATED_AT, F_PAID_AMOUNT, F_RAW),
+        )
+        result["global_uniqueness_verification"] = worker_client.verify_unique_identities(
+            table_id,
+            key_fields=(F_ORDER_NO,),
+        )
+        if result["global_uniqueness_verification"]["status"] != "success":
+            verification = {
+                **verification,
+                "status": "mismatch",
+                "global_uniqueness_verification": result["global_uniqueness_verification"],
+            }
+        result["verification"] = verification
+        result["readback_count"] = verification["readback_count"]
+        result["missing_unique_keys"] = verification["missing_unique_keys"]
+        result["duplicate_unique_keys"] = verification["duplicate_unique_keys"]
+        result["mismatched_rows"] = verification["mismatched_rows"]
+        progress("readback_orders_done", {"platform": platform, **verification})
         return platform, result
 
     order_tasks = [(platform, rows) for platform, rows in order_rows_by_platform.items() if rows]
@@ -1855,10 +2533,32 @@ def run_import(
         writes["ads"]["canonicalize_unique_keys"] = client.canonicalize_ad_unique_keys(settings.shopops_ad_table_id)
         progress("canonicalize_ads_done", writes["ads"]["canonicalize_unique_keys"])
         progress("readback_ads_started")
-        readback = client.readback_by_unique_key(settings.shopops_ad_table_id, {row[F_UNIQUE_KEY] for row in ad_rows})
-        writes["ads"]["readback_count"] = len(readback)
-        writes["ads"]["missing_unique_keys"] = sorted(set(row[F_UNIQUE_KEY] for row in ad_rows) - set(readback))[:50]
-        progress("readback_ads_done", {"readback_count": len(readback)})
+        verification = client.verify_rows_by_unique_key(
+            settings.shopops_ad_table_id,
+            ad_rows,
+            fallback_match_fields=(F_PLATFORM, F_DATE),
+        )
+        if verification["status"] != "success":
+            progress("repair_ads_started", {"verification": verification})
+            writes["ads"]["repair_retry"] = client.upsert_rows(
+                table_id=settings.shopops_ad_table_id,
+                rows=ad_rows,
+                required_fields=[F_UNIQUE_KEY, F_PLATFORM, F_DATE],
+                fallback_match_fields=(F_PLATFORM, F_DATE),
+                allow_partial_fields=False,
+            )
+            verification = client.verify_rows_by_unique_key(
+                settings.shopops_ad_table_id,
+                ad_rows,
+                fallback_match_fields=(F_PLATFORM, F_DATE),
+            )
+            progress("repair_ads_done", {"verification": verification})
+        writes["ads"]["verification"] = verification
+        writes["ads"]["readback_count"] = verification["readback_count"]
+        writes["ads"]["missing_unique_keys"] = verification["missing_unique_keys"]
+        writes["ads"]["duplicate_unique_keys"] = verification["duplicate_unique_keys"]
+        writes["ads"]["mismatched_rows"] = verification["mismatched_rows"]
+        progress("readback_ads_done", verification)
 
     if influencer_rows:
         table_id = influencer_table_id
@@ -1871,27 +2571,82 @@ def run_import(
             allow_partial_fields=False,
         )
         writes["influencer"]["dedupe_policy"] = {
-            "action": "skipped",
-            "reason": "daily import must not delete influencer records; only upsert the incoming rows",
+            "action": "repair_matching_incoming_keys",
+            "identity": [F_PLATFORM, F_ORDER_NO],
+            "deleted_duplicate_records": writes["influencer"]["deleted_duplicate_records"],
         }
         progress("upsert_influencer_done", writes["influencer"])
         progress("readback_influencer_started")
-        readback = client.readback_by_unique_key(table_id, {row[F_UNIQUE_KEY] for row in influencer_rows})
-        writes["influencer"]["readback_count"] = len(readback)
-        writes["influencer"]["missing_unique_keys"] = sorted(set(row[F_UNIQUE_KEY] for row in influencer_rows) - set(readback))[:50]
-        progress("readback_influencer_done", {"readback_count": len(readback)})
+        verification = client.verify_rows_by_unique_key(
+            table_id,
+            influencer_rows,
+            fallback_match_fields=(F_PLATFORM, F_ORDER_NO),
+        )
+        if verification["status"] != "success":
+            progress("repair_influencer_started", {"verification": verification})
+            writes["influencer"]["repair_retry"] = client.upsert_rows(
+                table_id=table_id,
+                rows=influencer_rows,
+                required_fields=[F_UNIQUE_KEY, F_ORDER_NO],
+                fallback_match_fields=(F_PLATFORM, F_ORDER_NO),
+                allow_partial_fields=False,
+            )
+            verification = client.verify_rows_by_unique_key(
+                table_id,
+                influencer_rows,
+                fallback_match_fields=(F_PLATFORM, F_ORDER_NO),
+            )
+            progress("repair_influencer_done", {"verification": verification})
+        writes["influencer"]["blank_identity_cleanup"] = client.delete_blank_identity_records(
+            table_id,
+            key_fields=(F_PLATFORM, F_ORDER_NO),
+            content_fields=(F_PLATFORM, I_SOURCE, I_CREATED_AT, F_PAID_AMOUNT, I_INFLUENCER_ID, F_RAW),
+        )
+        writes["influencer"]["global_uniqueness_verification"] = client.verify_unique_identities(
+            table_id,
+            key_fields=(F_PLATFORM, F_ORDER_NO),
+        )
+        if writes["influencer"]["global_uniqueness_verification"]["status"] != "success":
+            verification = {
+                **verification,
+                "status": "mismatch",
+                "global_uniqueness_verification": writes["influencer"]["global_uniqueness_verification"],
+            }
+        writes["influencer"]["verification"] = verification
+        writes["influencer"]["readback_count"] = verification["readback_count"]
+        writes["influencer"]["missing_unique_keys"] = verification["missing_unique_keys"]
+        writes["influencer"]["duplicate_unique_keys"] = verification["duplicate_unique_keys"]
+        writes["influencer"]["mismatched_rows"] = verification["mismatched_rows"]
+        progress("readback_influencer_done", verification)
 
     summary["field_preflight"] = field_preflight
     summary["writes"] = writes
-    missing = []
-    for section in ("orders", "ads", "influencer"):
-        value = writes.get(section)
-        if isinstance(value, dict):
-            for item in value.values() if section == "orders" else [value]:
-                if isinstance(item, dict):
-                    missing.extend(item.get("missing_unique_keys") or [])
-    summary["status"] = "success" if not missing else "readback_mismatch"
-    progress("complete", {"status": summary["status"]})
+    verification_failures = []
+    for platform, item in writes["orders"].items():
+        verification = item.get("verification") or {}
+        if verification.get("status") not in (None, "success"):
+            verification_failures.append(
+                {
+                    "section": "orders",
+                    "platform": platform,
+                    "table_id": field_preflight["orders"].get(platform, {}).get("table_id"),
+                    "verification": verification,
+                }
+            )
+    for section in ("ads", "influencer"):
+        item = writes.get(section) or {}
+        verification = item.get("verification") or {}
+        if verification.get("status") not in (None, "success"):
+            verification_failures.append(
+                {
+                    "section": section,
+                    "table_id": field_preflight.get(section, {}).get("table_id"),
+                    "verification": verification,
+                }
+            )
+    summary["verification_failures"] = verification_failures
+    summary["status"] = "source_verified" if not verification_failures else "readback_mismatch"
+    progress("source_verification_complete", {"status": summary["status"]})
     return summary
 
 
@@ -2084,32 +2839,48 @@ def run_formula_dynamic_summary(
         return reconciliation_failure
 
     def run_verifiers(attempt: int) -> list[dict[str, Any]]:
+        if not normalized_impact_dates:
+            return []
+        range_start = datetime.strptime(normalized_impact_dates[0], "%Y-%m-%d").date()
+        range_end = datetime.strptime(normalized_impact_dates[-1], "%Y-%m-%d").date()
         verifier_stages: list[dict[str, Any]] = []
-        for impact_date in normalized_impact_dates:
-            evidence_path = evidence_dir / f"source-summary-verification-{impact_date.replace('-', '')}-attempt-{attempt}.json"
+        chunk_start = range_start
+        while chunk_start <= range_end:
+            chunk_end = min(range_end, chunk_start + timedelta(days=13))
+            start_date = chunk_start.isoformat()
+            end_date = chunk_end.isoformat()
+            evidence_path = evidence_dir / (
+                f"source-summary-verification-{start_date.replace('-', '')}-{end_date.replace('-', '')}-attempt-{attempt}.json"
+            )
+            # The verifier emits one comparison row per date/platform/product.
+            # Fourteen-day windows preserve that per-date gate while avoiding
+            # one full source-table read per day and oversized filter formulas.
             stage = run_stage(
-                f"verify_{impact_date}_attempt_{attempt}",
+                f"verify_{start_date}_{end_date}_attempt_{attempt}",
                 [
                     sys.executable,
                     str(ROOT / "scripts" / "verify_formula_dynamic_summary.py"),
                     "--start-date",
-                    impact_date,
+                    start_date,
                     "--end-date",
-                    impact_date,
+                    end_date,
                     "--evidence",
                     str(evidence_path),
                 ],
             )
             stages.append(stage)
             verifier_stages.append(stage)
+            chunk_start = chunk_end + timedelta(days=1)
         return verifier_stages
 
     verifier_stages = run_verifiers(attempt=1) if normalized_impact_dates else []
     if verifier_stages and any(stage["status"] != "success" for stage in verifier_stages):
-        # A verifier is read-only.  One idempotent bootstrap retry repairs only
-        # structural rows, then the existing product repairs and verifier decide
-        # whether the mismatch was genuinely resolved.
-        retry_bootstrap = run_stage("bootstrap_dimension_retry", command)
+        # A verifier is read-only.  One idempotent bootstrap retry repairs
+        # structural rows and refreshes formula definitions before re-verifying.
+        # Formula updates are forced only after the first independent readback
+        # fails, avoiding routine full-table recalculation on successful runs.
+        retry_command = [*command, "--force-formula-updates", "--force-summary-formula-updates"]
+        retry_bootstrap = run_stage("bootstrap_dimension_and_formula_retry", retry_command)
         stages.append(retry_bootstrap)
         if retry_bootstrap["status"] != "success":
             return {
@@ -2191,7 +2962,19 @@ def order_created_at(platform: str, row: dict[str, Any], order_no: str) -> str:
     return ""
 
 
-NON_SOLD_STATUS_KEYWORDS = ("退款", "交易关闭", "已关闭", "已取消", "订单关闭", "待付款", "等待买家付款", "未付款")
+NON_SOLD_STATUS_KEYWORDS = (
+    "退款",
+    "交易关闭",
+    "已关闭",
+    "已取消",
+    "订单关闭",
+    "待付款",
+    "等待买家付款",
+    "未付款",
+    "Cancelled",
+    "cancelled",
+    "CANCELLED",
+)
 NON_SOLD_PRODUCT_KEYWORDS = ("补收差价", "差价专用", "购买前须联系客服", "联系客服确认")
 ACCESSORY_PRODUCT_KEYWORDS = ("配件",)
 
@@ -2447,15 +3230,14 @@ def main() -> int:
                 "status": "skipped",
                 "reason": "dry_run_does_not_write_feishu_source_or_summary_tables",
             }
-        elif summary.get("status") == "success":
+        elif summary.get("status") == "source_verified":
             formula_summary = run_formula_dynamic_summary(
                 evidence_dir=Path("docs/live-evidence/formula-dynamic-summary"),
                 timeout_seconds=args.formula_summary_timeout_seconds,
                 impact_dates=set(summary.get("impact_dates") or summary.get("date_filter") or []),
             )
             summary["formula_summary"] = formula_summary
-            if formula_summary.get("status") != "success":
-                summary["status"] = "formula_summary_failed"
+            summary["status"] = "success" if formula_summary.get("status") == "success" else "formula_summary_failed"
         write_import_evidence(evidence, summary)
     except Exception as exc:
         summary = {

@@ -37,7 +37,7 @@ def update(evidence: Path, cleanup_mojibake: bool) -> dict[str, Any]:
             result["deleted_mojibake_fields"][platform] = delete_mojibake_fields(bootstrap, table_id)
         fields = bootstrap.field_index(table_id)
         expression = actual_sold_quantity_expr(fields, product_rules)
-        bootstrap.ensure_formula_field(table_id, TARGET_FIELD, expression, formatter="0")
+        bootstrap.ensure_formula_field(table_id, TARGET_FIELD, expression, formatter="0", force=True)
         refreshed = bootstrap.field_index(table_id)
         current = refreshed.get(TARGET_FIELD) or {}
         result["updated"][platform] = {

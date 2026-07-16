@@ -19,9 +19,18 @@ from shopops.services.product_breakdown import (
     ORDER_RAW_FIELD,
     ProductRule,
     UNCLASSIFIED_PRODUCT_NAME,
-    best_product_rule_from_order_fields,
+    best_product_rule_for_order,
     extract_order_product_code,
+    independent_order_metrics,
     product_rules_from_records,
+)
+from shopops.services.dynamic_feishu_summary import (
+    AD_COST_FIELDS,
+    CLICK_FIELDS,
+    COMMISSION_AMOUNT_FIELDS,
+    COMMISSION_ESTIMATED_FIELDS,
+    COMMISSION_SETTLED_FIELDS,
+    IMPRESSION_FIELDS,
 )
 from scripts.bootstrap_formula_dynamic_summary import (
     FORMULA_DATE_FIELD,
@@ -42,24 +51,29 @@ ORDER_TABLE_ENVS = (
 )
 ORDER_METRICS = {
     "订单数": "unique_key",
-    "实际卖出数量": "公式_实际卖出数量",
-    "销售额": "公式_销售额",
-    "退款金额": "公式_退款金额",
-    "有效销售额": "公式_有效销售额",
+    "实际卖出数量": "数量",
+    "销售额": "实收款",
+    "退款金额": "退款金额",
+    "有效销售额": "有效销售额",
 }
 AD_METRICS = {
     "投流记录数": "unique_key",
-    "投流消耗": "公式_投流消耗",
-    "展现": "公式_展现",
-    "点击": "公式_点击",
+    "投流消耗": "花费",
+    "展现": "展现量",
+    "点击": "点击量",
 }
 COMMISSION_METRICS = {
-    "达人佣金": "公式_达人费用",
-    "预估佣金支出": "公式_预估佣金支出",
-    "实际佣金支出": "公式_实际佣金支出",
+    "达人佣金": "带货费用",
+    "预估佣金支出": "预估佣金支出",
+    "实际佣金支出": "实际佣金支出",
 }
 METRICS = {**ORDER_METRICS, **AD_METRICS, **COMMISSION_METRICS}
 PRODUCT_NAME_FIELD = "商品名称"
+ORDER_DATE_FIELDS = ("创建时间", "订单创建时间", "订单下单时间", "下单时间", "订单提交时间", "订单成交时间", FORMULA_DATE_FIELD)
+AD_DATE_FIELDS = ("统计日期", "投放日期", "日期", "采集时间", "更新时间", "投放时间", FORMULA_DATE_FIELD)
+COMMISSION_DATE_FIELDS = ("统计日期", "结算日期", "下单日期", "日期", "支付时间", "订单下单时间", "下单时间", "采集时间", "更新时间", FORMULA_DATE_FIELD)
+PLATFORM_FIELDS = ("平台", "来源平台", "店铺平台", FORMULA_PLATFORM_FIELD)
+ORDER_BASE_FIELDS = ("数量", "实收款", "退款金额", "交易状态", "履约/售后状态")
 
 
 def text_value(value: Any) -> str:
@@ -85,9 +99,22 @@ def date_range(start: date, end: date) -> set[date]:
     return {start + timedelta(days=offset) for offset in range((end - start).days + 1)}
 
 
-def source_dimension(fields: dict[str, Any], start: date, end: date) -> tuple[str, str] | None:
-    stat_date = parse_date(fields.get(FORMULA_DATE_FIELD))
-    platform = normalize_platform_value(text_value(fields.get(FORMULA_PLATFORM_FIELD)))
+def first_value(fields: dict[str, Any], aliases: Iterable[str]) -> Any:
+    return next((fields.get(name) for name in aliases if fields.get(name) not in (None, "", [])), None)
+
+
+def first_number(fields: dict[str, Any], aliases: Iterable[str]) -> float:
+    return number_value(first_value(fields, aliases))
+
+
+def source_dimension(
+    fields: dict[str, Any],
+    start: date,
+    end: date,
+    date_fields: Iterable[str] = ORDER_DATE_FIELDS,
+) -> tuple[str, str] | None:
+    stat_date = parse_date(first_value(fields, date_fields))
+    platform = normalize_platform_value(text_value(first_value(fields, PLATFORM_FIELDS)))
     if not stat_date or platform not in PLATFORMS or not start <= stat_date <= end:
         return None
     return stat_date.isoformat(), platform
@@ -106,26 +133,70 @@ def initialize_main_dimensions(
             _ = rows[(stat_date.isoformat(), platform)]
 
 
-def add_source_metrics(
+def add_order_metrics(
     rows: dict[tuple[str, str], dict[str, float]],
     records: Iterable[dict[str, Any]],
-    source_metrics: dict[str, str],
     start: date,
     end: date,
     source_dimensions: set[tuple[str, str]],
 ) -> None:
     for record in records:
         fields = record.get("fields") or {}
-        dimension = source_dimension(fields, start, end)
+        dimension = source_dimension(fields, start, end, ORDER_DATE_FIELDS)
         if not dimension:
             continue
         source_dimensions.add(dimension)
         values = rows[dimension]
-        for metric, source_field in source_metrics.items():
-            if metric in {"订单数", "投流记录数"}:
-                values[metric] += 1
-            else:
-                values[metric] += number_value(fields.get(source_field))
+        metrics = independent_order_metrics(fields)
+        values["订单数"] += 1
+        values["实际卖出数量"] += metrics["quantity"]
+        values["销售额"] += metrics["sales"]
+        values["退款金额"] += metrics["refund"]
+        values["有效销售额"] += metrics["valid_sales"]
+
+
+def add_ad_metrics(
+    rows: dict[tuple[str, str], dict[str, float]],
+    records: Iterable[dict[str, Any]],
+    start: date,
+    end: date,
+    source_dimensions: set[tuple[str, str]],
+) -> None:
+    for record in records:
+        fields = record.get("fields") or {}
+        dimension = source_dimension(fields, start, end, AD_DATE_FIELDS)
+        if not dimension:
+            continue
+        source_dimensions.add(dimension)
+        values = rows[dimension]
+        values["投流记录数"] += 1
+        values["投流消耗"] += first_number(fields, (*AD_COST_FIELDS, "推广花费(元)"))
+        values["展现"] += first_number(fields, IMPRESSION_FIELDS)
+        values["点击"] += first_number(fields, CLICK_FIELDS)
+
+
+def add_commission_metrics(
+    rows: dict[tuple[str, str], dict[str, float]],
+    records: Iterable[dict[str, Any]],
+    start: date,
+    end: date,
+    source_dimensions: set[tuple[str, str]],
+) -> None:
+    for record in records:
+        fields = record.get("fields") or {}
+        dimension = source_dimension(fields, start, end, COMMISSION_DATE_FIELDS)
+        if not dimension:
+            continue
+        source_dimensions.add(dimension)
+        estimated = first_number(fields, COMMISSION_ESTIMATED_FIELDS)
+        settled = first_number(fields, COMMISSION_SETTLED_FIELDS)
+        amount = settled if settled > 0 else estimated
+        if amount == 0:
+            amount = first_number(fields, COMMISSION_AMOUNT_FIELDS)
+        values = rows[dimension]
+        values["达人佣金"] += amount
+        values["预估佣金支出"] += estimated
+        values["实际佣金支出"] += settled
 
 
 def add_total_platform_rows(rows: dict[tuple[str, str], dict[str, float]], dates: Iterable[str]) -> None:
@@ -151,9 +222,9 @@ def expected_rows(
     rows: dict[tuple[str, str], dict[str, float]] = defaultdict(zero_metrics)
     source_dimensions: set[tuple[str, str]] = set()
     for records in records_by_table:
-        add_source_metrics(rows, records, ORDER_METRICS, start, end, source_dimensions)
-    add_source_metrics(rows, ad_records or [], AD_METRICS, start, end, source_dimensions)
-    add_source_metrics(rows, commission_records or [], COMMISSION_METRICS, start, end, source_dimensions)
+        add_order_metrics(rows, records, start, end, source_dimensions)
+    add_ad_metrics(rows, ad_records or [], start, end, source_dimensions)
+    add_commission_metrics(rows, commission_records or [], start, end, source_dimensions)
 
     if target_dates is not None:
         initialize_main_dimensions(rows, target_dates)
@@ -222,25 +293,26 @@ def expected_product_rows(
     for records in records_by_table:
         for record in records:
             fields = record.get("fields") or {}
-            dimension = source_dimension(fields, start, end)
+            dimension = source_dimension(fields, start, end, ORDER_DATE_FIELDS)
             if not dimension:
                 continue
             date_text, platform = dimension
             source_dimensions.add(dimension)
             for product_name in product_names:
                 _ = rows[(date_text, platform, product_name)]
-            rule = best_product_rule_from_order_fields(
+            rule = best_product_rule_for_order(
                 rules,
-                fields,
                 product_name=text_value(fields.get(PRODUCT_NAME_FIELD)),
                 product_code=extract_order_product_code(fields),
             )
             product_name = rule.name if rule else UNCLASSIFIED_PRODUCT_NAME
             target = rows[(date_text, platform, product_name)]
+            metrics = independent_order_metrics(fields)
             target["订单数"] += 1
-            target["实际卖出数量"] += number_value(fields.get(ORDER_METRICS["实际卖出数量"]))
-            for metric in ("销售额", "退款金额", "有效销售额"):
-                target[metric] += number_value(fields.get(ORDER_METRICS[metric]))
+            target["实际卖出数量"] += metrics["quantity"]
+            target["销售额"] += metrics["sales"]
+            target["退款金额"] += metrics["refund"]
+            target["有效销售额"] += metrics["valid_sales"]
 
     if target_dates is not None:
         for stat_date in target_dates:
@@ -320,6 +392,57 @@ def list_records_with_retry(
     raise AssertionError("unreachable")
 
 
+def existing_field_names(
+    client: DynamicSummaryFeishuClient,
+    table_id: str,
+    desired: Iterable[str],
+) -> list[str]:
+    available = client.list_field_names(table_id)
+    return [name for name in dict.fromkeys(desired) if name in available]
+
+
+def require_fields(table_id: str, available: set[str], required: Iterable[str]) -> None:
+    missing = sorted(set(required) - available)
+    if missing:
+        raise RuntimeError(f"Source table {table_id} is missing independent verification fields: {missing}")
+
+
+def require_any_field(table_id: str, available: set[str], aliases: Iterable[str], purpose: str) -> str:
+    field_name = next((name for name in aliases if name != FORMULA_DATE_FIELD and name in available), "")
+    if not field_name:
+        raise RuntimeError(f"Source table {table_id} has no base field for independent {purpose} verification")
+    return field_name
+
+
+def base_date_filter(field_name: str, dates: Iterable[date]) -> str:
+    clauses = [f'LEFT(CurrentValue.[{field_name}],10)="{value.isoformat()}"' for value in sorted(dates)]
+    if not clauses:
+        raise ValueError("At least one target date is required")
+    return clauses[0] if len(clauses) == 1 else "(" + "||".join(clauses) + ")"
+
+
+def list_records_for_base_dates(
+    client: DynamicSummaryFeishuClient,
+    table_id: str,
+    field_names: list[str],
+    date_field: str,
+    dates: Iterable[date],
+) -> list[dict[str, Any]]:
+    ordered_dates = sorted(set(dates))
+    records: list[dict[str, Any]] = []
+    for index in range(0, len(ordered_dates), 7):
+        date_batch = ordered_dates[index : index + 7]
+        records.extend(
+            list_records_with_retry(
+                client,
+                table_id,
+                field_names,
+                base_date_filter(date_field, date_batch),
+            )
+        )
+    return records
+
+
 def source_table_id(*names: str) -> str:
     return next((os.getenv(name, "").strip() for name in names if os.getenv(name, "").strip()), "")
 
@@ -343,6 +466,25 @@ def summary_date_filter(dates: Iterable[date]) -> str:
     if not clauses:
         raise ValueError("At least one target date is required")
     return clauses[0] if len(clauses) == 1 else "(" + "||".join(clauses) + ")"
+
+
+def list_summary_records_for_dates(
+    client: DynamicSummaryFeishuClient,
+    table_id: str,
+    field_names: list[str],
+    dates: Iterable[date],
+) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for target_date in sorted(set(dates)):
+        records.extend(
+            list_records_with_retry(
+                client,
+                table_id,
+                field_names,
+                summary_date_filter([target_date]),
+            )
+        )
+    return records
 
 
 def failure_categories(rows: list[dict[str, Any]], product_rows: list[dict[str, Any]], duplicate_keys: list[str]) -> list[str]:
@@ -391,23 +533,65 @@ def main() -> int:
     if not rules:
         raise RuntimeError("Product catalog has no usable product classification rules")
     order_fields = [
-        "unique_key", FORMULA_DATE_FIELD, FORMULA_PLATFORM_FIELD, PRODUCT_NAME_FIELD, ORDER_PRODUCT_CODE_FIELD, ORDER_RAW_FIELD,
-        *list(ORDER_METRICS.values())[1:],
-        *(field for rule in rules for field in (rule.quantity_field, rule.valid_sales_field)),
+        "unique_key", *ORDER_DATE_FIELDS, *PLATFORM_FIELDS, PRODUCT_NAME_FIELD, ORDER_PRODUCT_CODE_FIELD, ORDER_RAW_FIELD,
+        *ORDER_BASE_FIELDS,
     ]
-    ad_fields = ["unique_key", FORMULA_DATE_FIELD, FORMULA_PLATFORM_FIELD, *list(AD_METRICS.values())[1:]]
-    commission_fields = ["unique_key", FORMULA_DATE_FIELD, FORMULA_PLATFORM_FIELD, *COMMISSION_METRICS.values()]
+    ad_fields = ["unique_key", *AD_DATE_FIELDS, *PLATFORM_FIELDS, *AD_COST_FIELDS, "推广花费(元)", *IMPRESSION_FIELDS, *CLICK_FIELDS]
+    commission_fields = [
+        "unique_key", *COMMISSION_DATE_FIELDS, *PLATFORM_FIELDS,
+        *COMMISSION_AMOUNT_FIELDS, *COMMISSION_ESTIMATED_FIELDS, *COMMISSION_SETTLED_FIELDS,
+    ]
     target_dates = date_range(start, end)
-    date_filter = source_date_filter(target_dates)
-    summary_records = list_records_with_retry(
+    summary_records = list_summary_records_for_dates(
         client,
         args.summary_table_id,
         ["unique_key", *METRICS],
-        summary_date_filter(target_dates),
+        target_dates,
     )
-    order_records = [list_records_with_retry(client, table_id, order_fields, date_filter) for table_id in order_ids]
-    ad_records = list_records_with_retry(client, ad_table_id, ad_fields, date_filter)
-    commission_records = list_records_with_retry(client, commission_table_id, commission_fields, date_filter)
+    order_records = []
+    for table_id in order_ids:
+        available = client.list_field_names(table_id)
+        require_fields(
+            table_id,
+            available,
+            ("unique_key", "创建时间", "平台", PRODUCT_NAME_FIELD, ORDER_PRODUCT_CODE_FIELD, ORDER_RAW_FIELD, *ORDER_BASE_FIELDS),
+        )
+        order_records.append(
+            list_records_for_base_dates(
+                client,
+                table_id,
+                [field for field in dict.fromkeys(order_fields) if field in available],
+                "创建时间",
+                target_dates,
+            )
+        )
+    ad_available = client.list_field_names(ad_table_id)
+    ad_date_field = require_any_field(ad_table_id, ad_available, AD_DATE_FIELDS, "date")
+    require_any_field(ad_table_id, ad_available, PLATFORM_FIELDS, "platform")
+    require_any_field(ad_table_id, ad_available, (*AD_COST_FIELDS, "推广花费(元)"), "spend")
+    ad_records = list_records_for_base_dates(
+        client,
+        ad_table_id,
+        [field for field in dict.fromkeys(ad_fields) if field in ad_available],
+        ad_date_field,
+        target_dates,
+    )
+    commission_available = client.list_field_names(commission_table_id)
+    commission_date_field = require_any_field(commission_table_id, commission_available, COMMISSION_DATE_FIELDS, "date")
+    require_any_field(commission_table_id, commission_available, PLATFORM_FIELDS, "platform")
+    require_any_field(
+        commission_table_id,
+        commission_available,
+        (*COMMISSION_AMOUNT_FIELDS, *COMMISSION_ESTIMATED_FIELDS, *COMMISSION_SETTLED_FIELDS),
+        "amount",
+    )
+    commission_records = list_records_for_base_dates(
+        client,
+        commission_table_id,
+        [field for field in dict.fromkeys(commission_fields) if field in commission_available],
+        commission_date_field,
+        target_dates,
+    )
     expected = expected_rows(order_records, start, end, target_dates=target_dates, ad_records=ad_records, commission_records=commission_records)
     expected_products = expected_product_rows(order_records, start, end, rules, target_dates=target_dates)
     comparison = compare_rows(expected, summary_records)

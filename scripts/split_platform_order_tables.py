@@ -25,6 +25,7 @@ from shopops.services.product_breakdown import (
     ProductRule,
     effective_sales_amount,
     extract_order_product_code,
+    extract_product_code_from_raw,
     product_breakdown_values,
     product_field_names,
     product_rules_from_records,
@@ -134,7 +135,7 @@ FORMULA_FIELDS = {
     "公式_退款金额": {"formatter": "0.00", "expression": "IFBLANK([退款金额],0)"},
     "公式_有效销售额": {
         "formatter": "0.00",
-        "expression": "IF(IFBLANK([实收款],0)-IFBLANK([退款金额],0)<0,0,IFBLANK([实收款],0)-IFBLANK([退款金额],0))",
+        "expression": "IF(IFBLANK([数量],0)=0,0,IF(IFBLANK([实收款],0)-IFBLANK([退款金额],0)<0,0,IFBLANK([实收款],0)-IFBLANK([退款金额],0)))",
     },
     "公式_商品成本": {"formatter": "0.00", "expression": "IFBLANK([商品成本],0)"},
     "公式_运费成本": {"formatter": "0.00", "expression": "IFBLANK([运费成本],0)"},
@@ -693,7 +694,10 @@ def read_csv_file(path: Path) -> list[dict[str, Any]]:
 
 def read_excel_file(path: Path) -> list[dict[str, Any]]:
     workbook = load_workbook(path, data_only=True)
-    worksheet = workbook.active
+    worksheet = next(
+        (workbook[name] for name in workbook.sheetnames if str(name).strip().casefold() == "export"),
+        workbook.active,
+    )
     headers = [str(cell.value or "").strip() for cell in next(worksheet.iter_rows(min_row=1, max_row=1))]
     rows: list[dict[str, Any]] = []
     for values in worksheet.iter_rows(min_row=2, values_only=True):
@@ -719,6 +723,7 @@ def douyin_export_row(source: dict[str, Any], path: Path) -> dict[str, Any] | No
         order_no=order_no,
         created_at=order_created_at("抖音", source, order_no),
         product_name=clean_text(first_present(source, "选购商品", "商品名称")),
+        product_code=clean_text(first_present(source, "商品编码", "商品编码(平台)", "商家编码", "商品ID")),
         quantity=quantity,
         unit_price=unit_price,
         paid_amount=paid_amount,
@@ -794,6 +799,7 @@ def pdd_export_row(source: dict[str, Any], path: Path) -> dict[str, Any] | None:
         order_no=order_no,
         created_at=order_created_at("拼多多", source, order_no),
         product_name=clean_text(first_present(source, "商品", "商品名称")),
+        product_code=clean_text(first_present(source, "商品编码", "商品编码(平台)", "商家编码", "商品ID")),
         quantity=quantity,
         unit_price=unit_price,
         paid_amount=paid_amount,
@@ -818,6 +824,7 @@ def wechat_channels_export_row(source: dict[str, Any], path: Path) -> dict[str, 
         order_no=order_no,
         created_at=order_created_at("视频号", source, order_no),
         product_name=clean_text(first_present(source, "商品名称")),
+        product_code=clean_text(first_present(source, "商品编码(平台)", "商品编码", "商家编码", "商品ID")),
         quantity=number(first_present(source, "商品数量")),
         unit_price=number(first_present(source, "商品实际价格(单件)", "商品价格(单件)")),
         paid_amount=number(first_present(source, "订单实际收款金额", "订单实际支付金额", "商品实际价格(总共)")),
@@ -855,6 +862,7 @@ def tmall_export_row(source: dict[str, Any], path: Path) -> dict[str, Any] | Non
         order_no=order_no,
         created_at=order_created_at("天猫", source, order_no),
         product_name=clean_text(first_present(source, "商品标题", "商品名称", "宝贝标题", "商品")),
+        product_code=clean_text(first_present(source, "商品编码", "商家编码", "商品编号", "商品ID")),
         quantity=quantity,
         unit_price=unit_price,
         paid_amount=paid_amount,
@@ -888,6 +896,7 @@ def base_row(
     trade_status: str,
     operation: str,
     raw: dict[str, Any],
+    product_code: str = "",
     product_cost: float | None = 0,
     other_fee: float | None = 0,
     shop_id: str = "",
@@ -912,6 +921,7 @@ def base_row(
         F_CREATED_AT: created_at,
         F_BUYER_NICK: "",
         F_PRODUCT_NAME: product_name,
+        F_PRODUCT_CODE: product_code,
         F_UNIT_PRICE: unit_price,
         F_QUANTITY: quantity,
         F_FULFILL_STATUS: fulfill_status,
@@ -991,6 +1001,7 @@ def row_from_jushuitan_order(platform: str, order: dict[str, Any]) -> dict[str, 
         order_no=order_no,
         created_at=str(order.get("created_at") or ""),
         product_name=product_name,
+        product_code=extract_product_code_from_raw(raw),
         quantity=quantity,
         unit_price=unit_price,
         paid_amount=paid_amount,
@@ -1079,13 +1090,15 @@ def apply_product_breakdown_values(rows: list[dict[str, Any]], product_rules: li
     if not product_rules:
         return
     for row in rows:
+        actual_quantity = number(row.get(F_QUANTITY)) or 0
+        valid_sales = effective_sales_amount(row.get(F_PAID_AMOUNT), row.get(F_REFUND_AMOUNT)) if actual_quantity > 0 else 0
         row.update(
             product_breakdown_values(
                 product_rules,
                 product_name=row.get(F_PRODUCT_NAME),
                 product_code=extract_order_product_code(row),
-                actual_quantity=row.get(F_QUANTITY),
-                valid_sales=effective_sales_amount(row.get(F_PAID_AMOUNT), row.get(F_REFUND_AMOUNT)),
+                actual_quantity=actual_quantity,
+                valid_sales=valid_sales,
             )
         )
 
@@ -1306,7 +1319,19 @@ def order_created_at(platform: str, row: dict[str, Any], order_no: str) -> str:
     return ""
 
 
-NON_SOLD_STATUS_KEYWORDS = ("退款", "交易关闭", "已关闭", "已取消", "订单关闭", "待付款", "等待买家付款", "未付款")
+NON_SOLD_STATUS_KEYWORDS = (
+    "退款",
+    "交易关闭",
+    "已关闭",
+    "已取消",
+    "订单关闭",
+    "待付款",
+    "等待买家付款",
+    "未付款",
+    "Cancelled",
+    "cancelled",
+    "CANCELLED",
+)
 NON_SOLD_PRODUCT_KEYWORDS = ("补收差价", "差价专用", "购买前须联系客服", "联系客服确认")
 
 

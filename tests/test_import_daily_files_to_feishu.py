@@ -3,9 +3,11 @@ from __future__ import annotations
 import csv
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from openpyxl import Workbook
+import pytest
 
 import scripts.import_daily_files_to_feishu as daily_import
 from shopops.config import Settings
@@ -25,6 +27,7 @@ from scripts.import_daily_files_to_feishu import (
     F_ORDER_NO,
     F_PAID_AMOUNT,
     F_PLATFORM,
+    F_PRODUCT_CODE,
     F_QUANTITY,
     F_REFUND_AMOUNT,
     F_SETTLED_TRADE_AMOUNT,
@@ -118,12 +121,129 @@ def test_run_formula_dynamic_summary_reconciles_and_verifies_each_impact_date(mo
     assert any("verify_formula_dynamic_summary.py" in command[1] for command in captured)
 
 
+def test_run_formula_dynamic_summary_verifies_impacted_dates_in_one_range_process(monkeypatch, tmp_path: Path):
+    captured: list[list[str]] = []
+
+    class Completed:
+        returncode = 0
+        stderr = b""
+
+        def __init__(self, command):
+            self.stdout = (
+                b'{"summary_table": {"table_id": "tblepMIg19Ov1kSw"}, "status": "success"}'
+                if "bootstrap_formula_dynamic_summary.py" in command[1]
+                else b'{"status": "success"}'
+            )
+
+    def fake_run(command, **kwargs):
+        captured.append(command)
+        return Completed(command)
+
+    monkeypatch.setattr(daily_import.subprocess, "run", fake_run)
+    monkeypatch.setenv("SHOPOPS_FORMULA_SUMMARY_TABLE_ID", "tblepMIg19Ov1kSw")
+
+    result = run_formula_dynamic_summary(
+        evidence_dir=tmp_path,
+        timeout_seconds=17,
+        impact_dates={"2026-07-13", "2026-07-15"},
+    )
+
+    verifier_commands = [command for command in captured if "verify_formula_dynamic_summary.py" in command[1]]
+    assert result["status"] == "success"
+    assert len(verifier_commands) == 1
+    assert verifier_commands[0][verifier_commands[0].index("--start-date") + 1] == "2026-07-13"
+    assert verifier_commands[0][verifier_commands[0].index("--end-date") + 1] == "2026-07-15"
+
+
+def test_run_formula_dynamic_summary_chunks_long_verification_ranges(monkeypatch, tmp_path: Path):
+    captured: list[list[str]] = []
+
+    class Completed:
+        returncode = 0
+        stderr = b""
+
+        def __init__(self, command):
+            self.stdout = (
+                b'{"summary_table": {"table_id": "tblepMIg19Ov1kSw"}, "status": "success"}'
+                if "bootstrap_formula_dynamic_summary.py" in command[1]
+                else b'{"status": "success"}'
+            )
+
+    def fake_run(command, **kwargs):
+        captured.append(command)
+        return Completed(command)
+
+    monkeypatch.setattr(daily_import.subprocess, "run", fake_run)
+    monkeypatch.setenv("SHOPOPS_FORMULA_SUMMARY_TABLE_ID", "tblepMIg19Ov1kSw")
+
+    result = run_formula_dynamic_summary(
+        evidence_dir=tmp_path,
+        timeout_seconds=17,
+        impact_dates={"2026-07-01", "2026-07-31"},
+    )
+
+    verifier_commands = [command for command in captured if "verify_formula_dynamic_summary.py" in command[1]]
+    assert result["status"] == "success"
+    assert [
+        (
+            command[command.index("--start-date") + 1],
+            command[command.index("--end-date") + 1],
+        )
+        for command in verifier_commands
+    ] == [
+        ("2026-07-01", "2026-07-14"),
+        ("2026-07-15", "2026-07-28"),
+        ("2026-07-29", "2026-07-31"),
+    ]
+
+
+def test_run_formula_dynamic_summary_forces_formula_refresh_only_after_verifier_failure(monkeypatch, tmp_path: Path):
+    captured: list[list[str]] = []
+    verifier_attempt = 0
+
+    class Completed:
+        stderr = b""
+
+        def __init__(self, command, returncode=0, stdout=b'{"status": "success"}'):
+            self.returncode = returncode
+            self.stdout = stdout
+
+    def fake_run(command, **kwargs):
+        nonlocal verifier_attempt
+        captured.append(command)
+        if "bootstrap_formula_dynamic_summary.py" in command[1]:
+            return Completed(command, stdout=b'{"summary_table": {"table_id": "tblepMIg19Ov1kSw"}, "status": "success"}')
+        if "verify_formula_dynamic_summary.py" in command[1]:
+            verifier_attempt += 1
+            if verifier_attempt == 1:
+                return Completed(command, returncode=4, stdout=b'{"status": "mismatch"}')
+        return Completed(command)
+
+    monkeypatch.setattr(daily_import.subprocess, "run", fake_run)
+    monkeypatch.setenv("SHOPOPS_FORMULA_SUMMARY_TABLE_ID", "tblepMIg19Ov1kSw")
+
+    result = run_formula_dynamic_summary(
+        evidence_dir=tmp_path,
+        timeout_seconds=17,
+        impact_dates={"2026-07-15"},
+    )
+
+    bootstrap_commands = [command for command in captured if "bootstrap_formula_dynamic_summary.py" in command[1]]
+    assert result["status"] == "success"
+    assert len(bootstrap_commands) == 2
+    assert "--force-formula-updates" not in bootstrap_commands[0]
+    assert "--force-summary-formula-updates" not in bootstrap_commands[0]
+    assert "--force-formula-updates" in bootstrap_commands[1]
+    assert "--force-summary-formula-updates" in bootstrap_commands[1]
+    assert verifier_attempt == 2
+
+
 def test_main_marks_summary_refresh_failure_as_import_failure(monkeypatch, tmp_path: Path):
     evidence = tmp_path / "import.json"
     monkeypatch.setattr(
         daily_import,
         "run_import",
-        lambda **kwargs: {"status": "success", "batch_dir": str(tmp_path)},
+        lambda **kwargs: {"status": "source_verified", "batch_dir": str(tmp_path)},
     )
     monkeypatch.setattr(
         daily_import,
@@ -140,6 +260,30 @@ def test_main_marks_summary_refresh_failure_as_import_failure(monkeypatch, tmp_p
     payload = json.loads(evidence.read_text(encoding="utf-8"))
     assert payload["status"] == "formula_summary_failed"
     assert payload["formula_summary"]["status"] == "failed"
+
+
+def test_main_marks_success_only_after_source_and_formula_verification(monkeypatch, tmp_path: Path):
+    evidence = tmp_path / "import.json"
+    monkeypatch.setattr(
+        daily_import,
+        "run_import",
+        lambda **kwargs: {"status": "source_verified", "batch_dir": str(tmp_path)},
+    )
+    monkeypatch.setattr(
+        daily_import,
+        "run_formula_dynamic_summary",
+        lambda **kwargs: {"status": "success", "verification": {"status": "success"}},
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["import_daily_files_to_feishu.py", "--batch-dir", str(tmp_path), "--evidence", str(evidence)],
+    )
+
+    assert daily_import.main() == 0
+    payload = json.loads(evidence.read_text(encoding="utf-8"))
+    assert payload["status"] == "success"
+    assert payload["formula_summary"]["status"] == "success"
 
 
 def test_discovers_date_first_daily_folder_layout(tmp_path: Path):
@@ -255,6 +399,21 @@ def test_parse_tmall_order_uses_order_no_as_unique_key_and_refund_updates_amount
     assert rows[0][F_REFUND_AMOUNT] == 169.0
 
 
+def test_parse_tmall_order_explicitly_prefers_export_sheet(tmp_path: Path):
+    path = tmp_path / "ExportOrderList.xlsx"
+    workbook = Workbook()
+    workbook.active.title = "说明"
+    workbook.active.append(["这不是订单数据"])
+    export = workbook.create_sheet("export")
+    export.append(["订单编号", "买家实付金额", "退款金额", "订单创建时间", "商品标题", "宝贝总数量", "订单状态"])
+    export.append(["T-export", 169, 0, "2026-07-10 12:00:00", "商品A", 1, "交易成功"])
+    workbook.save(path)
+
+    rows = parse_order_rows("天猫", path)
+
+    assert [row[F_UNIQUE_KEY] for row in rows] == ["tmall_T-export"]
+
+
 def test_parse_pdd_order_status_refund_without_explicit_refund(tmp_path: Path):
     path = tmp_path / "orders.csv"
     headers = ["商品", "订单号", "订单状态", "售后状态", "商品数量(件)", "订单成交时间", "支付时间", "商家实收金额(元)"]
@@ -358,6 +517,18 @@ def test_regular_product_keeps_actual_quantity():
         trade_status="已收货",
         fulfill_status="无售后或售后取消",
     ) == 2
+
+
+@pytest.mark.parametrize("status", ["Cancelled", "cancelled", "CANCELLED"])
+def test_cancelled_jushuitan_status_has_zero_actual_quantity(status: str):
+    assert actual_sold_quantity(
+        quantity=1,
+        product="趣白全自动洗面奶打泡机",
+        unit_price=169,
+        refund_amount=0,
+        trade_status=status,
+        fulfill_status="",
+    ) == 0
 
 
 def test_collapsed_order_does_not_let_accessory_line_zero_main_product():
@@ -530,6 +701,90 @@ def test_run_import_can_filter_pdd_ads_when_explicitly_requested(tmp_path: Path)
     assert summary["files"]["拼多多"]["ads"][0]["rows"] == 2
     assert [row[F_DATE] for row in summary["sample_ad_rows"]] == ["2026-06-07", "2026-06-08"]
     assert summary["sample_ad_rows"][0][F_DEAL_SPEND] == 1426.86
+
+
+def test_run_import_merges_overlapping_order_and_influencer_snapshots_by_unique_key(tmp_path: Path, monkeypatch):
+    batch = tmp_path / "0715"
+    newest_order = batch / "newest-orders.xlsx"
+    older_order = batch / "older-orders.xlsx"
+    newest_influencer = batch / "newest-influencer.xlsx"
+    older_influencer = batch / "older-influencer.xlsx"
+
+    monkeypatch.setattr(
+        daily_import,
+        "discover_daily_files",
+        lambda _batch: {
+            platform: {"orders": [], "ads": [], "influencer": []}
+            for platform in daily_import.PLATFORMS
+        }
+        | {
+            "天猫": {"orders": [newest_order, older_order], "ads": [], "influencer": []},
+            "抖音": {"orders": [], "ads": [], "influencer": [newest_influencer, older_influencer]},
+        },
+    )
+    monkeypatch.setattr(
+        daily_import,
+        "parse_order_rows",
+        lambda _platform, path: [
+            {
+                F_UNIQUE_KEY: "tmall_T1",
+                F_ORDER_NO: "T1",
+                F_CREATED_AT: "2026-07-10 12:00:00",
+                F_PAID_AMOUNT: 169 if path == newest_order else 159,
+                F_ACCESSORY_FLAG: "否",
+            }
+        ]
+        + (
+            [{F_UNIQUE_KEY: "tmall_T2", F_ORDER_NO: "T2", F_CREATED_AT: "2026-07-09 12:00:00", F_ACCESSORY_FLAG: "否"}]
+            if path == older_order
+            else []
+        ),
+    )
+    monkeypatch.setattr(
+        daily_import,
+        "parse_influencer_rows",
+        lambda _platform, path: [
+            {
+                F_UNIQUE_KEY: "douyin_D1",
+                F_ORDER_NO: "D1",
+                daily_import.I_PAY_AT: "2026-07-10 12:00:00",
+                daily_import.I_COMMISSION: 20 if path == newest_influencer else 18,
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        daily_import,
+        "fetch_jushuitan_douyin_order_rows",
+        lambda _settings, _selected_dates: ([], {"source": "jushuitan", "rows": 0}),
+    )
+
+    summary = run_import(
+        batch_dir=batch,
+        dry_run=True,
+        evidence=tmp_path / "evidence.json",
+        platforms={"天猫", "抖音"},
+        kinds={"orders", "influencer"},
+    )
+
+    assert summary["order_counts"]["天猫"] == 2
+    assert summary["influencer_count"] == 1
+    assert summary["source_reconciliation"]["orders"]["天猫"]["overlapping_rows_ignored"] == 1
+    assert summary["source_reconciliation"]["orders"]["天猫"]["conflicting_overlaps"] == 1
+    assert summary["source_reconciliation"]["influencer"]["抖音"]["overlapping_rows_ignored"] == 1
+    assert summary["source_reconciliation"]["influencer"]["抖音"]["conflicting_overlaps"] == 1
+
+
+def test_standard_import_lock_prevents_overlapping_writers(tmp_path: Path, monkeypatch):
+    lock_path = tmp_path / "standard-import.lock"
+    monkeypatch.setenv("SHOPOPS_STANDARD_IMPORT_LOCK_PATH", str(lock_path))
+    monkeypatch.setenv("SHOPOPS_STANDARD_IMPORT_LOCK_TIMEOUT_SECONDS", "0")
+
+    with daily_import.standard_import_lock():
+        with pytest.raises(RuntimeError, match="Another standard import"):
+            with daily_import.standard_import_lock():
+                pass
+
+    assert not lock_path.exists()
 
 
 def test_run_import_uses_rolling_90_day_window_for_orders_and_influencers(tmp_path: Path, monkeypatch):
@@ -739,6 +994,219 @@ def test_upsert_rows_does_not_create_or_require_nonexistent_optional_fields():
     assert calls[0][2]["records"][0]["fields"] == {"平台": "天猫"}
 
 
+def test_upsert_rows_creates_each_incoming_unique_key_only_once():
+    calls: list[tuple[str, str, dict | None, dict | None]] = []
+
+    class FakeClient(FeishuDailyClient):
+        def __init__(self) -> None:
+            self.app_token = "app"
+
+        def field_names(self, table_id: str) -> set[str]:
+            return {F_UNIQUE_KEY, F_ORDER_NO, F_PLATFORM}
+
+        def iter_records(self, table_id: str, field_names=None):
+            return iter(())
+
+        def request(self, method: str, path: str, payload=None, params=None):
+            calls.append((method, path, payload, params))
+            return {}
+
+    row = {F_UNIQUE_KEY: "tmall_T1", F_ORDER_NO: "T1", F_PLATFORM: "天猫"}
+    result = FakeClient().upsert_rows(
+        table_id="tbl",
+        rows=[row, dict(row)],
+        required_fields=[F_UNIQUE_KEY, F_ORDER_NO],
+        fallback_match_fields=(F_ORDER_NO,),
+    )
+
+    assert result["created"] == 1
+    assert result["deduplicated_incoming_rows"] == 1
+    assert len(calls) == 1
+    assert len(calls[0][2]["records"]) == 1
+
+
+def test_upsert_rows_repairs_existing_duplicates_for_incoming_key():
+    calls: list[tuple[str, str, dict | None, dict | None]] = []
+
+    class FakeClient(FeishuDailyClient):
+        def __init__(self) -> None:
+            self.app_token = "app"
+
+        def field_names(self, table_id: str) -> set[str]:
+            return {F_UNIQUE_KEY, F_ORDER_NO, F_PLATFORM, F_PAID_AMOUNT, "人工备注"}
+
+        def field_index(self, table_id: str) -> dict[str, dict]:
+            return {
+                F_UNIQUE_KEY: {"type": 1},
+                F_ORDER_NO: {"type": 1},
+                F_PLATFORM: {"type": 1},
+                F_PAID_AMOUNT: {"type": 2},
+                "人工备注": {"type": 1},
+            }
+
+        def iter_records(self, table_id: str, field_names=None):
+            yield {"record_id": "stale", "fields": {F_UNIQUE_KEY: "tmall_T1", F_ORDER_NO: "T1", F_PLATFORM: "天猫", F_PAID_AMOUNT: 159, "人工备注": "需要保留"}}
+            yield {"record_id": "current", "fields": {F_UNIQUE_KEY: "tmall_T1", F_ORDER_NO: "T1", F_PLATFORM: "天猫", F_PAID_AMOUNT: 169}}
+
+        def request(self, method: str, path: str, payload=None, params=None):
+            calls.append((method, path, payload, params))
+            return {}
+
+    result = FakeClient().upsert_rows(
+        table_id="tbl",
+        rows=[{F_UNIQUE_KEY: "tmall_T1", F_ORDER_NO: "T1", F_PLATFORM: "天猫", F_PAID_AMOUNT: 169}],
+        required_fields=[F_UNIQUE_KEY, F_ORDER_NO],
+        fallback_match_fields=(F_ORDER_NO,),
+    )
+
+    assert result["updated"] == 1
+    assert result["deleted_duplicate_records"] == 1
+    assert result["preserved_duplicate_fields"] == {"人工备注": 1}
+    assert calls[0][1].endswith("/records/batch_update")
+    assert calls[0][2] == {"records": [{"record_id": "current", "fields": {"人工备注": "需要保留"}}]}
+    assert calls[1][1].endswith("/records/batch_delete")
+    assert calls[1][2] == {"records": ["stale"]}
+
+
+def test_upsert_rows_refuses_to_delete_duplicates_with_conflicting_manual_fields():
+    calls: list[tuple[str, str, dict | None, dict | None]] = []
+
+    class FakeClient(FeishuDailyClient):
+        def __init__(self) -> None:
+            self.app_token = "app"
+
+        def field_names(self, table_id: str) -> set[str]:
+            return {F_UNIQUE_KEY, F_ORDER_NO, F_PAID_AMOUNT, "人工备注"}
+
+        def field_index(self, table_id: str) -> dict[str, dict]:
+            return {
+                F_UNIQUE_KEY: {"type": 1},
+                F_ORDER_NO: {"type": 1},
+                F_PAID_AMOUNT: {"type": 2},
+                "人工备注": {"type": 1},
+            }
+
+        def iter_records(self, table_id: str, field_names=None):
+            yield {"record_id": "one", "fields": {F_UNIQUE_KEY: "tmall_T1", F_ORDER_NO: "T1", F_PAID_AMOUNT: 169, "人工备注": "备注A"}}
+            yield {"record_id": "two", "fields": {F_UNIQUE_KEY: "tmall_T1", F_ORDER_NO: "T1", F_PAID_AMOUNT: 169, "人工备注": "备注B"}}
+
+        def request(self, method: str, path: str, payload=None, params=None):
+            calls.append((method, path, payload, params))
+            return {}
+
+    result = FakeClient().upsert_rows(
+        table_id="tbl",
+        rows=[{F_UNIQUE_KEY: "tmall_T1", F_ORDER_NO: "T1", F_PAID_AMOUNT: 169}],
+        required_fields=[F_UNIQUE_KEY, F_ORDER_NO],
+        fallback_match_fields=(F_ORDER_NO,),
+    )
+
+    assert result["deleted_duplicate_records"] == 0
+    assert result["duplicate_conflicts"][0]["conflicting_fields"] == {"人工备注": ["备注A", "备注B"]}
+    assert calls == []
+
+
+def test_verify_rows_by_unique_key_rejects_duplicate_readback():
+    class FakeClient(FeishuDailyClient):
+        def __init__(self) -> None:
+            self.app_token = "app"
+
+        def field_names(self, table_id: str) -> set[str]:
+            return {F_UNIQUE_KEY, F_ORDER_NO, F_PAID_AMOUNT}
+
+        def iter_records(self, table_id: str, field_names=None):
+            yield {"record_id": "one", "fields": {F_UNIQUE_KEY: "tmall_T1", F_ORDER_NO: "T1", F_PAID_AMOUNT: 169}}
+            yield {"record_id": "two", "fields": {F_UNIQUE_KEY: "legacy_T1", F_ORDER_NO: "T1", F_PAID_AMOUNT: 169}}
+
+    result = FakeClient().verify_rows_by_unique_key(
+        "tbl",
+        [{F_UNIQUE_KEY: "tmall_T1", F_ORDER_NO: "T1", F_PAID_AMOUNT: 169}],
+        fallback_match_fields=(F_ORDER_NO,),
+    )
+
+    assert result["status"] == "mismatch"
+    assert result["checked_rows"] == 1
+    assert result["matched_rows"] == 0
+    assert result["duplicate_unique_keys"] == {"tmall_T1": 2}
+
+
+def test_upsert_rows_clears_source_managed_field_when_snapshot_value_is_empty():
+    calls: list[tuple[str, str, dict | None, dict | None]] = []
+
+    class FakeClient(FeishuDailyClient):
+        def __init__(self) -> None:
+            self.app_token = "app"
+
+        def field_names(self, table_id: str) -> set[str]:
+            return {F_UNIQUE_KEY, F_ORDER_NO, daily_import.F_PRODUCT_NAME}
+
+        def iter_records(self, table_id: str, field_names=None):
+            yield {
+                "record_id": "existing",
+                "fields": {
+                    F_UNIQUE_KEY: "tmall_T1",
+                    F_ORDER_NO: "T1",
+                    daily_import.F_PRODUCT_NAME: "旧商品名",
+                },
+            }
+
+        def request(self, method: str, path: str, payload=None, params=None):
+            calls.append((method, path, payload, params))
+            return {}
+
+    result = FakeClient().upsert_rows(
+        table_id="tbl",
+        rows=[{F_UNIQUE_KEY: "tmall_T1", F_ORDER_NO: "T1", daily_import.F_PRODUCT_NAME: ""}],
+        required_fields=[F_UNIQUE_KEY, F_ORDER_NO],
+        fallback_match_fields=(F_ORDER_NO,),
+        update_existing_fields={daily_import.F_PRODUCT_NAME},
+        clear_empty_fields={daily_import.F_PRODUCT_NAME},
+    )
+
+    assert result["updated"] == 1
+    assert calls == [
+        (
+            "POST",
+            "/bitable/v1/apps/app/tables/tbl/records/batch_update",
+            {"records": [{"record_id": "existing", "fields": {daily_import.F_PRODUCT_NAME: None}}]},
+            None,
+        )
+    ]
+
+
+def test_verify_rows_by_unique_key_compares_source_managed_empty_fields():
+    class FakeClient(FeishuDailyClient):
+        def __init__(self) -> None:
+            self.app_token = "app"
+
+        def field_names(self, table_id: str) -> set[str]:
+            return {F_UNIQUE_KEY, F_ORDER_NO, daily_import.F_PRODUCT_NAME}
+
+        def iter_records(self, table_id: str, field_names=None):
+            yield {
+                "record_id": "existing",
+                "fields": {
+                    F_UNIQUE_KEY: "tmall_T1",
+                    F_ORDER_NO: "T1",
+                    daily_import.F_PRODUCT_NAME: "旧商品名",
+                },
+            }
+
+    result = FakeClient().verify_rows_by_unique_key(
+        "tbl",
+        [{F_UNIQUE_KEY: "tmall_T1", F_ORDER_NO: "T1", daily_import.F_PRODUCT_NAME: ""}],
+        compare_fields={daily_import.F_PRODUCT_NAME},
+        fallback_match_fields=(F_ORDER_NO,),
+        compare_empty_fields=True,
+    )
+
+    assert result["status"] == "mismatch"
+    assert result["mismatched_row_count"] == 1
+    assert result["mismatched_rows"][0]["fields"] == {
+        daily_import.F_PRODUCT_NAME: {"expected": "", "actual": "旧商品名"}
+    }
+
+
 def test_ensure_missing_fields_for_rows_creates_only_typed_nonempty_fields():
     calls: list[tuple[str, str, dict | None, dict | None]] = []
 
@@ -942,6 +1410,163 @@ def test_prune_order_records_for_dates_deletes_only_stale_same_day_orders():
     ]
 
 
+def test_prune_records_to_snapshot_deletes_only_stale_rows_inside_source_range():
+    calls: list[tuple[str, str, dict | None, dict | None]] = []
+
+    class FakeClient(FeishuDailyClient):
+        def __init__(self) -> None:
+            self.app_token = "app"
+
+        def iter_records(self, table_id: str, field_names=None):
+            yield {
+                "record_id": "keep_before",
+                "fields": {F_UNIQUE_KEY: "tmall_old", F_ORDER_NO: "old", F_CREATED_AT: "2026-04-01 23:59:59"},
+            }
+            yield {
+                "record_id": "keep_source",
+                "fields": {F_UNIQUE_KEY: "tmall_T1", F_ORDER_NO: "T1", F_CREATED_AT: "2026-04-02 10:00:00"},
+            }
+            yield {
+                "record_id": "delete_stale",
+                "fields": {F_UNIQUE_KEY: "tmall_stale", F_ORDER_NO: "stale", F_CREATED_AT: "2026-05-01 10:00:00"},
+            }
+            yield {
+                "record_id": "keep_after",
+                "fields": {F_UNIQUE_KEY: "tmall_future", F_ORDER_NO: "future", F_CREATED_AT: "2026-07-16 00:00:00"},
+            }
+
+        def request(self, method: str, path: str, payload=None, params=None):
+            calls.append((method, path, payload, params))
+            return {}
+
+    result = FakeClient().prune_records_to_snapshot(
+        "tbl",
+        source_rows=[{F_UNIQUE_KEY: "tmall_T1", F_ORDER_NO: "T1"}],
+        fallback_match_fields=(F_ORDER_NO,),
+        date_field=F_CREATED_AT,
+        start_date="2026-04-02",
+        end_date="2026-07-15",
+    )
+
+    assert result["deleted_records"] == 1
+    assert result["scanned_records"] == 2
+    assert result["preserved_outside_scope"] == 2
+    assert calls == [
+        (
+            "POST",
+            "/bitable/v1/apps/app/tables/tbl/records/batch_delete",
+            {"records": ["delete_stale"]},
+            None,
+        )
+    ]
+
+
+def test_count_records_in_date_range_separates_preserved_history():
+    class FakeClient(FeishuDailyClient):
+        def __init__(self) -> None:
+            self.app_token = "app"
+
+        def iter_records(self, table_id: str, field_names=None):
+            for value in ("2026-04-01", "2026-04-02 10:00:00", "2026-07-15 23:59:59", "2026-07-16", ""):
+                yield {"record_id": value or "blank", "fields": {F_CREATED_AT: value}}
+
+    result = FakeClient().count_records_in_date_range(
+        "tbl",
+        date_field=F_CREATED_AT,
+        start_date="2026-04-02",
+        end_date="2026-07-15",
+    )
+
+    assert result == {"in_scope": 2, "outside_scope": 3, "total": 5}
+
+
+def test_verify_unique_identities_detects_cross_source_order_duplicates():
+    class FakeClient(FeishuDailyClient):
+        def __init__(self) -> None:
+            self.app_token = "app"
+
+        def iter_records(self, table_id: str, field_names=None):
+            yield {
+                "record_id": "csv",
+                "fields": {F_ORDER_NO: "D1", F_UNIQUE_KEY: "douyin_D1", daily_import.F_DATA_SOURCE: "抖店订单CSV导入"},
+            }
+            yield {
+                "record_id": "api",
+                "fields": {F_ORDER_NO: "D1", F_UNIQUE_KEY: "legacy_D1", daily_import.F_DATA_SOURCE: "聚水潭抖音订单API"},
+            }
+            yield {"record_id": "empty", "fields": {daily_import.F_DATA_SOURCE: "历史异常记录"}}
+
+    result = FakeClient().verify_unique_identities("tbl", key_fields=(F_ORDER_NO,))
+
+    assert result["status"] == "mismatch"
+    assert result["total_records"] == 3
+    assert result["empty_identity_record_count"] == 1
+    assert result["duplicate_identities"] == 1
+    assert result["duplicate_extra_rows"] == 1
+    assert result["duplicate_samples"][0]["identity"] == ["D1"]
+
+
+def test_delete_blank_identity_records_keeps_nonblank_anomalies():
+    calls: list[tuple[str, str, dict | None, dict | None]] = []
+
+    class FakeClient(FeishuDailyClient):
+        def __init__(self) -> None:
+            self.app_token = "app"
+
+        def field_names(self, table_id: str) -> set[str]:
+            return {F_UNIQUE_KEY, F_ORDER_NO, F_PLATFORM, F_CREATED_AT, daily_import.F_PRODUCT_NAME, F_PAID_AMOUNT}
+
+        def iter_records(self, table_id: str, field_names=None):
+            yield {"record_id": "blank", "fields": {}}
+            yield {"record_id": "title-only", "fields": {daily_import.F_PRODUCT_NAME: "orphan product title"}}
+            yield {
+                "record_id": "anomaly",
+                "fields": {F_PLATFORM: "douyin", F_CREATED_AT: "2026-07-14", F_PAID_AMOUNT: 169},
+            }
+            yield {
+                "record_id": "valid",
+                "fields": {F_ORDER_NO: "D1", F_PLATFORM: "douyin", F_PAID_AMOUNT: 169},
+            }
+
+        def request(self, method: str, path: str, payload=None, params=None):
+            calls.append((method, path, payload, params))
+            return {}
+
+    result = FakeClient().delete_blank_identity_records(
+        "tbl",
+        key_fields=(F_ORDER_NO,),
+        content_fields=(F_PLATFORM, daily_import.F_DATA_SOURCE, F_CREATED_AT, F_PAID_AMOUNT, daily_import.F_RAW),
+    )
+
+    assert result["deleted_blank_records"] == 2
+    assert result["sample_deleted_record_ids"] == ["blank", "title-only"]
+    assert result["unresolved_empty_identity_records"][0]["record_id"] == "anomaly"
+    assert calls == [
+        (
+            "POST",
+            "/bitable/v1/apps/app/tables/tbl/records/batch_delete",
+            {"records": ["blank", "title-only"]},
+            None,
+        )
+    ]
+
+
+def test_verify_unique_identities_rejects_empty_identity_even_without_duplicates():
+    class FakeClient(FeishuDailyClient):
+        def __init__(self) -> None:
+            self.app_token = "app"
+
+        def iter_records(self, table_id: str, field_names=None):
+            yield {"record_id": "valid", "fields": {F_ORDER_NO: "D1"}}
+            yield {"record_id": "empty", "fields": {}}
+
+    result = FakeClient().verify_unique_identities("tbl", key_fields=(F_ORDER_NO,))
+
+    assert result["status"] == "mismatch"
+    assert result["duplicate_identities"] == 0
+    assert result["empty_identity_record_count"] == 1
+
+
 def test_deduplicate_records_deletes_only_repeated_platform_order_keys():
     calls: list[tuple[str, str, dict | None, dict | None]] = []
 
@@ -1054,7 +1679,7 @@ def test_order_rows_can_be_enriched_with_product_breakdown_fields():
     assert rows[0]["洗面奶有效销售额"] == 338
 
 
-def test_order_breakdown_uses_internal_source_quantity_before_accessory_zeroing():
+def test_order_breakdown_uses_normalized_quantity_and_valid_sales():
     rules = product_rules_from_records([{"fields": {"商品名称": "配件", "搜索关键词": "配件"}}])
     rows = [
         {
@@ -1068,9 +1693,43 @@ def test_order_breakdown_uses_internal_source_quantity_before_accessory_zeroing(
 
     add_product_breakdown_to_orders(rows, rules)
 
-    assert rows[0]["配件数量"] == 8
-    assert rows[0]["配件有效销售额"] == 14
+    assert rows[0]["配件数量"] == 0
+    assert rows[0]["配件有效销售额"] == 0
     assert INTERNAL_PRODUCT_BREAKDOWN_QUANTITY not in rows[0]
+
+
+def test_jushuitan_order_writes_product_code_and_uses_it_before_name():
+    rules = product_rules_from_records(
+        [
+            {"fields": {"商品名称": "洗面奶", "商品编码": "QBPH004", "搜索关键词": "洗面奶"}},
+            {"fields": {"商品名称": "皂液器", "商品编码": "QB006", "搜索关键词": "皂液器"}},
+        ]
+    )
+    row = daily_import.jushuitan_douyin_order_row(
+        {
+            "so_id": "6927936814382415450",
+            "status": "Sent",
+            "order_date": "2026-07-14 12:00:00",
+            "pay_amount": 169,
+            "items": [
+                {
+                    "i_id": "QBPH004",
+                    "sku_id": "QBPH004",
+                    "name": "趣白洁面起泡器【达人专属】全自动感应打泡沫机",
+                    "qty": 1,
+                }
+            ],
+        },
+        datetime(2026, 7, 16, 12, 0, 0),
+    )
+    assert row is not None
+
+    add_product_breakdown_to_orders([row], rules)
+
+    assert row[F_PRODUCT_CODE] == "QBPH004"
+    assert row["洗面奶数量"] == 1
+    assert row["洗面奶有效销售额"] == 169
+    assert row["皂液器数量"] == 0
 
 
 def test_douyin_influencer_rows_require_commission_excel(tmp_path: Path):
