@@ -84,6 +84,27 @@ def test_run_formula_dynamic_summary_refreshes_today_without_scanning_history(mo
     assert "repair_formula_summary_product_order_sales.py" in captured["commands"][2][1]
 
 
+def test_file_snapshot_impact_dates_include_zero_record_days_inside_prune_scope():
+    rows_by_platform = {
+        "Tmall": [
+            {F_CREATED_AT: "2026-04-02 10:00:00"},
+            {F_CREATED_AT: "2026-04-04 10:00:00"},
+        ]
+    }
+    source_reconciliation = {
+        "Tmall": {"source_type": "file_snapshot"},
+    }
+
+    assert daily_import._file_snapshot_impact_dates(
+        rows_by_platform,
+        source_reconciliation,
+    ) == {
+        "2026-04-02",
+        "2026-04-03",
+        "2026-04-04",
+    }
+
+
 def test_run_formula_dynamic_summary_reconciles_and_verifies_each_impact_date(monkeypatch, tmp_path: Path):
     captured: list[list[str]] = []
 

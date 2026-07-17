@@ -2093,6 +2093,45 @@ def reconcile_source_snapshots(
     }
 
 
+def _file_snapshot_date_scope(
+    platform: str,
+    rows: list[dict[str, Any]],
+    source_info: dict[str, Any],
+) -> tuple[str, str] | None:
+    if source_info.get("source_type") != "file_snapshot":
+        return None
+    source_dates = [normalize_date(row.get(F_CREATED_AT)) for row in rows]
+    missing_date_rows = sum(not value for value in source_dates)
+    if missing_date_rows:
+        raise RuntimeError(
+            f"Cannot safely reconcile {platform} file snapshot: {missing_date_rows} source rows have no {F_CREATED_AT}"
+        )
+    if not source_dates:
+        return None
+    return min(source_dates), max(source_dates)
+
+
+def _file_snapshot_impact_dates(
+    order_rows_by_platform: dict[str, list[dict[str, Any]]],
+    order_source_reconciliation: dict[str, dict[str, Any]],
+) -> set[str]:
+    impact_dates: set[str] = set()
+    for platform, rows in order_rows_by_platform.items():
+        scope = _file_snapshot_date_scope(
+            platform,
+            rows,
+            order_source_reconciliation.get(platform) or {},
+        )
+        if not scope:
+            continue
+        current = datetime.strptime(scope[0], "%Y-%m-%d").date()
+        end = datetime.strptime(scope[1], "%Y-%m-%d").date()
+        while current <= end:
+            impact_dates.add(current.isoformat())
+            current += timedelta(days=1)
+    return impact_dates
+
+
 @contextmanager
 def standard_import_lock() -> Iterable[None]:
     lock_path = Path(os.getenv("SHOPOPS_STANDARD_IMPORT_LOCK_PATH", "").strip() or ROOT / ".shopops-standard-import.lock")
@@ -2257,6 +2296,12 @@ def _run_import_unlocked(
         normalize_date(row.get(I_PAY_AT) or row.get(I_CREATED_AT))
         for row in influencer_rows
     )
+    impact_dates.update(
+        _file_snapshot_impact_dates(
+            order_rows_by_platform,
+            source_reconciliation["orders"],
+        )
+    )
     impact_dates.discard("")
 
     summary: dict[str, Any] = {
@@ -2380,14 +2425,10 @@ def _run_import_unlocked(
         source_info = source_reconciliation["orders"].get(platform) or {}
         source_type = source_info.get("source_type")
         if source_type == "file_snapshot":
-            source_dates = [normalize_date(row.get(F_CREATED_AT)) for row in rows]
-            missing_date_rows = sum(not value for value in source_dates)
-            if missing_date_rows:
-                raise RuntimeError(
-                    f"Cannot safely reconcile {platform} file snapshot: {missing_date_rows} source rows have no {F_CREATED_AT}"
-                )
-            snapshot_start_date = min(source_dates)
-            snapshot_end_date = max(source_dates)
+            snapshot_scope = _file_snapshot_date_scope(platform, rows, source_info)
+            if snapshot_scope is None:
+                raise RuntimeError(f"Cannot safely reconcile empty {platform} file snapshot")
+            snapshot_start_date, snapshot_end_date = snapshot_scope
             result["snapshot_scope"] = {
                 "source_type": source_type,
                 "date_field": F_CREATED_AT,
